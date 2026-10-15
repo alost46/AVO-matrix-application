@@ -1,0 +1,885 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<title>Линейное преобразование матриц · Web 03f</title>
+<style>
+:root{font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif;color:#203245;background:#eef3f7}*{box-sizing:border-box}
+body{margin:0}.shell{max-width:1520px;margin:auto;padding:13px 14px calc(38px + var(--keyboard-occlusion,0px))}
+header{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:8px}.top-actions{margin-left:auto;display:flex;gap:6px;align-items:center;flex-wrap:wrap}.language-button{font-size:20px;padding:4px 7px;border:1px solid #c8d6e2;border-radius:9px;background:white;line-height:1.3}.language-button.active{outline:2px solid #235a91}.help-btn{border:2px solid #517496;background:#fff;color:#254e74;font-size:18px;font-weight:900;width:36px;height:36px;border-radius:50%}h1{font-size:22px;margin:0}.tag{background:#dfebf6;color:#305575;border-radius:99px;font-size:12px;padding:5px 11px;font-weight:700}
+ .lead{font-size:13px;line-height:1.55;color:#485e73;margin:0 0 13px}
+.state-toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 12px;padding:9px 11px;background:#fff;border:1px solid #cbd6e0;border-radius:12px}
+.state-toolbar button{font-size:13px;font-weight:700;border:1px solid #b9ccda;background:#f6faff;color:#244e77;padding:8px 12px;border-radius:8px;min-height:37px}
+.state-toolbar button:disabled{opacity:.46;cursor:default}
+.state-toolbar output{font-size:12px;color:#476278;flex:1 1 170px;line-height:1.4}
+
+.layout{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:start}
+.panel{background:#fff;border:1px solid #cbd6e0;border-radius:13px;overflow:hidden;box-shadow:0 2px 10px #00000008;min-width:0}
+.bar{background:#f8fbfe;border-bottom:1px solid #e0e7ee;padding:9px 10px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-height:59px}
+.bar strong{font-size:15px;margin-right:auto}.mode-group{display:flex;background:#e4edf6;border-radius:8px;padding:3px;gap:3px}
+button{font:inherit;cursor:pointer;touch-action:manipulation}.mode{border:0;border-radius:6px;padding:7px 11px;background:transparent;color:#3e5870;font-size:13px;font-weight:750}
+.mode.active{background:#285789;color:#fff}.btn{background:#fff;border:1px solid #c5d3df;border-radius:7px;padding:8px 9px;font-size:12px;font-weight:650;color:#325374}
+.btn:focus-visible,.mode:focus-visible{outline:3px solid #579bd0;outline-offset:2px}
+.plot{height:clamp(265px,31vw,460px);position:relative;background:#fff;overflow:hidden}
+.plot canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}.plot.dragging canvas{cursor:grabbing}
+.axis-label-layer{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
+.overlay{position:absolute;top:8px;left:8px;max-width:calc(100% - 16px);font-size:11px;line-height:1.4;background:#fffffff0;border:1px solid #d7e2ea;border-radius:7px;padding:6px 8px;pointer-events:none;font-weight:650;z-index:3}
+.status{font-size:12px;line-height:1.45;padding:8px 10px;min-height:51px;color:#325372;border-top:1px solid #e6ecf1}
+.data{border-top:1px solid #dce5ed;padding:10px 12px 13px}.data h2{font-size:14px;margin:0 0 4px}.data p{font-size:11px;color:#62768a;margin:0 0 7px;line-height:1.5}
+.matrix{border-collapse:separate;border-spacing:3px;width:100%;font-variant-numeric:tabular-nums;table-layout:fixed}
+.matrix td,.matrix input{background:#f7f9fb;border:1px solid #e1e7ee;border-radius:5px;text-align:center;font-size:14px;font-weight:740;padding:8px 2px;width:100%;min-width:0}
+.matrix input{font-family:inherit;outline-offset:1px}.matrix input:focus{background:#fff;border-color:#497ca5;outline:1px solid #497ca5}
+.red{color:#e02d26}.blue{color:#2255dc}.green{color:#008c45}
+.warning{font-size:12px;font-weight:800;color:#6a4500;background:#fff0bb;border:1px solid #ddbb56;border-radius:8px;padding:8px 10px;margin:8px 0 0}
+.view-panel{background:#fff;border:1px solid #cbd6e0;border-radius:12px;padding:10px 12px;margin-bottom:12px}.view-heading{display:flex;flex-wrap:wrap;gap:10px;align-items:baseline;margin-bottom:7px}.view-heading strong{font-size:14px}.view-heading small{font-size:11px;color:#617589}.rays{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}.ray-dial{border:1px solid #d8e3ec;border-radius:9px;background:#fafcfe;display:flex;align-items:center;justify-content:center;gap:8px;min-height:83px;touch-action:none;user-select:none;cursor:pointer}.ray-dial:active{background:#e7f3ff}.ray-dial svg{width:93px;height:75px;overflow:visible;touch-action:none;flex:none}.ray-info{display:flex;flex-direction:column;gap:3px;align-items:center}.ray-info strong{font-size:16px}.ray-info output{color:#265c90;font-size:14px;font-variant-numeric:tabular-nums;font-weight:700}.help-dialog{border:1px solid #a9bac8;border-radius:13px;width:min(640px,calc(100vw - 26px));max-height:85dvh;padding:0;background:white;box-shadow:0 15px 70px #0006}.help-dialog::backdrop{background:#1d2e43aa}.help-inner{padding:18px 22px;overflow:auto;max-height:85dvh}.help-inner h2{font-size:19px;margin:0 0 10px}.help-inner p{font-size:14px;line-height:1.65}.help-close{float:right;font-size:19px;background:white;border:1px solid #bac9d6;border-radius:8px;padding:4px 11px}.legend{font-size:11px;display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;color:#51667b}.legend b{font-size:14px}
+.help{font-size:13px;line-height:1.55;color:#435a6f;background:#fff;border:1px solid #d0dbe4;border-radius:12px;padding:11px 14px;margin-top:12px}
+.note{font-size:11px;color:#768698;margin:10px 2px 0}
+.panel.expanded{position:fixed;left:9px;right:9px;top:calc(var(--visual-top,0px) + 9px);height:calc(var(--visual-height,100dvh) - 18px);z-index:50;display:flex;flex-direction:column;overflow:auto;border-radius:12px;box-shadow:0 0 0 9999px #15283dcc}
+.panel.expanded .plot{height:auto;flex:1;min-height:235px}.panel.expanded .data{flex:0 0 auto}.panel.expanded .status{min-height:34px}.panel.expanded .bar{flex:0 0 auto}
+body.has-expanded{overflow:hidden}.matrix input{scroll-margin-top:40px;scroll-margin-bottom:110px;caret-color:#244d78}.matrix input:focus{box-shadow:0 0 0 2px #87b9df;position:relative;z-index:1}body.keyboard-focus .panel.expanded .plot{flex:0 0 auto!important;height:min(31dvh,230px)!important;min-height:125px}body.keyboard-focus .panel.expanded .data{padding-bottom:60px}.panel.expanded .matrix input{font-size:16px!important}
+@media(max-width:1130px){.layout{grid-template-columns:repeat(2,minmax(0,1fr))}.plot{height:clamp(285px,42vw,420px)}}
+@media(max-width:690px){.shell{padding:9px 9px calc(22px + var(--keyboard-occlusion,0px))}h1{font-size:19px}.layout{grid-template-columns:1fr;gap:11px}.plot{height:min(53dvh,490px);min-height:320px}.matrix td,.matrix input{font-size:16px;padding:9px 3px}.bar strong{font-size:14px}.panel.expanded{left:5px;right:5px;top:calc(var(--visual-top,0px) + 5px);height:calc(var(--visual-height,100dvh) - 10px)}.panel.expanded .plot{min-height:180px}.panel.expanded .data{padding:6px 9px}.panel.expanded .matrix td,.panel.expanded .matrix input{padding:7px;font-size:16px}}
+@media(max-width:690px){.rays{gap:5px}.ray-dial{gap:0;min-height:72px}.ray-dial svg{width:57px;height:66px}.ray-info strong{font-size:13px}.ray-info output{font-size:12px}.view-panel{padding:8px 5px}.view-heading{padding:0 5px}.top-actions{margin-left:0}.lead{font-size:12px}}
+@media(min-width:691px) and (max-width:1130px){.ray-dial svg{height:67px}}
+.flag-icon{display:block;width:27px;height:18px;border:1px solid #b8c8d5;border-radius:2px;box-sizing:content-box}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}</script>
+</head>
+<body>
+<main class="shell">
+<header><h1 data-i18n="appTitle">Линейное преобразование матриц</h1><span class="tag" data-i18n="edition">Веб-версия 03f</span><div class="top-actions"><button class="language-button active" data-lang="ru" aria-label="Русский"><svg class="flag-icon" viewBox="0 0 60 40" aria-hidden="true" focusable="false"><rect width="60" height="40" fill="#fff"/><rect y="13.333" width="60" height="13.334" fill="#1746a2"/><rect y="26.667" width="60" height="13.333" fill="#d52b1e"/></svg></button><button class="language-button" data-lang="en" aria-label="English"><svg class="flag-icon" viewBox="0 0 60 40" aria-hidden="true" focusable="false"><rect width="60" height="40" fill="#012169"/><path d="M0 0L60 40M60 0L0 40" stroke="#fff" stroke-width="12"/><path d="M0 0L60 40M60 0L0 40" stroke="#c8102e" stroke-width="4.5"/><path d="M30 0V40M0 20H60" stroke="#fff" stroke-width="14"/><path d="M30 0V40M0 20H60" stroke="#c8102e" stroke-width="7"/></svg></button><button class="language-button" data-lang="he" aria-label="עברית"><svg class="flag-icon" viewBox="0 0 60 40" aria-hidden="true" focusable="false"><rect width="60" height="40" fill="#fff"/><rect y="5" width="60" height="5" fill="#0038b8"/><rect y="30" width="60" height="5" fill="#0038b8"/><path d="M30 14 L36.3 25 H23.7 Z M30 26 L23.7 15 H36.3 Z" fill="none" stroke="#0038b8" stroke-width="1.7" stroke-linejoin="round"/></svg></button><button class="help-btn" id="open-help" aria-label="Help">?</button></div></header>
+<div class="state-toolbar" role="group" aria-label="Save and restore matrices">
+ <button type="button" id="undo-action" data-i18n="undo" disabled>Отменить</button>
+ <button type="button" id="save-state" data-i18n="saveFile">Сохранить в файл</button>
+ <button type="button" id="load-state" data-i18n="loadFile">Загрузить из файла</button>
+ <input type="file" id="load-state-input" accept=".json,application/json" hidden>
+ <output id="save-status" role="status" aria-live="polite">Состояние автоматически сохраняется в этом браузере.</output>
+</div>
+<p class="lead" data-i18n="lead">Перемещайте цветные маркеры для изменения A и B. Вращайте график за свободное место. Числовые матрицы можно изменять прямо здесь.</p>
+<section class="view-panel" aria-label="View angles"><div class="view-heading"><strong data-i18n="direction">Направление обзора X / Y / Z</strong><small data-i18n="rayInstruction">Потяните синий конец луча. Поворот любого графика меняет все три вида.</small></div><div class="rays" id="angle-rays"></div></section>
+<div class="layout">
+ <section class="panel" id="panel-a" aria-label="Объект A">
+  <div class="bar"><strong data-i18n="objectA">Объект A</strong><div class="mode-group"><button class="mode active" data-chart="a" data-mode="xy">XY</button><button class="mode" data-chart="a" data-mode="z">Z</button></div><button class="btn" data-expand="a" data-i18n="expand">Увеличить</button><button class="btn" data-reset="a" data-i18n="resetA">Сброс A</button></div>
+  <div class="plot" id="plot-a"><div class="overlay" id="live-a">A: коснитесь цветного кружка</div></div>
+  <div class="status" id="status-a" role="status">Загрузка…</div>
+  <div class="data"><h2 data-i18n="matrixA">Матрица A</h2><p data-i18n="descrA">Цветные столбцы соответствуют векторам. Числа редактируемы.</p><table class="matrix"><tbody id="matrix-a"></tbody></table><div class="warning" id="warn-a" data-i18n="warnA" hidden>Маркеры A соприкасаются. Поверните обзор.</div></div>
+ </section>
+ <section class="panel" id="panel-b" aria-label="Преобразование B">
+  <div class="bar"><strong data-i18n="transformB">Преобразование B</strong><div class="mode-group"><button class="mode active" data-chart="b" data-mode="xy">XY</button><button class="mode" data-chart="b" data-mode="z">Z</button></div><button class="btn" data-expand="b" data-i18n="expand">Увеличить</button><button class="btn" data-reset="b" data-i18n="resetB">Сброс B</button></div>
+  <div class="plot" id="plot-b"><div class="overlay" id="live-b">B: коснитесь цветного кружка</div></div>
+  <div class="status" id="status-b" role="status">Загрузка…</div>
+  <div class="data"><h2 data-i18n="matrixB">Матрица B</h2><p data-i18n="descrB">Цветные рёбра задают преобразование куба. Числа редактируемы.</p><table class="matrix"><tbody id="matrix-b"></tbody></table><div class="warning" id="warn-b" data-i18n="warnB" hidden>Маркеры B соприкасаются. Поверните обзор.</div></div>
+ </section>
+ <section class="panel" id="panel-ba" aria-label="Результат BA">
+  <div class="bar"><strong data-i18n="resultBA">Результат BA = B × A</strong><div class="mode-group" aria-label="BA view rotation"><button class="mode active" data-chart="ba" data-mode="xy" aria-pressed="true">XY</button><button class="mode" data-chart="ba" data-mode="z" aria-pressed="false">Z</button></div><button class="btn" data-expand="ba" data-i18n="expand">Увеличить</button><button class="btn" data-reset="camera-ba" data-i18n="resetView">Вернуть обзор</button></div>
+  <div class="plot" id="plot-ba"><div class="overlay">BA: результат вычисляется автоматически</div></div>
+  <div class="status" id="status-ba" role="status">Изменение A или B перестраивает этот график.</div>
+  <div class="data"><h2 data-i18n="matrixBA">Матрица BA</h2><p data-i18n="descrBA">Результат B × A, вычисляется автоматически.</p><table class="matrix"><tbody id="matrix-ba"></tbody></table></div>
+ </section>
+</div>
+<div class="help" data-i18n="quickHelp">Перемещение маркера меняет координаты вектора, но не обзор; вращение графика меняет обзор, но не матрицы. Помощь: кнопка ? наверху.</div>
+<p class="note" data-i18n="footnote">Требуется интернет для Three.js. Состояние автоматически сохраняется в текущем браузере; для другого устройства используйте файл JSON.</p>
+<dialog class="help-dialog" id="help-dialog"><div class="help-inner"><button class="help-close" id="close-help" aria-label="Close">×</button><h2 data-i18n="helpTitle">Справка</h2><div id="help-body"></div></div></dialog>
+</main>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+const COLORS=[0xf02a28,0x2454e7,0x008c45];
+const CSS=['red','blue','green'];
+const I18N={
+ru:{appTitle:'Линейное преобразование матриц',undo:'Отменить',saveFile:'Сохранить в файл',loadFile:'Загрузить из файла',autoSaved:'Автоматически сохранено в этом браузере',restored:'Восстановлено сохранённое состояние',exported:'Файл состояния сохранён',imported:'Состояние загружено из файла',invalidFile:'Не удалось загрузить: неверный файл состояния',storageUnavailable:'Автосохранение недоступно; используйте файл JSON',nothingToUndo:'Пока нечего отменять',tapMarker:'коснитесь цветного кружка',readyEdit:'Готово. Цветной кружок: перемещение; свободное место: вращение.',readyResult:'BA = B × A. Можно вращать и масштабировать обзор.',orbitStart:'Вращается только обзор; матрицы не изменяются.',orbitEnd:'Обзор изменён; координаты векторов прежние.',resetViewDone:'Обзор восстановлен. Матрицы не изменились.',vectorFinished:'перемещение закончено; сетка осталась на месте.',selectedMarker:'Выбран',cameraStill:'камера неподвижна',modeXY:'XY: изменяются X и Y, Z сохраняется.',modeZ:'Z: изменяется только Z.',matrixRestored:'Восстановлена матрица',edition:'Веб-версия 03f',lead:'Перемещайте цветные маркеры для изменения матриц A и B. Вращайте график за свободное место. Числа можно редактировать непосредственно под графиками.',direction:'Направление обзора X / Y / Z',rayInstruction:'Потяните синий конец луча. Поворот любого графика меняет все три вида.',objectA:'Объект A',transformB:'Преобразование B',resultBA:'Результат BA = B × A',expand:'Увеличить',collapse:'Свернуть',resetA:'Сброс A',resetB:'Сброс B',resetView:'Вернуть обзор',matrixA:'Матрица A',matrixB:'Матрица B',matrixBA:'Матрица BA',descrA:'Цветные столбцы соответствуют векторам. Числа редактируемы.',descrB:'Цветные рёбра задают преобразование куба. Числа редактируемы.',descrBA:'Результат B × A, вычисляется автоматически.',warnA:'Маркеры A соприкасаются. Поверните обзор, чтобы разделить их.',warnB:'Маркеры B соприкасаются. Поверните обзор, чтобы разделить их.',quickHelp:'Вектор перемещается при неподвижной сетке; поворот сетки не меняет координаты векторов. Полная справка: кнопка ?.',footnote:'Требуется интернет для Three.js. Состояние автоматически сохраняется в текущем браузере; для другого устройства используйте файл JSON.',helpTitle:'Как работать с Matrix Transformer',helpHtml:`<p><b>Матрицы:</b> изменяйте A и B перетаскиванием концов векторов или вводом чисел в таблицы. BA = B × A пересчитывается автоматически.</p><p><b>Режим XY</b> меняет X и Y выбранного вектора; <b>Z</b> меняет только Z. В момент захвата маркера сетки и обзор неподвижны. При вращении графика координаты векторов остаются неизменными.</p><p><b>Направление обзора:</b> три луча X, Y, Z управляют общими углами всех графиков. Поворот мышью или пальцем на любом графике обновляет лучи и обзор других графиков.</p><p><b>На телефоне:</b> прокручивайте страницу, проводя пальцем вне графика. Если кружки соприкасаются, поверните сетку, чтобы они разошлись.</p><p><b>Клавиатура:</b> при редактировании чисел страница поднимает активную строку матрицы выше экранной клавиатуры. Если открыт увеличенный график, область рисунка временно уменьшается, оставляя место таблице.</p><p><b>Сохранение:</b> матрицы и обзор сохраняются автоматически в этом браузере. Кнопка «Отменить» отменяет последнее действие. Для переноса на другой телефон сохраните файл JSON и загрузите его там.</p><p><b>Плоскости:</b> жёлтая сетка на A и BA проходит через концы трёх соответствующих векторов. На B показаны исходный куб и преобразованный параллелепипед.</p>`},
+en:{appTitle:'Linear Matrix Transformation',undo:'Undo',saveFile:'Save to file',loadFile:'Load from file',autoSaved:'Saved automatically in this browser',restored:'Previous session restored',exported:'State file downloaded',imported:'State loaded from file',invalidFile:'Cannot load: invalid state file',storageUnavailable:'Browser autosave unavailable; use JSON file',nothingToUndo:'Nothing to undo yet',tapMarker:'touch a colored endpoint',readyEdit:'Ready. Drag a colored endpoint to edit; drag free space to orbit.',readyResult:'BA = B × A. The view can be rotated and zoomed.',orbitStart:'Only the view rotates; matrices stay unchanged.',orbitEnd:'View rotated; vector coordinates unchanged.',resetViewDone:'View reset; matrices unchanged.',vectorFinished:'drag finished; grid remained still.',selectedMarker:'Selected',cameraStill:'camera stays still',modeXY:'XY: X and Y change; Z stays fixed.',modeZ:'Z: only Z changes.',matrixRestored:'Reset matrix',edition:'Web version 03f',lead:'Drag colored endpoints to edit A and B. Drag empty plot space to orbit. Edit numeric matrices directly below each plot.',direction:'View direction X / Y / Z',rayInstruction:'Drag a blue ray tip. Orbiting any plot synchronizes the view of all three.',objectA:'Object A',transformB:'Transformation B',resultBA:'Result BA = B × A',expand:'Expand',collapse:'Collapse',resetA:'Reset A',resetB:'Reset B',resetView:'Reset view',matrixA:'Matrix A',matrixB:'Matrix B',matrixBA:'Matrix BA',descrA:'Colored columns correspond to vectors. Values are editable.',descrB:'Colored edges transform the unit cube. Values are editable.',descrBA:'Computed B × A; updates automatically.',warnA:'A markers are touching. Rotate the view to separate them.',warnB:'B markers are touching. Rotate the view to separate them.',quickHelp:'Dragging a vector keeps the grid still; orbiting does not change vector coordinates. Tap ? for full Help.',footnote:'Three.js needs internet. State is saved in this browser; export JSON to move it to another device.',helpTitle:'Matrix Transformer Help',helpHtml:`<p><b>Matrices:</b> edit A and B by dragging vector endpoints or typing into the matrices. BA = B × A updates automatically.</p><p><b>XY</b> changes X and Y only; <b>Z</b> changes Z only. While grabbing a marker the grid and view remain still. When orbiting, vector coordinates remain unchanged.</p><p><b>View direction:</b> drag the X, Y or Z ray tips. All three graphs share one orientation. Orbiting any graph updates the rays and the other graphs.</p><p><b>On phones:</b> scroll the page by dragging outside the plots. If markers touch, rotate the view to separate them.</p><p><b>Keyboard:</b> the focused matrix row is scrolled above the on-screen keyboard. In expanded mode, the plot temporarily shrinks to leave room for the matrix.</p><p><b>Saving:</b> matrices and view are saved automatically in this browser. Undo reverts the last action. Export/import a JSON file to move the state to another device.</p><p><b>Planes:</b> the yellow mesh in A and BA passes through the three vector endpoints. B displays the original unit cube and its transformed parallelepiped.</p>`},
+he:{appTitle:'טרנספורמציה לינארית של מטריצות',undo:'בטל',saveFile:'שמור לקובץ',loadFile:'טען מקובץ',autoSaved:'נשמר אוטומטית בדפדפן זה',restored:'המצב הקודם שוחזר',exported:'קובץ המצב נשמר',imported:'המצב נטען מקובץ',invalidFile:'לא ניתן לטעון: קובץ לא תקין',storageUnavailable:'שמירה אוטומטית אינה זמינה; השתמשו בקובץ JSON',nothingToUndo:'אין מה לבטל',tapMarker:'געו בנקודה צבעונית',readyEdit:'מוכן. גררו נקודה צבעונית לשינוי ושטח פנוי לסיבוב.',readyResult:'BA = B × A. אפשר לסובב ולהגדיל את התצוגה.',orbitStart:'התצוגה מסתובבת; המטריצות לא משתנות.',orbitEnd:'התצוגה השתנתה; קואורדינטות הווקטורים לא השתנו.',resetViewDone:'התצוגה אופסה; המטריצות לא השתנו.',vectorFinished:'הגרירה הסתיימה; הרשת נשארה במקומה.',selectedMarker:'נבחר',cameraStill:'המצלמה לא זזה',modeXY:'XY: רק X ו-Y משתנים.',modeZ:'Z: רק Z משתנה.',matrixRestored:'מטריצה אופסה',edition:'גרסת רשת 03f',lead:'גררו את הנקודות הצבעוניות כדי לשנות את המטריצות A ו-B. גררו שטח פנוי לסיבוב התצוגה. אפשר לערוך מספרים מתחת לגרפים.',direction:'כיוון התצוגה X / Y / Z',rayInstruction:'גררו את קצה הקרן הכחולה. סיבוב גרף אחד משנה את תצוגת שלושתם.',objectA:'עצם A',transformB:'טרנספורמציה B',resultBA:'תוצאה BA = B × A',expand:'הגדל',collapse:'הקטן',resetA:'איפוס A',resetB:'איפוס B',resetView:'איפוס תצוגה',matrixA:'מטריצה A',matrixB:'מטריצה B',matrixBA:'מטריצה BA',descrA:'העמודות הצבעוניות תואמות לווקטורים. ניתן לערוך מספרים.',descrB:'הקצוות הצבעוניים מגדירים את שינוי הקובייה. ניתן לערוך מספרים.',descrBA:'תוצאת B × A מתעדכנת באופן אוטומטי.',warnA:'הסמנים של A נוגעים זה בזה. סובבו את התצוגה כדי להפריד.',warnB:'הסמנים של B נוגעים זה בזה. סובבו את התצוגה כדי להפריד.',quickHelp:'גרירת וקטור אינה מזיזה את הרשת; סיבוב התצוגה אינו משנה את המטריצות. לעזרה: ?',footnote:'נדרש אינטרנט עבור Three.js. המצב נשמר בדפדפן זה; להעברה למכשיר אחר השתמשו בקובץ JSON.',helpTitle:'עזרה ל-Matrix Transformer',helpHtml:`<p><b>מטריצות:</b> אפשר לשנות את A ואת B באמצעות גרירת קצות הווקטורים או הקלדת מספרים. BA = B × A מחושבת אוטומטית.</p><p><b>מצב XY</b> משנה רק X ו-Y; <b>מצב Z</b> משנה רק Z. בעת גרירת סמן הרשת נשארת במקום. סיבוב התצוגה אינו משנה את קואורדינטות הווקטורים.</p><p><b>כיוון התצוגה:</b> גררו את קצות הקרניים X, Y, Z. לכל שלושת הגרפים כיוון תצוגה משותף.</p><p><b>בטלפון:</b> גללו את הדף באמצעות גרירה מחוץ לגרפים. אם הסמנים נוגעים, סובבו את התצוגה כדי להפריד ביניהם.</p><p><b>מקלדת:</b> בעת עריכת מספר המטריצה תגלול כך שהשורה הנבחרת תישאר מעל המקלדת. במצב מוגדל הגרף יקטן זמנית.</p><p><b>שמירה:</b> המטריצות והתצוגה נשמרות אוטומטית בדפדפן זה. ביטול הפעולה האחרונה זמין; ניתן להעביר מצב במכשירים עם קובץ JSON.</p><p><b>מישורים:</b> רשת צהובה בגרפים A ו-BA עוברת דרך קצות שלושת הווקטורים. בגרף B מוצגות הקובייה המקורית והצורה המותמרת.</p>`}}
+let lang='ru';const t=k=>I18N[lang][k]||k;
+
+const makePoints=(array)=>array.map(v=>new THREE.Vector3(...v));
+const initialA=makePoints([[1.35,0.20,0.25],[-0.25,1.20,0.35],[0.25,-0.20,1.45]]);
+const initialB=makePoints([[1,0,0],[0,1,0],[0,0,1]]);
+const matrices={a:initialA.map(p=>p.clone()),b:initialB.map(p=>p.clone()),ba:initialA.map(p=>p.clone())};
+const charts={};
+const origin=new THREE.Vector3();
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const format=(x)=>Math.abs(x)<0.005?'0.00':x.toFixed(2);
+const LABEL={a:'A',b:'B',ba:'BA'};
+
+function newGrid(axis,at){
+ const lines=[];
+ for(let i=-3;i<=3;i++){
+  if(axis==='xy')lines.push(-3,i,at,3,i,at,i,-3,at,i,3,at);
+  else if(axis==='xz')lines.push(-3,at,i,3,at,i,i,at,-3,i,at,3);
+  else lines.push(at,-3,i,at,3,i,at,i,-3,at,i,3);
+ }
+ const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(lines,3));
+ return new THREE.LineSegments(geometry,new THREE.LineBasicMaterial({color:0xa2b1bd,transparent:true,opacity:.48,depthWrite:false}));
+}
+function newLine(color,widthIgnored=1){
+ const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(6),3));
+ return new THREE.Line(g,new THREE.LineBasicMaterial({color,depthTest:false}));
+}
+function updateLine(line,start,end){
+ const a=line.geometry.attributes.position;
+ a.setXYZ(0,start.x,start.y,start.z);a.setXYZ(1,end.x,end.y,end.z);
+ a.needsUpdate=true;line.geometry.computeBoundingSphere();
+}
+function cubeEdges(){
+ const vs=[];
+ for(let x=0;x<2;x++)for(let y=0;y<2;y++)for(let z=0;z<2;z++)vs.push([x,y,z]);
+ const edges=[];
+ for(let i=0;i<vs.length;i++)for(let j=i+1;j<vs.length;j++){
+  if(vs[i].filter((p,k)=>p!==vs[j][k]).length===1)edges.push([i,j]);
+ }
+ return {vs,edges};
+}
+const CUBE=cubeEdges();
+function addBGeometry(chart){
+ const orig=new THREE.Group();
+ for(const [i,j] of CUBE.edges){
+  const a=CUBE.vs[i],b=CUBE.vs[j];
+  const delta=new THREE.Vector3(b[0]-a[0],b[1]-a[1],b[2]-a[2]);
+  const segment=new THREE.LineDashedMaterial({color:0x7a8792,dashSize:.11,gapSize:.08,transparent:true,opacity:.6});
+  const line=new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(...a),new THREE.Vector3(...b)]),segment);
+  line.computeLineDistances();orig.add(line);
+ }
+ chart.scene.add(orig);
+ chart.cubeLines=[];
+ for(const [i,j] of CUBE.edges){
+  const line=newLine(0x303c46);line.renderOrder=4;chart.scene.add(line);
+  chart.cubeLines.push({i,j,line});
+ }
+}
+function projectBPoint(point){
+ const p=new THREE.Vector3();
+ for(let c=0;c<3;c++)p.addScaledVector(matrices.b[c],point[c]);
+ return p;
+}
+function recalcBA(){
+ for(let c=0;c<3;c++){
+  const a=matrices.a[c];
+  matrices.ba[c].set(0,0,0);
+  for(let k=0;k<3;k++)matrices.ba[c].addScaledVector(matrices.b[k],a.getComponent(k));
+ }
+ renderMatrix('ba');if(charts.ba)charts.ba.updateGeometry();
+}
+function createMatrixTable(id){
+ const tbody=document.getElementById('matrix-'+id),table=[];
+ for(let r=0;r<3;r++){
+  const tr=document.createElement('tr');table[r]=[];
+  for(let c=0;c<3;c++){
+   const td=document.createElement('td');td.className=CSS[c];
+   if(id==='ba'){table[r][c]=td;}
+   else{
+    const input=document.createElement('input');input.type='text';input.inputMode='decimal';input.autocomplete='off';input.spellcheck=false;
+    input.className=CSS[c];input.setAttribute('aria-label',`${id.toUpperCase()} строка ${r+1} столбец ${c+1}`);
+    const applyInput=()=>{
+     const raw=input.value.trim().replace(',','.');
+     if(raw===''||raw==='-'||raw==='.'||raw==='-.')return;
+     const value=Number(raw);
+     if(!Number.isFinite(value))return;
+     matrices[id][c].setComponent(r,clamp(value,-3,3));updateFromMatrix(id);
+    };
+    input.addEventListener('focus',()=>{input._undoStart=snapshotState();});
+    input.addEventListener('input',applyInput);
+    input.addEventListener('change',()=>{applyInput();});
+    input.addEventListener('blur',()=>{input.value=format(matrices[id][c].getComponent(r));recordAction(input._undoStart);input._undoStart=null;});
+    td.appendChild(input);table[r][c]=input;
+   }
+   tr.appendChild(td);
+  }
+  tbody.appendChild(tr);
+ }
+ return table;
+}
+const matrixCells={a:createMatrixTable('a'),b:createMatrixTable('b'),ba:createMatrixTable('ba')};
+function renderMatrix(id){
+ for(let r=0;r<3;r++)for(let c=0;c<3;c++){
+  const value=format(matrices[id][c].getComponent(r));
+  const cell=matrixCells[id][r][c];
+  if(id==='ba')cell.textContent=value;
+  else if(document.activeElement!==cell)cell.value=value;
+ }
+}
+function updateFromMatrix(id){
+ renderMatrix(id);
+ charts[id]?.updateGeometry();
+ recalcBA();
+ scheduleSave();
+}
+
+
+function addPlaneGeometry(chart){
+ const geometry=new THREE.BufferGeometry();
+ geometry.setAttribute('position',new THREE.BufferAttribute(new Float32Array(18),3));
+ const material=new THREE.MeshBasicMaterial({color:0xffc12b,side:THREE.DoubleSide,transparent:true,opacity:.12,depthWrite:false});
+ chart.planeMesh=new THREE.Mesh(geometry,material);chart.planeMesh.renderOrder=2;chart.scene.add(chart.planeMesh);
+ const gridGeometry=new THREE.BufferGeometry();gridGeometry.setAttribute('position',new THREE.BufferAttribute(new Float32Array(22*2*3),3));
+ chart.planeGrid=new THREE.LineSegments(gridGeometry,new THREE.LineBasicMaterial({color:0xeeaa0a,transparent:true,opacity:.8,depthWrite:false}));
+ chart.planeGrid.renderOrder=3;chart.scene.add(chart.planeGrid);
+}
+function updatePlaneGeometry(chart){
+ const [p1,p2,p3]=matrices[chart.id];
+ const u=new THREE.Vector3().subVectors(p2,p1),v=new THREE.Vector3().subVectors(p3,p1);
+ if(u.clone().cross(v).length()<1e-7 || u.length()<1e-7 || v.length()<1e-7){chart.planeMesh.visible=false;chart.planeGrid.visible=false;return;}
+ chart.planeMesh.visible=true;chart.planeGrid.visible=true;
+ const center=p1.clone().add(p2).add(p3).multiplyScalar(1/3);
+ u.normalize().multiplyScalar(2.75);v.normalize().multiplyScalar(2.75);
+ const corner=(a,b)=>center.clone().addScaledVector(u,a).addScaledVector(v,b);
+ const [a,b,c,d]=[corner(-1,-1),corner(1,-1),corner(1,1),corner(-1,1)];
+ const tri=[a,b,c,a,c,d],attr=chart.planeMesh.geometry.attributes.position;
+ tri.forEach((p,i)=>attr.setXYZ(i,p.x,p.y,p.z));attr.needsUpdate=true;chart.planeMesh.geometry.computeBoundingSphere();
+ const gridAttr=chart.planeGrid.geometry.attributes.position;let idx=0;
+ const put=p=>{gridAttr.setXYZ(idx++,p.x,p.y,p.z);};
+ for(let i=0;i<=10;i++){
+  const t=-1+2*i/10;
+  put(corner(t,-1));put(corner(t,1));
+  put(corner(-1,t));put(corner(1,t));
+ }
+ // 11 lines in each direction = 22 line segments = 44 vertices.
+ gridAttr.needsUpdate=true;chart.planeGrid.geometry.computeBoundingSphere();
+}
+const BASE_POS=new THREE.Vector3(8,-9,7),BASE_UP=new THREE.Vector3(0,0,1);
+const baseCamera=new THREE.PerspectiveCamera();baseCamera.position.copy(BASE_POS);baseCamera.up.copy(BASE_UP);baseCamera.lookAt(0,0,0);
+const BASE_Q=baseCamera.quaternion.clone(),INV_BASE_Q=BASE_Q.clone().invert();
+const DEG=180/Math.PI;
+function currentAngles(){
+ const chart=charts.a;if(!chart)return [0,0,0];
+ const q=chart.camera.quaternion.clone().multiply(INV_BASE_Q);
+ const e=new THREE.Euler().setFromQuaternion(q,'XYZ');
+ return [e.x*DEG,e.y*DEG,e.z*DEG];
+}
+function syncCameraFrom(source){
+ if(cameraSyncing)return;cameraSyncing=true;
+ for(const chart of Object.values(charts)){
+  if(chart===source)continue;
+  chart.camera.position.copy(source.camera.position);
+  chart.camera.up.copy(source.camera.up);
+  chart.camera.quaternion.copy(source.camera.quaternion);
+  chart.controls.target.copy(source.controls.target);
+  chart.refreshWarning();
+ }
+ cameraSyncing=false;updateRays();scheduleSave();
+}
+function setAnglesByRay(axis,value){
+ const angles=currentAngles();angles[axis]=value;
+ const rot=new THREE.Euler(...angles.map(v=>v/DEG),'XYZ');
+ const q=new THREE.Quaternion().setFromEuler(rot);
+ cameraSyncing=true;
+ for(const chart of Object.values(charts)){
+  chart.camera.position.copy(BASE_POS).applyQuaternion(q);
+  chart.camera.up.copy(BASE_UP).applyQuaternion(q);
+  chart.camera.lookAt(0,0,0);
+  chart.refreshWarning();
+ }
+ cameraSyncing=false;updateRays();scheduleSave();
+}
+const rayElements=[];
+function installRays(){
+ const wrap=document.getElementById('angle-rays');
+ for(let axis=0;axis<3;axis++){
+  const name=['X','Y','Z'][axis];
+  const dial=document.createElement('div');dial.className='ray-dial';dial.setAttribute('role','slider');
+  dial.setAttribute('aria-label',`View ${name}`);dial.setAttribute('aria-valuemin','-180');dial.setAttribute('aria-valuemax','180');
+  dial.setAttribute('tabindex','0');
+  dial.innerHTML=`<svg viewBox="0 0 94 86" aria-hidden="true"><circle cx="46" cy="43" r="35" fill="none" stroke="#d3e0ed" stroke-width="1.4"/><line x1="46" y1="43" x2="83" y2="43" stroke="#8a9bab" stroke-width="2.5"/><line class="moving-ray" x1="46" y1="43" x2="81" y2="43" stroke="#2667b2" stroke-width="3.5" stroke-linecap="round"/><circle cx="46" cy="43" r="3.5" fill="#53677b"/><circle class="ray-tip" cx="81" cy="43" r="7" fill="#2667b2" stroke="white" stroke-width="2"/></svg><span class="ray-info"><strong>${name}</strong><output>0°</output></span>`;
+  wrap.appendChild(dial);rayElements[axis]=dial;
+  let pointerId=null,rayStart=null;
+  const doPointer=event=>{
+   const rect=dial.querySelector('svg').getBoundingClientRect();
+   const x=(event.clientX-rect.left)*94/rect.width-46;
+   const y=43-(event.clientY-rect.top)*86/rect.height;
+   if(Math.hypot(x,y)<4)return;
+   let degrees=Math.atan2(y,x)*DEG;
+   setAnglesByRay(axis,degrees);
+  };
+  dial.addEventListener('pointerdown',ev=>{if(pointerId!==null)return;rayStart=snapshotState();pointerId=ev.pointerId;ev.preventDefault();dial.setPointerCapture(pointerId);doPointer(ev);});
+  dial.addEventListener('pointermove',ev=>{if(ev.pointerId===pointerId){ev.preventDefault();doPointer(ev);}});
+  const finish=ev=>{if(ev.pointerId===pointerId){pointerId=null;recordAction(rayStart);rayStart=null;}};dial.addEventListener('pointerup',finish);dial.addEventListener('pointercancel',finish);dial.addEventListener('lostpointercapture',finish);
+  dial.addEventListener('keydown',ev=>{if(ev.key==='ArrowRight'||ev.key==='ArrowUp'||ev.key==='ArrowLeft'||ev.key==='ArrowDown'){
+   ev.preventDefault();const before=snapshotState();const delta=(ev.key==='ArrowRight'||ev.key==='ArrowUp')?1:-1;setAnglesByRay(axis,currentAngles()[axis]+delta*(ev.shiftKey?10:5));recordAction(before);}});
+ }
+ updateRays();
+}
+function updateRays(){
+ if(rayElements.length<3)return;
+ const angles=currentAngles();
+ angles.forEach((degree,i)=>{
+  const dial=rayElements[i];if(!dial)return;
+  const angle=degree/DEG,x=46+35*Math.cos(angle),y=43-35*Math.sin(angle);
+  const line=dial.querySelector('.moving-ray'),tip=dial.querySelector('.ray-tip');
+  line.setAttribute('x2',x.toFixed(2));line.setAttribute('y2',y.toFixed(2));
+  tip.setAttribute('cx',x.toFixed(2));tip.setAttribute('cy',y.toFixed(2));
+  dial.querySelector('output').textContent=`${Math.round(degree)}°`;
+  dial.setAttribute('aria-valuenow',String(Math.round(degree)));
+ });
+}
+
+class Chart{
+ constructor(id){
+  this.id=id;this.editable=id!=='ba';this.mode='xy';this.selected=-1;this.gesture=null;this.lastOrbit=false;
+  this.root=document.getElementById('plot-'+id);this.status=document.getElementById('status-'+id);
+  this.live=document.getElementById('live-'+id);
+  this.scene=new THREE.Scene();this.scene.background=new THREE.Color(0xffffff);
+  this.camera=new THREE.OrthographicCamera(-4.7,4.7,4.7,-4.7,.1,100);
+  this.camera.up.set(0,0,1);this.resetCamera(true);
+  try{this.renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'default'});}catch(err){this.status.textContent='WebGL недоступен';throw err;}
+  this.renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+  this.renderer.setSize(Math.max(1,this.root.clientWidth),Math.max(1,this.root.clientHeight),false);
+  this.root.prepend(this.renderer.domElement);this.canvas=this.renderer.domElement;
+  this.labelsCanvas=document.createElement('canvas');
+  this.labelsCanvas.className='axis-label-layer';
+  this.labelsCanvas.setAttribute('aria-hidden','true');
+  this.root.appendChild(this.labelsCanvas);
+  this.labelsCtx=this.labelsCanvas.getContext('2d');
+  this.controls=new OrbitControls(this.camera,this.canvas);
+  this.controls.enableDamping=true;this.controls.dampingFactor=.09;this.controls.enablePan=false;
+  this.controls.minZoom=.55;this.controls.maxZoom=5;this.controls.target.set(0,0,0);this.controls.update();
+  this.scene.add(newGrid('xy',-3),newGrid('xz',3),newGrid('yz',-3));
+  for(const [a,b] of [[[-3,0,0],[3,0,0]],[[0,-3,0],[0,3,0]],[[0,0,-3],[0,0,3]]]){
+   const line=new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(...a),new THREE.Vector3(...b)]),new THREE.LineBasicMaterial({color:0x273747,depthTest:false}));
+   line.renderOrder=1;this.scene.add(line);
+  }
+  this.shafts=[];this.markers=[];
+  for(let c=0;c<3;c++){
+   const line=newLine(COLORS[c]);line.renderOrder=6;this.scene.add(line);this.shafts.push(line);
+   const marker=new THREE.Mesh(new THREE.SphereGeometry(.125,22,14),new THREE.MeshBasicMaterial({color:COLORS[c],depthTest:false}));
+   marker.renderOrder=11;this.scene.add(marker);this.markers.push(marker);
+  }
+  this.halo=new THREE.Mesh(new THREE.SphereGeometry(.195,24,16),new THREE.MeshBasicMaterial({color:0x1c3040,transparent:true,opacity:.22,depthTest:false,depthWrite:false}));
+  this.halo.renderOrder=10;this.halo.visible=false;this.scene.add(this.halo);
+  if(id==='b')addBGeometry(this);
+  else addPlaneGeometry(this);
+  if(this.editable)this.attachPointerEvents();
+  else this.attachResultRotation();
+  this.controls.addEventListener('change',()=>{if(webReady&&!cameraSyncing)syncCameraFrom(this);});
+  this.controls.addEventListener('start',()=>{if(!this.gesture){this._orbitStart=snapshotState();this.lastOrbit=true;this.status.textContent=t('orbitStart');}});
+  this.controls.addEventListener('end',()=>{if(this.lastOrbit&&!this.gesture){this.status.textContent=t('orbitEnd');this.lastOrbit=false;recordAction(this._orbitStart);this._orbitStart=null;}});
+  new ResizeObserver(()=>this.resize()).observe(this.root);
+  this.resize();this.updateGeometry();
+  this.status.textContent=t(this.editable?'readyEdit':'readyResult');
+ }
+ resetCamera(beforeControls=false){
+  this.camera.position.set(8,-9,7);this.camera.lookAt(0,0,0);this.camera.zoom=1;this.camera.updateProjectionMatrix();
+  if(!beforeControls){this.controls.target.set(0,0,0);this.controls.update();this.status.textContent=t('resetViewDone');this.refreshWarning();}
+ }
+ resize(){
+  const w=Math.max(1,this.root.clientWidth),h=Math.max(1,this.root.clientHeight),aspect=w/h,span=4.6;
+  if(aspect>=1){this.camera.left=-span*aspect;this.camera.right=span*aspect;this.camera.top=span;this.camera.bottom=-span;}
+  else{this.camera.left=-span;this.camera.right=span;this.camera.top=span/aspect;this.camera.bottom=-span/aspect;}
+  this.camera.updateProjectionMatrix();this.renderer.setSize(w,h,false);
+  const dpr=Math.min(window.devicePixelRatio||1,2);
+  this.labelsCanvas.width=Math.round(w*dpr);
+  this.labelsCanvas.height=Math.round(h*dpr);
+  this.labelsCtx.setTransform(dpr,0,0,dpr,0,0);
+  this.refreshWarning();
+ }
+ updateGeometry(){
+  for(let c=0;c<3;c++){
+   updateLine(this.shafts[c],origin,matrices[this.id][c]);this.markers[c].position.copy(matrices[this.id][c]);
+  }
+  if(this.planeMesh)updatePlaneGeometry(this);
+  if(this.cubeLines){
+   const vs=CUBE.vs.map(v=>projectBPoint(v));
+   for(const {i,j,line} of this.cubeLines)updateLine(line,vs[i],vs[j]);
+  }
+  this.halo.visible=this.selected>=0;
+  if(this.selected>=0)this.halo.position.copy(matrices[this.id][this.selected]);
+  if(this.live){
+   if(this.selected<0)this.live.textContent=LABEL[this.id]+': '+t('tapMarker');
+   else{const p=matrices[this.id][this.selected];this.live.textContent=`${LABEL[this.id]}${this.selected+1} = (${format(p.x)}, ${format(p.y)}, ${format(p.z)})`;}
+  }
+  this.refreshWarning();
+ }
+ screenPos(point){
+  const p=point.clone().project(this.camera),b=this.canvas.getBoundingClientRect();
+  return {x:b.left+(p.x+1)*b.width/2,y:b.top+(1-p.y)*b.height/2,z:p.z};
+ }
+ pickMarker(ev){
+  const rad=ev.pointerType==='mouse'?21:31;let found=-1,best=rad*rad;
+  for(let i=0;i<3;i++){
+   const p=this.screenPos(matrices[this.id][i]);if(p.z < -1||p.z>1)continue;
+   const d2=(p.x-ev.clientX)**2+(p.y-ev.clientY)**2;
+   if(d2<=best){best=d2;found=i;}
+  }
+  return found;
+ }
+ screenBasis(point){
+  const base=this.screenPos(point);
+  return [new THREE.Vector3(1,0,0),new THREE.Vector3(0,1,0),new THREE.Vector3(0,0,1)]
+   .map(axis=>{const p=this.screenPos(point.clone().add(axis));return [p.x-base.x,p.y-base.y];});
+ }
+ constrainedPosition(g,dx,dy){
+  const next=g.start.clone(),a=g.basis[0],b=g.basis[1],z=g.basis[2];
+  const damping=12*12,maximum=.035*Math.hypot(dx,dy);
+  if(g.mode==='xy'){
+   const aa=a[0]*a[0]+a[1]*a[1]+damping,bb=b[0]*b[0]+b[1]*b[1]+damping;
+   const ab=a[0]*b[0]+a[1]*b[1],ra=a[0]*dx+a[1]*dy,rb=b[0]*dx+b[1]*dy,det=aa*bb-ab*ab;
+   let u=(ra*bb-rb*ab)/det,v=(rb*aa-ra*ab)/det;
+   const dist=Math.hypot(u,v);if(dist>maximum&&dist>1e-9){u*=maximum/dist;v*=maximum/dist;}
+   next.x=clamp(g.start.x+u,-3,3);next.y=clamp(g.start.y+v,-3,3);
+  }else{
+   const den=z[0]*z[0]+z[1]*z[1]+damping;
+   const dz=clamp((z[0]*dx+z[1]*dy)/den,-maximum,maximum);
+   next.z=clamp(g.start.z+dz,-3,3);
+  }
+  return next;
+ }
+ endGesture(ev){
+  if(!this.gesture||(ev&&ev.pointerId!==this.gesture.pointerId))return;
+  try{if(this.canvas.hasPointerCapture(this.gesture.pointerId))this.canvas.releasePointerCapture(this.gesture.pointerId);}catch(_){ }
+  recordAction(this.gesture.undoStart);
+  this.gesture=null;this.controls.enabled=true;this.root.classList.remove('dragging');
+  if(this.selected>=0)this.status.textContent=`${LABEL[this.id]}${this.selected+1}: ${t('vectorFinished')}`;
+ }
+ attachPointerEvents(){
+  const canvas=this.canvas;
+  canvas.addEventListener('pointerdown',ev=>{
+   if(this.gesture){ev.preventDefault();ev.stopImmediatePropagation();return;}
+   if(ev.pointerType==='mouse'&&ev.button!==0)return;
+   const i=this.pickMarker(ev);
+   if(i<0){this.lastOrbit=true;return;}
+   ev.preventDefault();ev.stopImmediatePropagation();this.selected=i;this.controls.enabled=false;
+   this.gesture={pointerId:ev.pointerId,index:i,mode:this.mode,start:matrices[this.id][i].clone(),x:ev.clientX,y:ev.clientY,basis:this.screenBasis(matrices[this.id][i]),undoStart:snapshotState()};
+   canvas.setPointerCapture(ev.pointerId);this.root.classList.add('dragging');
+   this.status.textContent=`${t('selectedMarker')} ${LABEL[this.id]}${i+1}. ${this.mode.toUpperCase()}; ${t('cameraStill')}`;
+   this.updateGeometry();
+  },true);
+  canvas.addEventListener('pointermove',ev=>{
+   if(!this.gesture||ev.pointerId!==this.gesture.pointerId)return;
+   ev.preventDefault();ev.stopImmediatePropagation();
+   const dx=ev.clientX-this.gesture.x,dy=ev.clientY-this.gesture.y;
+   matrices[this.id][this.gesture.index].copy(this.constrainedPosition(this.gesture,dx,dy));
+   updateFromMatrix(this.id);
+  },true);
+  canvas.addEventListener('pointerup',ev=>{
+   if(!this.gesture||ev.pointerId!==this.gesture.pointerId)return;
+   ev.preventDefault();ev.stopImmediatePropagation();this.endGesture(ev);
+  },true);
+  canvas.addEventListener('pointercancel',ev=>{if(!this.gesture||ev.pointerId!==this.gesture.pointerId)return;ev.stopImmediatePropagation();this.endGesture(ev);},true);
+  canvas.addEventListener('lostpointercapture',ev=>{if(this.gesture&&ev.pointerId===this.gesture.pointerId)this.endGesture(ev);});
+ }
+ attachResultRotation(){
+  // Result BA has no editable endpoints. XY uses the existing OrbitControls;
+  // Z rotates the common camera around the world Z axis without changing data.
+  const canvas=this.canvas;
+  const touches=new Map();
+  let lastX=null, lastDistance=null,rotationStart=null;
+  const distance=()=>{
+   const a=[...touches.values()];
+   return a.length>=2?Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y):null;
+  };
+  canvas.addEventListener('pointerdown',ev=>{
+   if(this.mode!=='z'||(ev.pointerType==='mouse'&&ev.button!==0))return;
+   ev.preventDefault();ev.stopImmediatePropagation();
+   if(touches.size===0)rotationStart=snapshotState();
+   touches.set(ev.pointerId,{x:ev.clientX,y:ev.clientY});
+   try{canvas.setPointerCapture(ev.pointerId);}catch(_){}
+   lastX=touches.size===1?ev.clientX:null;
+   lastDistance=distance();
+  },true);
+  canvas.addEventListener('pointermove',ev=>{
+   if(!touches.has(ev.pointerId))return;
+   ev.preventDefault();ev.stopImmediatePropagation();
+   touches.set(ev.pointerId,{x:ev.clientX,y:ev.clientY});
+   if(touches.size>=2){
+    const next=distance();
+    if(lastDistance&&next){
+     this.camera.zoom=clamp(this.camera.zoom*next/lastDistance,.55,5);
+     this.camera.updateProjectionMatrix();
+     for(const chart of Object.values(charts)){
+      if(chart!==this){chart.camera.zoom=this.camera.zoom;chart.camera.updateProjectionMatrix();}
+     }
+     syncCameraFrom(this);
+    }
+    lastDistance=next;lastX=null;
+   }else if(lastX!==null){
+    const delta=ev.clientX-lastX;lastX=ev.clientX;
+    const axis=new THREE.Vector3(0,0,1);
+    const q=new THREE.Quaternion().setFromAxisAngle(axis,-delta*.009);
+    const offset=this.camera.position.clone().sub(this.controls.target).applyQuaternion(q);
+    this.camera.position.copy(this.controls.target).add(offset);
+    this.camera.up.applyQuaternion(q);
+    this.camera.lookAt(this.controls.target);
+    syncCameraFrom(this);
+   }else lastX=ev.clientX;
+   this.status.textContent=t('orbitEnd');
+  },true);
+  const release=ev=>{
+   if(!touches.has(ev.pointerId))return;
+   ev.preventDefault();ev.stopImmediatePropagation();
+   touches.delete(ev.pointerId);
+   if(touches.size===0){recordAction(rotationStart);rotationStart=null;}
+   lastDistance=distance();lastX=touches.size===1?[...touches.values()][0].x:null;
+   try{if(canvas.hasPointerCapture(ev.pointerId))canvas.releasePointerCapture(ev.pointerId);}catch(_){}
+  };
+  canvas.addEventListener('pointerup',release,true);
+  canvas.addEventListener('pointercancel',release,true);
+ }
+ setMode(next){
+  this.mode=next;
+  for(const btn of document.querySelectorAll(`.mode[data-chart="${this.id}"]`)){
+   const active=btn.dataset.mode===next;btn.classList.toggle('active',active);btn.setAttribute('aria-pressed',String(active));
+  }
+  this.status.textContent=this.id==='ba'?(next==='xy'?'BA: XY · '+t('orbitStart'):'BA: Z · '+t('orbitStart')):t(next==='xy'?'modeXY':'modeZ');
+  scheduleSave();
+ }
+ refreshWarning(){
+  if(!this.editable)return;
+  const warning=document.getElementById('warn-'+this.id);
+  if(!warning)return;
+  // The markers are spheres of radius 0.125 world units. In orthographic
+  // projection their visible circle radius is independent of orientation.
+  // Warn only when two actual visible circles touch or overlap on screen.
+  const points=matrices[this.id].map(p=>this.screenPos(p));
+  const radius=.125*this.root.clientHeight*this.camera.zoom/(this.camera.top-this.camera.bottom);
+  let intersects=false;
+  for(let i=0;i<3&&!intersects;i++)for(let j=i+1;j<3;j++){
+   const d=Math.hypot(points[i].x-points[j].x,points[i].y-points[j].y);
+   if(d<=2*radius){intersects=true;break;}
+  }
+  warning.hidden=!intersects;
+ }
+ drawAxisLabels(){
+  // Only the 2D annotation layer is changed in 03d. The 3D scene, gesture
+  // handlers, view synchronization and matrices are exactly as in 03b.
+  const ctx=this.labelsCtx;if(!ctx)return;
+  const w=this.root.clientWidth,h=this.root.clientHeight;
+  ctx.clearRect(0,0,w,h);
+  if(w<70||h<70)return;
+  const camera=this.camera;
+  const v=new THREE.Vector3();
+  const xy=(x,y,z)=>{
+   v.set(x,y,z).project(camera);
+   return {x:(v.x+1)*w/2,y:(1-v.y)*h/2,visible:v.z>=-1&&v.z<=1};
+  };
+  const origin2=xy(0,0,0);
+  const cubeCorners=[
+   [-3,-3,-3],[-3,3,-3],[-3,-3,3],
+   [3,3,-3],[-3,3,3],[3,3,3],[3,-3,-3]
+  ].map(p=>xy(...p));
+  // All candidates are REAL outside edges of one of the three rendered grids:
+  // XY(z=-3), XZ(y=3), YZ(x=-3). We never draw numbers on imaginary edges.
+  const grids={
+   x:[[-3,-3],[3,-3],[3,3]],
+   y:[[-3,-3],[3,-3],[-3,3]],
+   z:[[-3,-3],[-3,3],[3,3]]
+  };
+  const edgePoint=(axis,fix,k)=>axis==='x'?xy(k,fix[0],fix[1]):
+    axis==='y'?xy(fix[0],k,fix[1]):xy(fix[0],fix[1],k);
+  const padding=10, tickSize=11.5, labelOffset=17;
+  const bbox=(value,x,y,size)=>({
+   x:x-Math.max(11,String(value).length*size*.34)-2,
+   y:y-size*.65-2,
+   x2:x+Math.max(11,String(value).length*size*.34)+2,
+   y2:y+size*.65+2
+  });
+  const fits=b=>b.x>=padding&&b.x2<=w-padding&&b.y>=padding&&b.y2<=h-padding;
+  const overlaps=(a,b)=>a.x<b.x2&&a.x2>b.x&&a.y<b.y2&&a.y2>b.y;
+  const reserved=[{x:6,y:4,x2:Math.min(235,w*.70),y2:39}]; // live readout at top-left
+  // Keep the current 03b placement of X/Y/Z letters. Reserve their space
+  // before distributing numeric graduations so digits do not collide with them.
+  const letters=[];
+  for(const [letter,axis] of [['X','x'],['Y','y'],['Z','z']]){
+   const p=axis==='x'?xy(3,0,0):axis==='y'?xy(0,3,0):xy(0,0,3);
+   const n=axis==='x'?xy(-3,0,0):axis==='y'?xy(0,-3,0):xy(0,0,-3);
+   const chosen=Math.abs(p.x-n.x)>5?(p.x>n.x?p:n):(p.y<n.y?p:n);
+   const dx=chosen.x-origin2.x,dy=chosen.y-origin2.y;
+   const d=Math.max(1,Math.hypot(dx,dy));
+   const x=Math.max(11,Math.min(w-11,chosen.x+dx/d*14));
+   const y=Math.max(11,Math.min(h-11,chosen.y+dy/d*14));
+   if(chosen.visible){letters.push({value:letter,x,y,size:17});reserved.push(bbox(letter,x,y,17));}
+  }
+  const options={};
+  for(const axis of ['x','y','z']){
+   options[axis]=[];
+   for(const fixed of grids[axis]){
+    const a=edgePoint(axis,fixed,-3),b=edgePoint(axis,fixed,3);
+    if(!a.visible||!b.visible)continue;
+    const dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy);
+    if(len<27)continue;
+    let nx=-dy/len,ny=dx/len;
+    // Choose the outward normal of a real rendered grid edge.
+    if((origin2.x-a.x)*nx+(origin2.y-a.y)*ny>0){nx=-nx;ny=-ny;}
+    const outside=Math.max(...cubeCorners.map(p=>(p.x-a.x)*nx+(p.y-a.y)*ny));
+    if(outside>1.5)continue;
+    let ticks;
+    if(len/6>=31)ticks=[-3,-2,-1,0,1,2,3];
+    else if(len/3>=30)ticks=[-3,-1,1,3];
+    else if(len/2>=29)ticks=[-3,0,3];
+    else ticks=[-3,3];
+    // On narrow phone graphs the OUTSIDE of a Z edge often lies beyond
+    // the canvas boundary. Keep the same visible, outermost vertical edge,
+    // but put its numbers a few pixels INSIDE the plot when necessary.
+    // X and Y retain exactly the successful 03c outside-label strategy.
+    const sides=axis==='z'?[1,-1]:[1];
+    for(const side of sides){
+     const items=[];
+     for(const k of ticks){
+      const p=edgePoint(axis,fixed,k);
+      const x=p.x+nx*labelOffset*side;
+      const y=p.y+ny*labelOffset*side;
+      const box=bbox(k,x,y,tickSize);
+      if(p.visible&&fits(box)&&!reserved.some(r=>overlaps(box,r)))
+       items.push({value:String(k),x,y,size:tickSize,box});
+     }
+     if(items.length){
+      const insetPenalty=side<0?45:0;
+      const score=items.length*100+Math.min(len,500)*.08-insetPenalty;
+      options[axis].push({items,score});
+     }
+    }
+   }
+   options[axis].sort((a,b)=>b.score-a.score);
+  }
+  // There are at most three outside edges per axis: evaluate <=27 layouts.
+  // The joint choice avoids crowding at corners where numeric axes meet.
+  let best=null;
+  // Prefer a valid Z scale over extra X/Y labels. In the old layout
+  // Z could be silently omitted on both desktops and phones.
+  const candidates=axis=>[...(options[axis]||[]),{items:[],score:axis==='z'?-1000:-200}];
+  for(const x of candidates('x'))for(const y of candidates('y'))for(const z of candidates('z')){
+   const combined=[...x.items,...y.items,...z.items];
+   let clashes=0;
+   for(let i=0;i<combined.length;i++)for(let j=i+1;j<combined.length;j++)
+    if(overlaps(combined[i].box,combined[j].box))clashes++;
+   const score=x.score+y.score+z.score-clashes*180;
+   if(!best||score>best.score)best={score,axes:[x,y,z]};
+  }
+  const occupied=[...reserved];
+  const draw=(value,x,y,size,emph=false)=>{
+   ctx.font=`${emph?900:750} ${size}px system-ui, Arial, sans-serif`;
+   ctx.textAlign='center';ctx.textBaseline='middle';
+   ctx.lineJoin='round';ctx.strokeStyle='#ffffff';ctx.lineWidth=emph?4.5:3.8;
+   ctx.strokeText(value,x,y);
+   ctx.fillStyle=emph?'#152b40':'#273f55';ctx.fillText(value,x,y);
+  };
+  // Paint Z first so a neighboring X/Y tick cannot hide the entire Z scale.
+  if(best)for(const selected of [best.axes[2],best.axes[0],best.axes[1]])for(const item of selected.items){
+   if(occupied.some(r=>overlaps(item.box,r)))continue;
+   occupied.push(item.box);
+   draw(item.value,item.x,item.y,item.size);
+  }
+  for(const letter of letters)draw(letter.value,letter.x,letter.y,letter.size,true);
+ }
+ animate(){this.controls.update();this.refreshWarning();this.renderer.render(this.scene,this.camera);this.drawAxisLabels();}
+}
+
+// Durable state: local browser auto-save, portable JSON, and gesture-level undo.
+// Never store BA directly: the result is always recomputed as B × A.
+const STATE_KEY='linear-matrix-transformation-web-03e-state';
+const HISTORY_LIMIT=60;
+const undoHistory=[];
+let persistenceReady=false,restoringState=false,saveTimer=null;
+const finite=v=>typeof v==='number'&&Number.isFinite(v);
+const roundState=v=>Number(v.toFixed(8));
+function snapshotState(){
+ const c=charts.a?.camera;
+ return {version:1,
+  a:matrices.a.map(p=>[roundState(p.x),roundState(p.y),roundState(p.z)]),
+  b:matrices.b.map(p=>[roundState(p.x),roundState(p.y),roundState(p.z)]),
+  camera:c?{
+   position:c.position.toArray().map(roundState),up:c.up.toArray().map(roundState),
+   zoom:roundState(c.zoom),target:charts.a.controls.target.toArray().map(roundState)
+  }:null,
+  modes:Object.fromEntries(['a','b','ba'].map(id=>[id,charts[id]?.mode||'xy'])),
+  language:lang
+ };
+}
+function isValidState(value){
+ if(!value||value.version!==1)return false;
+ const validColumns=cols=>Array.isArray(cols)&&cols.length===3&&cols.every(col=>
+  Array.isArray(col)&&col.length===3&&col.every(n=>finite(n)&&Math.abs(n)<=3));
+ const xyz=arr=>Array.isArray(arr)&&arr.length===3&&arr.every(n=>finite(n)&&Math.abs(n)<10000);
+ if(!validColumns(value.a)||!validColumns(value.b))return false;
+ const c=value.camera;
+ if(!c||!xyz(c.position)||!xyz(c.up)||!xyz(c.target)||!finite(c.zoom)||c.zoom<.55||c.zoom>5)return false;
+ if(Math.hypot(...c.up)<.001||Math.hypot(...c.position.map((n,i)=>n-c.target[i]))<.001)return false;
+ return true;
+}
+function setSaveMessage(msg){
+ const out=document.getElementById('save-status');if(out)out.textContent=msg;
+}
+function scheduleSave(){
+ if(!persistenceReady||restoringState)return;
+ clearTimeout(saveTimer);
+ saveTimer=setTimeout(()=>{
+  try{localStorage.setItem(STATE_KEY,JSON.stringify(snapshotState()));setSaveMessage(t('autoSaved'));}
+  catch(_){setSaveMessage(t('storageUnavailable'));}
+ },400);
+}
+function storeImmediately(){
+ if(!persistenceReady||restoringState)return;
+ clearTimeout(saveTimer);
+ try{localStorage.setItem(STATE_KEY,JSON.stringify(snapshotState()));setSaveMessage(t('autoSaved'));}
+ catch(_){setSaveMessage(t('storageUnavailable'));}
+}
+function recordAction(before){
+ if(!before||restoringState)return;
+ if(JSON.stringify(before)===JSON.stringify(snapshotState()))return;
+ undoHistory.push(before);
+ if(undoHistory.length>HISTORY_LIMIT)undoHistory.shift();
+ updateUndoButton();storeImmediately();
+}
+function updateUndoButton(){document.getElementById('undo-action').disabled=undoHistory.length===0;}
+function applyState(state){
+ if(!isValidState(state))throw new Error('Invalid matrix state');
+ restoringState=true;
+ try{
+  for(const id of ['a','b'])for(let i=0;i<3;i++)matrices[id][i].fromArray(state[id][i]);
+  for(const id of ['a','b','ba']){
+   const ch=charts[id],c=state.camera;
+   ch.camera.position.fromArray(c.position);
+   ch.camera.up.fromArray(c.up);
+   ch.controls.target.fromArray(c.target);
+   ch.camera.zoom=c.zoom;
+   ch.camera.lookAt(ch.controls.target);
+   ch.camera.updateProjectionMatrix();
+   const damping=ch.controls.enableDamping;ch.controls.enableDamping=false;
+   ch.controls.update();ch.controls.enableDamping=damping;
+   ch.setMode(['xy','z'].includes(state.modes?.[id])?state.modes[id]:'xy');
+   ch.selected=-1;ch.updateGeometry();ch.refreshWarning();
+  }
+  for(const id of ['a','b'])renderMatrix(id);
+  recalcBA();syncCameraFrom(charts.a);
+  if(['ru','en','he'].includes(state.language))setLanguage(state.language);
+  updateRays();
+ }finally{restoringState=false;}
+}
+function undoAction(){
+ if(!undoHistory.length){setSaveMessage(t('nothingToUndo'));return;}
+ const state=undoHistory.pop();
+ applyState(state);updateUndoButton();storeImmediately();
+}
+function exportState(){
+ const data=JSON.stringify(snapshotState(),null,2);
+ const url=URL.createObjectURL(new Blob([data],{type:'application/json'}));
+ const a=document.createElement('a');a.href=url;a.download='Linear_Matrix_Transformation_state.json';
+ document.body.appendChild(a);a.click();a.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),30000);
+ setSaveMessage(t('exported'));
+}
+function setupStateControls(){
+ document.getElementById('undo-action').addEventListener('click',undoAction);
+ document.getElementById('save-state').addEventListener('click',exportState);
+ const chooser=document.getElementById('load-state-input');
+ document.getElementById('load-state').addEventListener('click',()=>chooser.click());
+ chooser.addEventListener('change',async()=>{
+  const file=chooser.files?.[0];if(!file)return;
+  try{
+   if(file.size>250000)throw new Error('File too large');
+   const parsed=JSON.parse(await file.text());
+   if(!isValidState(parsed))throw new Error('Invalid state');
+   const before=snapshotState();applyState(parsed);recordAction(before);storeImmediately();setSaveMessage(t('imported'));
+  }catch(err){setSaveMessage(t('invalidFile'));}
+  finally{chooser.value='';}
+ });
+ window.addEventListener('keydown',ev=>{
+  if((ev.ctrlKey||ev.metaKey)&&!ev.shiftKey&&ev.key.toLowerCase()==='z' &&
+     !['INPUT','TEXTAREA'].includes(document.activeElement?.tagName)){
+   ev.preventDefault();undoAction();
+  }
+ });
+}
+function restoreBrowserState(){
+ let saved=null;
+ try{saved=localStorage.getItem(STATE_KEY);}catch(_){setSaveMessage(t('storageUnavailable'));return;}
+ if(!saved)return;
+ try{const parsed=JSON.parse(saved);applyState(parsed);setSaveMessage(t('restored'));}
+ catch(_){setSaveMessage(t('invalidFile'));}
+}
+let webReady=false,cameraSyncing=false;
+for(const id of ['a','b','ba']){charts[id]=new Chart(id);}
+webReady=true;
+syncCameraFrom(charts.a);
+installRays();
+renderMatrix('a');renderMatrix('b');recalcBA();
+for(const btn of document.querySelectorAll('.mode'))btn.addEventListener('click',()=>charts[btn.dataset.chart].setMode(btn.dataset.mode));
+for(const btn of document.querySelectorAll('[data-reset]'))btn.addEventListener('click',()=>{
+ const before=snapshotState();
+ const id=btn.dataset.reset;
+ if(id==='camera-ba'){charts.ba.resetCamera();syncCameraFrom(charts.ba);recordAction(before);return;}
+ const source=id==='a'?initialA:initialB;
+ for(let c=0;c<3;c++)matrices[id][c].copy(source[c]);
+ charts[id].selected=-1;updateFromMatrix(id);
+ charts[id].status.textContent=`${t('matrixRestored')} ${id.toUpperCase()}.`;recordAction(before);
+});
+let expanded=null;
+function setExpanded(id){
+ const current=document.getElementById('panel-'+id);
+ if(expanded===id){current.classList.remove('expanded');document.body.classList.remove('has-expanded');expanded=null;}
+ else{
+  if(expanded)document.getElementById('panel-'+expanded).classList.remove('expanded');
+  current.classList.add('expanded');document.body.classList.add('has-expanded');expanded=id;
+ }
+ for(const btn of document.querySelectorAll('[data-expand]'))btn.textContent=btn.dataset.expand===expanded?t('collapse'):t('expand');
+ requestAnimationFrame(()=>{for(const chart of Object.values(charts))chart.resize();});
+}
+for(const btn of document.querySelectorAll('[data-expand]'))btn.addEventListener('click',()=>setExpanded(btn.dataset.expand));
+window.addEventListener('keydown',ev=>{if(ev.key==='Escape'){if(document.getElementById('help-dialog').open)document.getElementById('help-dialog').close();else if(expanded)setExpanded(expanded);}});
+
+function setLanguage(next){
+ lang=next;document.documentElement.lang=next;document.title=t('appTitle')+' · Web 03f';
+ for(const el of document.querySelectorAll('[data-i18n]'))el.textContent=t(el.dataset.i18n);
+ for(const el of document.querySelectorAll('[data-lang]'))el.classList.toggle('active',el.dataset.lang===next);
+ const body=document.getElementById('help-body');body.innerHTML=I18N[next].helpHtml;body.dir=next==='he'?'rtl':'ltr';
+ for(const btn of document.querySelectorAll('[data-expand]'))btn.textContent=btn.dataset.expand===expanded?t('collapse'):t('expand');
+ scheduleSave();
+}
+for(const btn of document.querySelectorAll('[data-lang]'))btn.addEventListener('click',()=>setLanguage(btn.dataset.lang));
+const helpDialog=document.getElementById('help-dialog');
+document.getElementById('open-help').addEventListener('click',()=>helpDialog.showModal());
+document.getElementById('close-help').addEventListener('click',()=>helpDialog.close());
+helpDialog.addEventListener('click',ev=>{if(ev.target===helpDialog)helpDialog.close();});
+setLanguage('ru');
+setupStateControls();restoreBrowserState();persistenceReady=true;
+let focusedInput=null;
+function updateVisualViewport(){
+ const vv=window.visualViewport;
+ const top=vv?vv.offsetTop:0;
+ const height=vv?vv.height:window.innerHeight;
+ document.documentElement.style.setProperty('--visual-top',top+'px');
+ document.documentElement.style.setProperty('--visual-height',height+'px');
+ const occlusion=Math.max(0,window.innerHeight-(top+height));
+ document.documentElement.style.setProperty('--keyboard-occlusion',occlusion+'px');
+ if(focusedInput){ensureInputVisible();}
+ if(expanded)requestAnimationFrame(()=>charts[expanded]?.resize());
+}
+function ensureInputVisible(){
+ if(!focusedInput || document.activeElement!==focusedInput)return;
+ const vv=window.visualViewport;
+ const top=(vv?.offsetTop??0)+20;
+ const bottom=(vv?(vv.offsetTop+vv.height):window.innerHeight)-Math.min(65,Math.max(30,(vv?.height??innerHeight)*.10));
+ const rect=focusedInput.getBoundingClientRect();
+ let delta=0;
+ if(rect.bottom>bottom)delta=rect.bottom-bottom;
+ else if(rect.top<top)delta=rect.top-top;
+ if(!delta)return;
+ const panel=focusedInput.closest('.panel.expanded');
+ if(panel)panel.scrollTop+=delta;
+ else window.scrollBy({top:delta,left:0,behavior:'instant'});
+}
+for(const input of document.querySelectorAll('.matrix input')){
+ input.addEventListener('focus',()=>{
+  focusedInput=input;document.body.classList.add('keyboard-focus');
+  updateVisualViewport();
+  [60,210,450,750].forEach(ms=>setTimeout(()=>{
+   if(document.activeElement===input){updateVisualViewport();ensureInputVisible();}
+  },ms));
+ });
+ input.addEventListener('blur',()=>{
+  if(focusedInput!==input)return;focusedInput=null;document.body.classList.remove('keyboard-focus');
+  updateVisualViewport();
+ });
+}
+window.visualViewport?.addEventListener('resize',updateVisualViewport);
+window.visualViewport?.addEventListener('scroll',updateVisualViewport);
+window.addEventListener('resize',updateVisualViewport);
+updateVisualViewport();
+
+function loop(){requestAnimationFrame(loop);for(const chart of Object.values(charts))chart.animate();}
+loop();
+</script>
+<script>setTimeout(()=>{for(const id of ['a','b','ba']){const status=document.getElementById('status-'+id);if(status?.textContent==='Загрузка…')status.textContent='Three.js не загрузилась. Проверьте интернет и обновите страницу.';}},9000);</script>
+</body>
+</html>
