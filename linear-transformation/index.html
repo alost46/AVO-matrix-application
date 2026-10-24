@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="color-scheme" content="light">
-<title>Линейное преобразование матриц · Web 03f</title>
+<title>Линейное преобразование матриц · Web 03q</title>
 <style>
 :root{font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif;color:#203245;background:#eef3f7}*{box-sizing:border-box}
 body{margin:0}.shell{max-width:1520px;margin:auto;padding:13px 14px calc(38px + var(--keyboard-occlusion,0px))}
@@ -26,14 +26,14 @@ button{font:inherit;cursor:pointer;touch-action:manipulation}.mode{border:0;bord
 .plot canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}.plot.dragging canvas{cursor:grabbing}
 .axis-label-layer{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
 .overlay{position:absolute;top:8px;left:8px;max-width:calc(100% - 16px);font-size:11px;line-height:1.4;background:#fffffff0;border:1px solid #d7e2ea;border-radius:7px;padding:6px 8px;pointer-events:none;font-weight:650;z-index:3}
-.status{font-size:12px;line-height:1.45;padding:8px 10px;min-height:51px;color:#325372;border-top:1px solid #e6ecf1}
+.plane-equation{font-size:12px;line-height:1.55;padding:8px 10px;background:#f8fbff;border-top:1px solid #dce5ed;color:#233f57;font-variant-numeric:tabular-nums}.plane-equation strong{font-weight:750}.plane-equation .formula{display:block;direction:ltr;text-align:left;white-space:normal;overflow-wrap:anywhere;font-family:ui-monospace,Consolas,monospace;margin-top:2px}.status{font-size:12px;line-height:1.45;padding:8px 10px;min-height:51px;color:#325372;border-top:1px solid #e6ecf1}
 .data{border-top:1px solid #dce5ed;padding:10px 12px 13px}.data h2{font-size:14px;margin:0 0 4px}.data p{font-size:11px;color:#62768a;margin:0 0 7px;line-height:1.5}
 .matrix{border-collapse:separate;border-spacing:3px;width:100%;font-variant-numeric:tabular-nums;table-layout:fixed}
 .matrix td,.matrix input{background:#f7f9fb;border:1px solid #e1e7ee;border-radius:5px;text-align:center;font-size:14px;font-weight:740;padding:8px 2px;width:100%;min-width:0}
 .matrix input{font-family:inherit;outline-offset:1px}.matrix input:focus{background:#fff;border-color:#497ca5;outline:1px solid #497ca5}
 .red{color:#e02d26}.blue{color:#2255dc}.green{color:#008c45}
 .warning{font-size:12px;font-weight:800;color:#6a4500;background:#fff0bb;border:1px solid #ddbb56;border-radius:8px;padding:8px 10px;margin:8px 0 0}
-.view-panel{background:#fff;border:1px solid #cbd6e0;border-radius:12px;padding:10px 12px;margin-bottom:12px}.view-heading{display:flex;flex-wrap:wrap;gap:10px;align-items:baseline;margin-bottom:7px}.view-heading strong{font-size:14px}.view-heading small{font-size:11px;color:#617589}.rays{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}.ray-dial{border:1px solid #d8e3ec;border-radius:9px;background:#fafcfe;display:flex;align-items:center;justify-content:center;gap:8px;min-height:83px;touch-action:none;user-select:none;cursor:pointer}.ray-dial:active{background:#e7f3ff}.ray-dial svg{width:93px;height:75px;overflow:visible;touch-action:none;flex:none}.ray-info{display:flex;flex-direction:column;gap:3px;align-items:center}.ray-info strong{font-size:16px}.ray-info output{color:#265c90;font-size:14px;font-variant-numeric:tabular-nums;font-weight:700}.help-dialog{border:1px solid #a9bac8;border-radius:13px;width:min(640px,calc(100vw - 26px));max-height:85dvh;padding:0;background:white;box-shadow:0 15px 70px #0006}.help-dialog::backdrop{background:#1d2e43aa}.help-inner{padding:18px 22px;overflow:auto;max-height:85dvh}.help-inner h2{font-size:19px;margin:0 0 10px}.help-inner p{font-size:14px;line-height:1.65}.help-close{float:right;font-size:19px;background:white;border:1px solid #bac9d6;border-radius:8px;padding:4px 11px}.legend{font-size:11px;display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;color:#51667b}.legend b{font-size:14px}
+.view-panel{background:#fff;border:1px solid #cbd6e0;border-radius:12px;padding:10px 12px;margin-bottom:12px}.view-heading{display:flex;flex-wrap:wrap;gap:10px;align-items:baseline;margin-bottom:7px}.view-heading strong{font-size:14px}.view-heading small{font-size:11px;color:#617589}.rays{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}.ray-dial{border:1px solid #d8e3ec;border-radius:9px;background:#fafcfe;display:flex;align-items:center;justify-content:center;gap:8px;min-height:83px;touch-action:none;user-select:none;cursor:pointer}.ray-dial:active{background:#e7f3ff}.ray-dial svg{width:93px;height:75px;overflow:visible;touch-action:none;flex:none}.ray-info{display:flex;flex-direction:column;gap:3px;align-items:center}.ray-info strong{font-size:16px}.ray-info input.angle-input{width:65px;max-width:100%;box-sizing:border-box;border:1px solid #b7c9da;border-radius:5px;background:#fff;color:#265c90;font-size:14px;font-variant-numeric:tabular-nums;font-weight:700;text-align:center;padding:3px 1px;touch-action:manipulation;user-select:text;cursor:text}.ray-info input.angle-input:focus{outline:2px solid #2667b2;outline-offset:1px}.ray-info output{color:#265c90;font-size:14px;font-variant-numeric:tabular-nums;font-weight:700}.help-dialog{border:1px solid #a9bac8;border-radius:13px;width:min(640px,calc(100vw - 26px));max-height:85dvh;padding:0;background:white;box-shadow:0 15px 70px #0006}.help-dialog::backdrop{background:#1d2e43aa}.help-inner{padding:18px 22px;overflow:auto;max-height:85dvh}.help-inner h2{font-size:19px;margin:0 0 10px}.help-inner p{font-size:14px;line-height:1.65}.help-close{float:right;font-size:19px;background:white;border:1px solid #bac9d6;border-radius:8px;padding:4px 11px}.legend{font-size:11px;display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;color:#51667b}.legend b{font-size:14px}
 .help{font-size:13px;line-height:1.55;color:#435a6f;background:#fff;border:1px solid #d0dbe4;border-radius:12px;padding:11px 14px;margin-top:12px}
 .note{font-size:11px;color:#768698;margin:10px 2px 0}
 .panel.expanded{position:fixed;left:9px;right:9px;top:calc(var(--visual-top,0px) + 9px);height:calc(var(--visual-height,100dvh) - 18px);z-index:50;display:flex;flex-direction:column;overflow:auto;border-radius:12px;box-shadow:0 0 0 9999px #15283dcc}
@@ -44,37 +44,82 @@ body.has-expanded{overflow:hidden}.matrix input{scroll-margin-top:40px;scroll-ma
 @media(max-width:690px){.rays{gap:5px}.ray-dial{gap:0;min-height:72px}.ray-dial svg{width:57px;height:66px}.ray-info strong{font-size:13px}.ray-info output{font-size:12px}.view-panel{padding:8px 5px}.view-heading{padding:0 5px}.top-actions{margin-left:0}.lead{font-size:12px}}
 @media(min-width:691px) and (max-width:1130px){.ray-dial svg{height:67px}}
 .flag-icon{display:block;width:27px;height:18px;border:1px solid #b8c8d5;border-radius:2px;box-sizing:content-box}
+
+.sync-tools{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;font-size:12px;color:#51667b}
+#sync-view{font-size:14px;padding:10px 13px}
+#sync-view.active,.edit-toggle.active{background:#2466a5;color:#fff;border-color:#2466a5}
+.view-panel[hidden],.local-rays[hidden]{display:none!important}
+.local-rays{background:#f7fbff;border-bottom:1px solid #dce5ed;padding:8px 10px}
+/* Local ray controls are visible for a chart being edited, even at normal size. */
+.panel .plot canvas{touch-action:pan-y;cursor:default}
+.panel.editing .plot canvas{touch-action:none;cursor:grab}
+.panel.editing .plot.dragging canvas{cursor:grabbing}
+/* Fit X/Y/Z ray handles and numeric inputs above compact chart panels. */
+.local-rays .rays{gap:4px}
+.local-rays .ray-dial{gap:2px;min-width:0;padding:2px 0}
+.local-rays .ray-dial svg{width:56px;height:62px}
+.local-rays .ray-info{min-width:0}
+.local-rays .ray-info input.angle-input{width:52px;font-size:13px}
+@media(max-width:690px){.local-rays .ray-dial svg{width:52px;height:61px}.local-rays .ray-info input.angle-input{width:47px}}
+
+/* 03p: mobile expanded plot gets a genuinely larger drawing surface.
+   The panel itself scrolls, instead of squeezing the plot to fit the matrix. */
+@media(max-width:690px){
+ .panel.expanded .plot{flex:0 0 auto;height:clamp(420px,68dvh,650px);min-height:420px}
+ .panel.expanded .bar,.panel.expanded .local-rays,.panel.expanded .plane-equation{flex:0 0 auto}
+ body.keyboard-focus .panel.expanded .plot{height:min(31dvh,230px)!important;min-height:125px}
+}
+/* 03q: AVO signature next to application title. */
+.header-brand{display:flex;align-items:center;gap:9px;min-width:0}
+.header-brand img{display:block;width:27px;height:35px;object-fit:contain;flex:none}
+.header-brand h1{margin:0}
+@media(max-width:690px){.header-brand img{width:24px;height:31px}.header-brand{gap:6px}}
 </style>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}</script>
+<link rel="icon" type="image/png" sizes="32x32" href="./favicon-32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
+<link rel="manifest" href="./manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="AVO LT">
+<meta name="theme-color" content="#f4f8fc">
 </head>
 <body>
 <main class="shell">
-<header><h1 data-i18n="appTitle">Линейное преобразование матриц</h1><span class="tag" data-i18n="edition">Веб-версия 03f</span><div class="top-actions"><button class="language-button active" data-lang="ru" aria-label="Русский"><svg class="flag-icon" viewBox="0 0 60 40" aria-hidden="true" focusable="false"><rect width="60" height="40" fill="#fff"/><rect y="13.333" width="60" height="13.334" fill="#1746a2"/><rect y="26.667" width="60" height="13.333" fill="#d52b1e"/></svg></button><button class="language-button" data-lang="en" aria-label="English"><svg class="flag-icon" viewBox="0 0 60 40" aria-hidden="true" focusable="false"><rect width="60" height="40" fill="#012169"/><path d="M0 0L60 40M60 0L0 40" stroke="#fff" stroke-width="12"/><path d="M0 0L60 40M60 0L0 40" stroke="#c8102e" stroke-width="4.5"/><path d="M30 0V40M0 20H60" stroke="#fff" stroke-width="14"/><path d="M30 0V40M0 20H60" stroke="#c8102e" stroke-width="7"/></svg></button><button class="language-button" data-lang="he" aria-label="עברית"><svg class="flag-icon" viewBox="0 0 60 40" aria-hidden="true" focusable="false"><rect width="60" height="40" fill="#fff"/><rect y="5" width="60" height="5" fill="#0038b8"/><rect y="30" width="60" height="5" fill="#0038b8"/><path d="M30 14 L36.3 25 H23.7 Z M30 26 L23.7 15 H36.3 Z" fill="none" stroke="#0038b8" stroke-width="1.7" stroke-linejoin="round"/></svg></button><button class="help-btn" id="open-help" aria-label="Help">?</button></div></header>
+<header><div class="header-brand"><img src="./avo-logo.png" alt="AVO" width="27" height="35"><h1 data-i18n="appTitle">Линейное преобразование матриц</h1></div><span class="tag" data-i18n="edition">Веб-версия 03q</span><div class="top-actions"><button class="language-button active" data-lang="ru" aria-label="Русский"><svg class="flag-icon" viewBox="0 0 60 40" aria-hidden="true" focusable="false"><rect width="60" height="40" fill="#fff"/><rect y="13.333" width="60" height="13.334" fill="#1746a2"/><rect y="26.667" width="60" height="13.333" fill="#d52b1e"/></svg></button><button class="language-button" data-lang="en" aria-label="English"><svg class="flag-icon" viewBox="0 0 60 40" aria-hidden="true" focusable="false"><rect width="60" height="40" fill="#012169"/><path d="M0 0L60 40M60 0L0 40" stroke="#fff" stroke-width="12"/><path d="M0 0L60 40M60 0L0 40" stroke="#c8102e" stroke-width="4.5"/><path d="M30 0V40M0 20H60" stroke="#fff" stroke-width="14"/><path d="M30 0V40M0 20H60" stroke="#c8102e" stroke-width="7"/></svg></button><button class="language-button" data-lang="he" aria-label="עברית"><svg class="flag-icon" viewBox="0 0 60 40" aria-hidden="true" focusable="false"><rect width="60" height="40" fill="#fff"/><rect y="5" width="60" height="5" fill="#0038b8"/><rect y="30" width="60" height="5" fill="#0038b8"/><path d="M30 14 L36.3 25 H23.7 Z M30 26 L23.7 15 H36.3 Z" fill="none" stroke="#0038b8" stroke-width="1.7" stroke-linejoin="round"/></svg></button><button class="help-btn" id="open-help" aria-label="Help">?</button></div></header>
 <div class="state-toolbar" role="group" aria-label="Save and restore matrices">
  <button type="button" id="undo-action" data-i18n="undo" disabled>Отменить</button>
+ <button type="button" id="restart-action" data-i18n="restart">Начать заново</button>
  <button type="button" id="save-state" data-i18n="saveFile">Сохранить в файл</button>
  <button type="button" id="load-state" data-i18n="loadFile">Загрузить из файла</button>
  <input type="file" id="load-state-input" accept=".json,application/json" hidden>
  <output id="save-status" role="status" aria-live="polite">Состояние автоматически сохраняется в этом браузере.</output>
 </div>
 <p class="lead" data-i18n="lead">Перемещайте цветные маркеры для изменения A и B. Вращайте график за свободное место. Числовые матрицы можно изменять прямо здесь.</p>
-<section class="view-panel" aria-label="View angles"><div class="view-heading"><strong data-i18n="direction">Направление обзора X / Y / Z</strong><small data-i18n="rayInstruction">Потяните синий конец луча. Поворот любого графика меняет все три вида.</small></div><div class="rays" id="angle-rays"></div></section>
+<div class="sync-tools"><button type="button" id="sync-view" class="btn" aria-pressed="false" data-i18n="sameView">Одинаковый обзор</button><span data-i18n="syncHint">Общие лучи управляют всеми тремя графиками</span></div>
+<section class="view-panel" id="global-view-panel" hidden aria-label="View angles"><div class="view-heading"><strong data-i18n="direction">Направление обзора X / Y / Z</strong><small data-i18n="rayInstruction">Потяните синий конец луча. Поворот любого графика меняет все три вида.</small></div><div class="rays" id="angle-rays"></div></section>
 <div class="layout">
  <section class="panel" id="panel-a" aria-label="Объект A">
-  <div class="bar"><strong data-i18n="objectA">Объект A</strong><div class="mode-group"><button class="mode active" data-chart="a" data-mode="xy">XY</button><button class="mode" data-chart="a" data-mode="z">Z</button></div><button class="btn" data-expand="a" data-i18n="expand">Увеличить</button><button class="btn" data-reset="a" data-i18n="resetA">Сброс A</button></div>
+  <div class="bar"><strong data-i18n="objectA">Объект A</strong><div class="mode-group"><button class="mode active" data-chart="a" data-mode="xy">XY</button><button class="mode" data-chart="a" data-mode="z">Z</button></div><button class="btn edit-toggle" data-edit="a" aria-pressed="false" data-i18n="edit">Редактировать</button><button class="btn" data-expand="a" data-i18n="expand">Увеличить</button><button class="btn" data-reset="a" data-i18n="resetA">Сброс A</button></div>
+  <section class="local-rays" id="local-rays-a" hidden><div class="rays" id="angle-rays-a"></div></section>
   <div class="plot" id="plot-a"><div class="overlay" id="live-a">A: коснитесь цветного кружка</div></div>
+  <div class="plane-equation" id="plane-equation-a" aria-live="polite"></div>
   <div class="status" id="status-a" role="status">Загрузка…</div>
   <div class="data"><h2 data-i18n="matrixA">Матрица A</h2><p data-i18n="descrA">Цветные столбцы соответствуют векторам. Числа редактируемы.</p><table class="matrix"><tbody id="matrix-a"></tbody></table><div class="warning" id="warn-a" data-i18n="warnA" hidden>Маркеры A соприкасаются. Поверните обзор.</div></div>
  </section>
  <section class="panel" id="panel-b" aria-label="Преобразование B">
-  <div class="bar"><strong data-i18n="transformB">Преобразование B</strong><div class="mode-group"><button class="mode active" data-chart="b" data-mode="xy">XY</button><button class="mode" data-chart="b" data-mode="z">Z</button></div><button class="btn" data-expand="b" data-i18n="expand">Увеличить</button><button class="btn" data-reset="b" data-i18n="resetB">Сброс B</button></div>
+  <div class="bar"><strong data-i18n="transformB">Преобразование B</strong><div class="mode-group"><button class="mode active" data-chart="b" data-mode="xy">XY</button><button class="mode" data-chart="b" data-mode="z">Z</button></div><button class="btn edit-toggle" data-edit="b" aria-pressed="false" data-i18n="edit">Редактировать</button><button class="btn" data-expand="b" data-i18n="expand">Увеличить</button><button class="btn" data-reset="b" data-i18n="resetB">Сброс B</button></div>
+  <section class="local-rays" id="local-rays-b" hidden><div class="rays" id="angle-rays-b"></div></section>
   <div class="plot" id="plot-b"><div class="overlay" id="live-b">B: коснитесь цветного кружка</div></div>
+  <div class="plane-equation" id="plane-equation-b" aria-live="polite"></div>
   <div class="status" id="status-b" role="status">Загрузка…</div>
   <div class="data"><h2 data-i18n="matrixB">Матрица B</h2><p data-i18n="descrB">Цветные рёбра задают преобразование куба. Числа редактируемы.</p><table class="matrix"><tbody id="matrix-b"></tbody></table><div class="warning" id="warn-b" data-i18n="warnB" hidden>Маркеры B соприкасаются. Поверните обзор.</div></div>
  </section>
  <section class="panel" id="panel-ba" aria-label="Результат BA">
-  <div class="bar"><strong data-i18n="resultBA">Результат BA = B × A</strong><div class="mode-group" aria-label="BA view rotation"><button class="mode active" data-chart="ba" data-mode="xy" aria-pressed="true">XY</button><button class="mode" data-chart="ba" data-mode="z" aria-pressed="false">Z</button></div><button class="btn" data-expand="ba" data-i18n="expand">Увеличить</button><button class="btn" data-reset="camera-ba" data-i18n="resetView">Вернуть обзор</button></div>
+  <div class="bar"><strong data-i18n="resultBA">Результат BA = B × A</strong><div class="mode-group" aria-label="BA view rotation"><button class="mode active" data-chart="ba" data-mode="xy" aria-pressed="true">XY</button><button class="mode" data-chart="ba" data-mode="z" aria-pressed="false">Z</button></div><button class="btn edit-toggle" data-edit="ba" aria-pressed="false" data-i18n="edit">Редактировать</button><button class="btn" data-expand="ba" data-i18n="expand">Увеличить</button><button class="btn" data-reset="camera-ba" data-i18n="resetView">Вернуть обзор</button></div>
+  <section class="local-rays" id="local-rays-ba" hidden><div class="rays" id="angle-rays-ba"></div></section>
   <div class="plot" id="plot-ba"><div class="overlay">BA: результат вычисляется автоматически</div></div>
+  <div class="plane-equation" id="plane-equation-ba" aria-live="polite"></div>
   <div class="status" id="status-ba" role="status">Изменение A или B перестраивает этот график.</div>
   <div class="data"><h2 data-i18n="matrixBA">Матрица BA</h2><p data-i18n="descrBA">Результат B × A, вычисляется автоматически.</p><table class="matrix"><tbody id="matrix-ba"></tbody></table></div>
  </section>
@@ -90,13 +135,13 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 const COLORS=[0xf02a28,0x2454e7,0x008c45];
 const CSS=['red','blue','green'];
 const I18N={
-ru:{appTitle:'Линейное преобразование матриц',undo:'Отменить',saveFile:'Сохранить в файл',loadFile:'Загрузить из файла',autoSaved:'Автоматически сохранено в этом браузере',restored:'Восстановлено сохранённое состояние',exported:'Файл состояния сохранён',imported:'Состояние загружено из файла',invalidFile:'Не удалось загрузить: неверный файл состояния',storageUnavailable:'Автосохранение недоступно; используйте файл JSON',nothingToUndo:'Пока нечего отменять',tapMarker:'коснитесь цветного кружка',readyEdit:'Готово. Цветной кружок: перемещение; свободное место: вращение.',readyResult:'BA = B × A. Можно вращать и масштабировать обзор.',orbitStart:'Вращается только обзор; матрицы не изменяются.',orbitEnd:'Обзор изменён; координаты векторов прежние.',resetViewDone:'Обзор восстановлен. Матрицы не изменились.',vectorFinished:'перемещение закончено; сетка осталась на месте.',selectedMarker:'Выбран',cameraStill:'камера неподвижна',modeXY:'XY: изменяются X и Y, Z сохраняется.',modeZ:'Z: изменяется только Z.',matrixRestored:'Восстановлена матрица',edition:'Веб-версия 03f',lead:'Перемещайте цветные маркеры для изменения матриц A и B. Вращайте график за свободное место. Числа можно редактировать непосредственно под графиками.',direction:'Направление обзора X / Y / Z',rayInstruction:'Потяните синий конец луча. Поворот любого графика меняет все три вида.',objectA:'Объект A',transformB:'Преобразование B',resultBA:'Результат BA = B × A',expand:'Увеличить',collapse:'Свернуть',resetA:'Сброс A',resetB:'Сброс B',resetView:'Вернуть обзор',matrixA:'Матрица A',matrixB:'Матрица B',matrixBA:'Матрица BA',descrA:'Цветные столбцы соответствуют векторам. Числа редактируемы.',descrB:'Цветные рёбра задают преобразование куба. Числа редактируемы.',descrBA:'Результат B × A, вычисляется автоматически.',warnA:'Маркеры A соприкасаются. Поверните обзор, чтобы разделить их.',warnB:'Маркеры B соприкасаются. Поверните обзор, чтобы разделить их.',quickHelp:'Вектор перемещается при неподвижной сетке; поворот сетки не меняет координаты векторов. Полная справка: кнопка ?.',footnote:'Требуется интернет для Three.js. Состояние автоматически сохраняется в текущем браузере; для другого устройства используйте файл JSON.',helpTitle:'Как работать с Matrix Transformer',helpHtml:`<p><b>Матрицы:</b> изменяйте A и B перетаскиванием концов векторов или вводом чисел в таблицы. BA = B × A пересчитывается автоматически.</p><p><b>Режим XY</b> меняет X и Y выбранного вектора; <b>Z</b> меняет только Z. В момент захвата маркера сетки и обзор неподвижны. При вращении графика координаты векторов остаются неизменными.</p><p><b>Направление обзора:</b> три луча X, Y, Z управляют общими углами всех графиков. Поворот мышью или пальцем на любом графике обновляет лучи и обзор других графиков.</p><p><b>На телефоне:</b> прокручивайте страницу, проводя пальцем вне графика. Если кружки соприкасаются, поверните сетку, чтобы они разошлись.</p><p><b>Клавиатура:</b> при редактировании чисел страница поднимает активную строку матрицы выше экранной клавиатуры. Если открыт увеличенный график, область рисунка временно уменьшается, оставляя место таблице.</p><p><b>Сохранение:</b> матрицы и обзор сохраняются автоматически в этом браузере. Кнопка «Отменить» отменяет последнее действие. Для переноса на другой телефон сохраните файл JSON и загрузите его там.</p><p><b>Плоскости:</b> жёлтая сетка на A и BA проходит через концы трёх соответствующих векторов. На B показаны исходный куб и преобразованный параллелепипед.</p>`},
-en:{appTitle:'Linear Matrix Transformation',undo:'Undo',saveFile:'Save to file',loadFile:'Load from file',autoSaved:'Saved automatically in this browser',restored:'Previous session restored',exported:'State file downloaded',imported:'State loaded from file',invalidFile:'Cannot load: invalid state file',storageUnavailable:'Browser autosave unavailable; use JSON file',nothingToUndo:'Nothing to undo yet',tapMarker:'touch a colored endpoint',readyEdit:'Ready. Drag a colored endpoint to edit; drag free space to orbit.',readyResult:'BA = B × A. The view can be rotated and zoomed.',orbitStart:'Only the view rotates; matrices stay unchanged.',orbitEnd:'View rotated; vector coordinates unchanged.',resetViewDone:'View reset; matrices unchanged.',vectorFinished:'drag finished; grid remained still.',selectedMarker:'Selected',cameraStill:'camera stays still',modeXY:'XY: X and Y change; Z stays fixed.',modeZ:'Z: only Z changes.',matrixRestored:'Reset matrix',edition:'Web version 03f',lead:'Drag colored endpoints to edit A and B. Drag empty plot space to orbit. Edit numeric matrices directly below each plot.',direction:'View direction X / Y / Z',rayInstruction:'Drag a blue ray tip. Orbiting any plot synchronizes the view of all three.',objectA:'Object A',transformB:'Transformation B',resultBA:'Result BA = B × A',expand:'Expand',collapse:'Collapse',resetA:'Reset A',resetB:'Reset B',resetView:'Reset view',matrixA:'Matrix A',matrixB:'Matrix B',matrixBA:'Matrix BA',descrA:'Colored columns correspond to vectors. Values are editable.',descrB:'Colored edges transform the unit cube. Values are editable.',descrBA:'Computed B × A; updates automatically.',warnA:'A markers are touching. Rotate the view to separate them.',warnB:'B markers are touching. Rotate the view to separate them.',quickHelp:'Dragging a vector keeps the grid still; orbiting does not change vector coordinates. Tap ? for full Help.',footnote:'Three.js needs internet. State is saved in this browser; export JSON to move it to another device.',helpTitle:'Matrix Transformer Help',helpHtml:`<p><b>Matrices:</b> edit A and B by dragging vector endpoints or typing into the matrices. BA = B × A updates automatically.</p><p><b>XY</b> changes X and Y only; <b>Z</b> changes Z only. While grabbing a marker the grid and view remain still. When orbiting, vector coordinates remain unchanged.</p><p><b>View direction:</b> drag the X, Y or Z ray tips. All three graphs share one orientation. Orbiting any graph updates the rays and the other graphs.</p><p><b>On phones:</b> scroll the page by dragging outside the plots. If markers touch, rotate the view to separate them.</p><p><b>Keyboard:</b> the focused matrix row is scrolled above the on-screen keyboard. In expanded mode, the plot temporarily shrinks to leave room for the matrix.</p><p><b>Saving:</b> matrices and view are saved automatically in this browser. Undo reverts the last action. Export/import a JSON file to move the state to another device.</p><p><b>Planes:</b> the yellow mesh in A and BA passes through the three vector endpoints. B displays the original unit cube and its transformed parallelepiped.</p>`},
-he:{appTitle:'טרנספורמציה לינארית של מטריצות',undo:'בטל',saveFile:'שמור לקובץ',loadFile:'טען מקובץ',autoSaved:'נשמר אוטומטית בדפדפן זה',restored:'המצב הקודם שוחזר',exported:'קובץ המצב נשמר',imported:'המצב נטען מקובץ',invalidFile:'לא ניתן לטעון: קובץ לא תקין',storageUnavailable:'שמירה אוטומטית אינה זמינה; השתמשו בקובץ JSON',nothingToUndo:'אין מה לבטל',tapMarker:'געו בנקודה צבעונית',readyEdit:'מוכן. גררו נקודה צבעונית לשינוי ושטח פנוי לסיבוב.',readyResult:'BA = B × A. אפשר לסובב ולהגדיל את התצוגה.',orbitStart:'התצוגה מסתובבת; המטריצות לא משתנות.',orbitEnd:'התצוגה השתנתה; קואורדינטות הווקטורים לא השתנו.',resetViewDone:'התצוגה אופסה; המטריצות לא השתנו.',vectorFinished:'הגרירה הסתיימה; הרשת נשארה במקומה.',selectedMarker:'נבחר',cameraStill:'המצלמה לא זזה',modeXY:'XY: רק X ו-Y משתנים.',modeZ:'Z: רק Z משתנה.',matrixRestored:'מטריצה אופסה',edition:'גרסת רשת 03f',lead:'גררו את הנקודות הצבעוניות כדי לשנות את המטריצות A ו-B. גררו שטח פנוי לסיבוב התצוגה. אפשר לערוך מספרים מתחת לגרפים.',direction:'כיוון התצוגה X / Y / Z',rayInstruction:'גררו את קצה הקרן הכחולה. סיבוב גרף אחד משנה את תצוגת שלושתם.',objectA:'עצם A',transformB:'טרנספורמציה B',resultBA:'תוצאה BA = B × A',expand:'הגדל',collapse:'הקטן',resetA:'איפוס A',resetB:'איפוס B',resetView:'איפוס תצוגה',matrixA:'מטריצה A',matrixB:'מטריצה B',matrixBA:'מטריצה BA',descrA:'העמודות הצבעוניות תואמות לווקטורים. ניתן לערוך מספרים.',descrB:'הקצוות הצבעוניים מגדירים את שינוי הקובייה. ניתן לערוך מספרים.',descrBA:'תוצאת B × A מתעדכנת באופן אוטומטי.',warnA:'הסמנים של A נוגעים זה בזה. סובבו את התצוגה כדי להפריד.',warnB:'הסמנים של B נוגעים זה בזה. סובבו את התצוגה כדי להפריד.',quickHelp:'גרירת וקטור אינה מזיזה את הרשת; סיבוב התצוגה אינו משנה את המטריצות. לעזרה: ?',footnote:'נדרש אינטרנט עבור Three.js. המצב נשמר בדפדפן זה; להעברה למכשיר אחר השתמשו בקובץ JSON.',helpTitle:'עזרה ל-Matrix Transformer',helpHtml:`<p><b>מטריצות:</b> אפשר לשנות את A ואת B באמצעות גרירת קצות הווקטורים או הקלדת מספרים. BA = B × A מחושבת אוטומטית.</p><p><b>מצב XY</b> משנה רק X ו-Y; <b>מצב Z</b> משנה רק Z. בעת גרירת סמן הרשת נשארת במקום. סיבוב התצוגה אינו משנה את קואורדינטות הווקטורים.</p><p><b>כיוון התצוגה:</b> גררו את קצות הקרניים X, Y, Z. לכל שלושת הגרפים כיוון תצוגה משותף.</p><p><b>בטלפון:</b> גללו את הדף באמצעות גרירה מחוץ לגרפים. אם הסמנים נוגעים, סובבו את התצוגה כדי להפריד ביניהם.</p><p><b>מקלדת:</b> בעת עריכת מספר המטריצה תגלול כך שהשורה הנבחרת תישאר מעל המקלדת. במצב מוגדל הגרף יקטן זמנית.</p><p><b>שמירה:</b> המטריצות והתצוגה נשמרות אוטומטית בדפדפן זה. ביטול הפעולה האחרונה זמין; ניתן להעביר מצב במכשירים עם קובץ JSON.</p><p><b>מישורים:</b> רשת צהובה בגרפים A ו-BA עוברת דרך קצות שלושת הווקטורים. בגרף B מוצגות הקובייה המקורית והצורה המותמרת.</p>`}}
+ru:{sameView:'Одинаковый обзор',syncHint:'Общие лучи действуют на все три графика',edit:'Редактировать',appTitle:'Линейное преобразование матриц',undo:'Отменить',restart:'Начать заново',restartDone:'Начальное состояние восстановлено',saveFile:'Сохранить в файл',loadFile:'Загрузить из файла',autoSaved:'Автоматически сохранено в этом браузере',restored:'Восстановлено сохранённое состояние',exported:'Файл состояния сохранён',imported:'Состояние загружено из файла',invalidFile:'Не удалось загрузить: неверный файл состояния',storageUnavailable:'Автосохранение недоступно; используйте файл JSON',nothingToUndo:'Пока нечего отменять',tapMarker:'коснитесь цветного кружка',readyEdit:'Готово. Цветной кружок: перемещение; свободное место: вращение.',readyResult:'BA = B × A. Можно вращать и масштабировать обзор.',orbitStart:'Вращается только обзор; матрицы не изменяются.',orbitEnd:'Обзор изменён; координаты векторов прежние.',resetViewDone:'Обзор восстановлен. Матрицы не изменились.',vectorFinished:'перемещение закончено; сетка осталась на месте.',selectedMarker:'Выбран',cameraStill:'камера неподвижна',modeXY:'XY: изменяются X и Y, Z сохраняется.',modeZ:'Z: изменяется только Z.',matrixRestored:'Восстановлена матрица',edition:'Веб-версия 03q',lead:'Кнопка «Редактировать» разрешает жесты внутри выбранного графика. «Одинаковый обзор» задаёт общие углы только лучами.',direction:'Направление обзора X / Y / Z',rayInstruction:'Значения X/Y/Z показывают абсолютные углы камеры (в градусах). При одинаковом обзоре лучи меняют все три графика, иначе только выбранный.',objectA:'Объект A',transformB:'Преобразование B',resultBA:'Результат BA = B × A',expand:'Увеличить',collapse:'Свернуть',resetA:'Сброс A',resetB:'Сброс B',resetView:'Вернуть обзор',matrixA:'Матрица A',matrixB:'Матрица B',matrixBA:'Матрица BA',descrA:'Цветные столбцы соответствуют векторам. Числа редактируемы.',descrB:'Цветные рёбра задают преобразование куба. Числа редактируемы.',descrBA:'Результат B × A, вычисляется автоматически.',warnA:'Маркеры A соприкасаются. Поверните обзор, чтобы разделить их.',warnB:'Маркеры B соприкасаются. Поверните обзор, чтобы разделить их.',quickHelp:'Вектор перемещается при неподвижной сетке; поворот сетки не меняет координаты векторов. Полная справка: кнопка ?.',footnote:'Требуется интернет для Three.js. Состояние автоматически сохраняется в текущем браузере; для другого устройства используйте файл JSON.',helpTitle:'Как работать с Matrix Transformer',helpHtml:`<p><b>Редактирование:</b> сначала нажмите «Редактировать» у нужного графика. Пока кнопка выключена, рисунок не мешает прокручивать страницу. Разрешено редактирование одного графика за раз.</p><p><b>Одинаковый обзор:</b> при включении общие лучи X/Y/Z управляют углами всех трёх графиков. Вращение пальцем запрещено, но с включённым редактированием можно перемещать векторы и менять масштаб. На увеличенном графике лучи дублируются.</p><p><b>Независимый обзор:</b> когда общий режим выключен, у каждого графика свои углы. При включении «Редактировать» лучи X/Y/Z и поля числового ввода появляются над выбранным графиком, даже без увеличения. Лучи также доступны на увеличенном графике. Обзор можно вращать при включённом редактировании.</p>`},
+en:{sameView:'Same view',syncHint:'Shared rays control all three plots',edit:'Edit',appTitle:'Linear Matrix Transformation',undo:'Undo',restart:'Start over',restartDone:'Initial state restored',saveFile:'Save to file',loadFile:'Load from file',autoSaved:'Saved automatically in this browser',restored:'Previous session restored',exported:'State file downloaded',imported:'State loaded from file',invalidFile:'Cannot load: invalid state file',storageUnavailable:'Browser autosave unavailable; use JSON file',nothingToUndo:'Nothing to undo yet',tapMarker:'touch a colored endpoint',readyEdit:'Ready. Drag a colored endpoint to edit; drag free space to orbit.',readyResult:'BA = B × A. The view can be rotated and zoomed.',orbitStart:'Only the view rotates; matrices stay unchanged.',orbitEnd:'View rotated; vector coordinates unchanged.',resetViewDone:'View reset; matrices unchanged.',vectorFinished:'drag finished; grid remained still.',selectedMarker:'Selected',cameraStill:'camera stays still',modeXY:'XY: X and Y change; Z stays fixed.',modeZ:'Z: only Z changes.',matrixRestored:'Reset matrix',edition:'Web version 03q',lead:'Tap Edit to enable gestures within a plot. Same view sets all angles through shared rays only.',direction:'View direction X / Y / Z',rayInstruction:'X/Y/Z show absolute camera angles in degrees. In Same view, rays control all three plots; otherwise they control the selected plot.',objectA:'Object A',transformB:'Transformation B',resultBA:'Result BA = B × A',expand:'Expand',collapse:'Collapse',resetA:'Reset A',resetB:'Reset B',resetView:'Reset view',matrixA:'Matrix A',matrixB:'Matrix B',matrixBA:'Matrix BA',descrA:'Colored columns correspond to vectors. Values are editable.',descrB:'Colored edges transform the unit cube. Values are editable.',descrBA:'Computed B × A; updates automatically.',warnA:'A markers are touching. Rotate the view to separate them.',warnB:'B markers are touching. Rotate the view to separate them.',quickHelp:'Dragging a vector keeps the grid still; orbiting does not change vector coordinates. Tap ? for full Help.',footnote:'Three.js needs internet. State is saved in this browser; export JSON to move it to another device.',helpTitle:'Matrix Transformer Help',helpHtml:`<p><b>Edit:</b> enable Edit on a plot to move endpoints, zoom or orbit; otherwise swipe to scroll the page. Only one plot can be editable at once.</p><p><b>Same view:</b> shared rays set the viewing angles of all three plots. Dragging never rotates a plot while Same view is on, though editing and zoom remain possible.</p><p><b>Independent views:</b> each expanded plot has its own X/Y/Z rays. Edit mode permits touch rotation.</p>`},
+he:{sameView:'תצוגה זהה',syncHint:'קרניים משותפות לשלושת הגרפים',edit:'עריכה',appTitle:'טרנספורמציה לינארית של מטריצות',undo:'בטל',restart:'התחל מחדש',restartDone:'המצב ההתחלתי שוחזר',saveFile:'שמור לקובץ',loadFile:'טען מקובץ',autoSaved:'נשמר אוטומטית בדפדפן זה',restored:'המצב הקודם שוחזר',exported:'קובץ המצב נשמר',imported:'המצב נטען מקובץ',invalidFile:'לא ניתן לטעון: קובץ לא תקין',storageUnavailable:'שמירה אוטומטית אינה זמינה; השתמשו בקובץ JSON',nothingToUndo:'אין מה לבטל',tapMarker:'געו בנקודה צבעונית',readyEdit:'מוכן. גררו נקודה צבעונית לשינוי ושטח פנוי לסיבוב.',readyResult:'BA = B × A. אפשר לסובב ולהגדיל את התצוגה.',orbitStart:'התצוגה מסתובבת; המטריצות לא משתנות.',orbitEnd:'התצוגה השתנתה; קואורדינטות הווקטורים לא השתנו.',resetViewDone:'התצוגה אופסה; המטריצות לא השתנו.',vectorFinished:'הגרירה הסתיימה; הרשת נשארה במקומה.',selectedMarker:'נבחר',cameraStill:'המצלמה לא זזה',modeXY:'XY: רק X ו-Y משתנים.',modeZ:'Z: רק Z משתנה.',matrixRestored:'מטריצה אופסה',edition:'גרסת רשת 03q',lead:'לחצו על עריכה כדי להפעיל מחוות בגרף. בתצוגה זהה הזוויות נקבעות באמצעות הקרניים בלבד.',direction:'כיוון התצוגה X / Y / Z',rayInstruction:'במצב תצוגה זהה הקרניים משנות את שלושת הגרפים; אחרת לכל גרף מוגדל קרניים משלו.',objectA:'עצם A',transformB:'טרנספורמציה B',resultBA:'תוצאה BA = B × A',expand:'הגדל',collapse:'הקטן',resetA:'איפוס A',resetB:'איפוס B',resetView:'איפוס תצוגה',matrixA:'מטריצה A',matrixB:'מטריצה B',matrixBA:'מטריצה BA',descrA:'העמודות הצבעוניות תואמות לווקטורים. ניתן לערוך מספרים.',descrB:'הקצוות הצבעוניים מגדירים את שינוי הקובייה. ניתן לערוך מספרים.',descrBA:'תוצאת B × A מתעדכנת באופן אוטומטי.',warnA:'הסמנים של A נוגעים זה בזה. סובבו את התצוגה כדי להפריד.',warnB:'הסמנים של B נוגעים זה בזה. סובבו את התצוגה כדי להפריד.',quickHelp:'גרירת וקטור אינה מזיזה את הרשת; סיבוב התצוגה אינו משנה את המטריצות. לעזרה: ?',footnote:'נדרש אינטרנט עבור Three.js. המצב נשמר בדפדפן זה; להעברה למכשיר אחר השתמשו בקובץ JSON.',helpTitle:'עזרה ל-Matrix Transformer',helpHtml:`<p><b>עריכה:</b> לחצו על עריכה בגרף הרצוי כדי לשנות וקטורים או זום. כשהעריכה כבויה ניתן לגלול בדף.</p><p><b>תצוגה זהה:</b> הקרניים המשותפות קובעות את זוויות שלושת הגרפים. סיבוב במגע חסום, גם כשעריכה פעילה.</p><p><b>תצוגה עצמאית:</b> לכל גרף מוגדל קרניים משלו והוא יכול להסתובב במצב עריכה.</p>`}}
 let lang='ru';const t=k=>I18N[lang][k]||k;
 
 const makePoints=(array)=>array.map(v=>new THREE.Vector3(...v));
-const initialA=makePoints([[1.35,0.20,0.25],[-0.25,1.20,0.35],[0.25,-0.20,1.45]]);
+const initialA=makePoints([[1,0,0],[0,1,0],[0,0,1]]);
 const initialB=makePoints([[1,0,0],[0,1,0],[0,0,1]]);
 const matrices={a:initialA.map(p=>p.clone()),b:initialB.map(p=>p.clone()),ba:initialA.map(p=>p.clone())};
 const charts={};
@@ -193,6 +238,35 @@ function createMatrixTable(id){
  return table;
 }
 const matrixCells={a:createMatrixTable('a'),b:createMatrixTable('b'),ba:createMatrixTable('ba')};
+// Equation of the plane through the endpoints of the three column vectors.
+// Recalculate from exact current vector coordinates, not rounded matrix inputs.
+function updatePlaneEquation(id){
+ const label={ru:'Уравнение плоскости',en:'Plane equation',he:'משוואת המישור'}[lang];
+ const degenerate={ru:'Три конца векторов не задают единственную плоскость.',en:'The three endpoints do not define a unique plane.',he:'שלוש נקודות הקצה אינן מגדירות מישור יחיד.'}[lang];
+ const [p,q,r]=matrices[id];
+ const u=new THREE.Vector3().subVectors(q,p),v=new THREE.Vector3().subVectors(r,p);
+ const n=u.cross(v);
+ const el=document.getElementById('plane-equation-'+id);
+ if(n.length()<1e-8){el.textContent=label+': '+degenerate;return;}
+ // Unit normal gives stable, human-readable coefficients even for large normals.
+ n.normalize();const d=n.dot(p);
+ const clean=x=>Math.abs(x)<0.000005?0:Number(x.toFixed(3));
+ const ns=[clean(n.x),clean(n.y),clean(n.z)];
+ const build=()=>{
+  let formula='';
+  for(let i=0;i<3;i++){
+   const v=ns[i],a=Math.abs(v),variable=['x','y','z'][i];
+   if(a===0)continue;
+   const term=(Math.abs(a-1)<0.000001?'':String(a)) + variable;
+   formula+=(formula?(v<0?' − ':' + '):(v<0?'−':''))+term;
+  }
+  return (formula||'0')+' = '+clean(d);
+ };
+ el.replaceChildren();
+ const b=document.createElement('strong');b.textContent=label+':';
+ const f=document.createElement('span');f.className='formula';f.textContent=build();
+ el.append(b,f);
+}
 function renderMatrix(id){
  for(let r=0;r<3;r++)for(let c=0;c<3;c++){
   const value=format(matrices[id][c].getComponent(r));
@@ -200,6 +274,7 @@ function renderMatrix(id){
   if(id==='ba')cell.textContent=value;
   else if(document.activeElement!==cell)cell.value=value;
  }
+ updatePlaneEquation(id);
 }
 function updateFromMatrix(id){
  renderMatrix(id);
@@ -240,79 +315,150 @@ function updatePlaneGeometry(chart){
  gridAttr.needsUpdate=true;chart.planeGrid.geometry.computeBoundingSphere();
 }
 const BASE_POS=new THREE.Vector3(8,-9,7),BASE_UP=new THREE.Vector3(0,0,1);
-const baseCamera=new THREE.PerspectiveCamera();baseCamera.position.copy(BASE_POS);baseCamera.up.copy(BASE_UP);baseCamera.lookAt(0,0,0);
-const BASE_Q=baseCamera.quaternion.clone(),INV_BASE_Q=BASE_Q.clone().invert();
+// Absolute Euler angles of the camera in world XYZ coordinates.
+// The default camera (8,-9,7) is deliberately NOT the zero orientation.
+// Camera local +Z points from the target toward the eye; local +Y is camera up.
+const CAMERA_BACK=new THREE.Vector3(0,0,1),CAMERA_UP=new THREE.Vector3(0,1,0);
 const DEG=180/Math.PI;
-function currentAngles(){
- const chart=charts.a;if(!chart)return [0,0,0];
- const q=chart.camera.quaternion.clone().multiply(INV_BASE_Q);
- const e=new THREE.Euler().setFromQuaternion(q,'XYZ');
+let expanded=null;
+let sharedView=false;
+let sharedAngles=null;
+const editEnabled={a:false,b:false,ba:false};
+function anglesOf(chart){
+ if(!chart)return [0,0,0];
+ const e=new THREE.Euler().setFromQuaternion(chart.camera.quaternion,'XYZ');
  return [e.x*DEG,e.y*DEG,e.z*DEG];
 }
-function syncCameraFrom(source){
- if(cameraSyncing)return;cameraSyncing=true;
- for(const chart of Object.values(charts)){
-  if(chart===source)continue;
-  chart.camera.position.copy(source.camera.position);
-  chart.camera.up.copy(source.camera.up);
-  chart.camera.quaternion.copy(source.camera.quaternion);
-  chart.controls.target.copy(source.controls.target);
-  chart.refreshWarning();
+function currentAngles(id='a'){return anglesOf(charts[id]);}
+function updateControlAccess(){
+ for(const id of ['a','b','ba']){
+  const chart=charts[id];if(!chart)continue;
+  const active=editEnabled[id];
+  chart.root.closest('.panel').classList.toggle('editing',active);
+  const btn=document.querySelector(`[data-edit="${id}"]`);
+  btn.classList.toggle('active',active);btn.setAttribute('aria-pressed',String(active));
+  chart.controls.enabled=active;
+  chart.controls.enableRotate=active&&!sharedView;
+  chart.controls.enableZoom=active;
+  chart.canvas.style.touchAction=active?'none':'pan-y';
+  chart.updateMarkerVisibility();
  }
- cameraSyncing=false;updateRays();scheduleSave();
+ const button=document.getElementById('sync-view');
+ button.classList.toggle('active',sharedView);button.setAttribute('aria-pressed',String(sharedView));
+ document.getElementById('global-view-panel').hidden=!sharedView;
+ for(const id of ['a','b','ba'])document.getElementById('local-rays-'+id).hidden=!(expanded===id||editEnabled[id]);
+ updateRays();
 }
-function setAnglesByRay(axis,value){
- const angles=currentAngles();angles[axis]=value;
- const rot=new THREE.Euler(...angles.map(v=>v/DEG),'XYZ');
- const q=new THREE.Quaternion().setFromEuler(rot);
+function cameraOrientation(chart,angles){
+ const q=new THREE.Quaternion().setFromEuler(new THREE.Euler(...angles.map(v=>v/DEG),'XYZ'));
+ const distance=chart.camera.position.distanceTo(chart.controls.target);
+ const offset=CAMERA_BACK.clone().applyQuaternion(q).multiplyScalar(distance);
+ chart.camera.position.copy(chart.controls.target).add(offset);
+ chart.camera.up.copy(CAMERA_UP).applyQuaternion(q);
+ chart.camera.lookAt(chart.controls.target);
+ chart.refreshWarning();
+}
+function setAnglesByRay(axis,value,id='a'){
+ const master=sharedView;
+ const angles=master?(sharedAngles||currentAngles(id)).slice():currentAngles(id);
+ angles[axis]=value;
  cameraSyncing=true;
- for(const chart of Object.values(charts)){
-  chart.camera.position.copy(BASE_POS).applyQuaternion(q);
-  chart.camera.up.copy(BASE_UP).applyQuaternion(q);
-  chart.camera.lookAt(0,0,0);
-  chart.refreshWarning();
- }
- cameraSyncing=false;updateRays();scheduleSave();
+ try{
+  if(master){sharedAngles=angles.slice();for(const chart of Object.values(charts))cameraOrientation(chart,angles);}
+  else cameraOrientation(charts[id],angles);
+ }finally{cameraSyncing=false;}
+ updateRays();scheduleSave();
 }
-const rayElements=[];
+function setSharedView(on){
+ if(sharedView===on)return;
+ const before=snapshotState();
+ sharedView=on;
+ if(on){
+  if(!sharedAngles)sharedAngles=currentAngles('a');
+  cameraSyncing=true;
+  try{for(const chart of Object.values(charts))cameraOrientation(chart,sharedAngles);}
+  finally{cameraSyncing=false;}
+ }
+ updateControlAccess();recordAction(before);
+}
+function setEditMode(id,on){
+ for(const key of ['a','b','ba'])editEnabled[key]=key===id?on:false;
+ updateControlAccess();
+}
+const rayGroups=[];
 function installRays(){
- const wrap=document.getElementById('angle-rays');
- for(let axis=0;axis<3;axis++){
-  const name=['X','Y','Z'][axis];
-  const dial=document.createElement('div');dial.className='ray-dial';dial.setAttribute('role','slider');
-  dial.setAttribute('aria-label',`View ${name}`);dial.setAttribute('aria-valuemin','-180');dial.setAttribute('aria-valuemax','180');
-  dial.setAttribute('tabindex','0');
-  dial.innerHTML=`<svg viewBox="0 0 94 86" aria-hidden="true"><circle cx="46" cy="43" r="35" fill="none" stroke="#d3e0ed" stroke-width="1.4"/><line x1="46" y1="43" x2="83" y2="43" stroke="#8a9bab" stroke-width="2.5"/><line class="moving-ray" x1="46" y1="43" x2="81" y2="43" stroke="#2667b2" stroke-width="3.5" stroke-linecap="round"/><circle cx="46" cy="43" r="3.5" fill="#53677b"/><circle class="ray-tip" cx="81" cy="43" r="7" fill="#2667b2" stroke="white" stroke-width="2"/></svg><span class="ray-info"><strong>${name}</strong><output>0°</output></span>`;
-  wrap.appendChild(dial);rayElements[axis]=dial;
-  let pointerId=null,rayStart=null;
-  const doPointer=event=>{
-   const rect=dial.querySelector('svg').getBoundingClientRect();
-   const x=(event.clientX-rect.left)*94/rect.width-46;
-   const y=43-(event.clientY-rect.top)*86/rect.height;
-   if(Math.hypot(x,y)<4)return;
-   let degrees=Math.atan2(y,x)*DEG;
-   setAnglesByRay(axis,degrees);
-  };
-  dial.addEventListener('pointerdown',ev=>{if(pointerId!==null)return;rayStart=snapshotState();pointerId=ev.pointerId;ev.preventDefault();dial.setPointerCapture(pointerId);doPointer(ev);});
-  dial.addEventListener('pointermove',ev=>{if(ev.pointerId===pointerId){ev.preventDefault();doPointer(ev);}});
-  const finish=ev=>{if(ev.pointerId===pointerId){pointerId=null;recordAction(rayStart);rayStart=null;}};dial.addEventListener('pointerup',finish);dial.addEventListener('pointercancel',finish);dial.addEventListener('lostpointercapture',finish);
-  dial.addEventListener('keydown',ev=>{if(ev.key==='ArrowRight'||ev.key==='ArrowUp'||ev.key==='ArrowLeft'||ev.key==='ArrowDown'){
-   ev.preventDefault();const before=snapshotState();const delta=(ev.key==='ArrowRight'||ev.key==='ArrowUp')?1:-1;setAnglesByRay(axis,currentAngles()[axis]+delta*(ev.shiftKey?10:5));recordAction(before);}});
+ const contexts=[{id:'global',container:'angle-rays'},...['a','b','ba'].map(id=>({id,container:'angle-rays-'+id}))];
+ for(const context of contexts){
+  const wrap=document.getElementById(context.container);
+  const dials=[];rayGroups.push({id:context.id,dials});
+  for(let axis=0;axis<3;axis++){
+   const name=['X','Y','Z'][axis];
+   const dial=document.createElement('div');dial.className='ray-dial';dial.setAttribute('role','slider');
+   dial.setAttribute('aria-label',`${context.id} view ${name}`);dial.setAttribute('aria-valuemin','-180');dial.setAttribute('aria-valuemax','180');dial.tabIndex=0;
+   dial.innerHTML=`<svg viewBox="0 0 94 86" aria-hidden="true"><circle cx="46" cy="43" r="35" fill="none" stroke="#d3e0ed" stroke-width="1.4"/><line x1="46" y1="43" x2="83" y2="43" stroke="#8a9bab" stroke-width="2.5"/><line class="moving-ray" x1="46" y1="43" x2="81" y2="43" stroke="#2667b2" stroke-width="3.5" stroke-linecap="round"/><circle cx="46" cy="43" r="3.5" fill="#53677b"/><circle class="ray-tip" cx="81" cy="43" r="9" fill="#145fa8" stroke="white" stroke-width="3"/></svg><span class="ray-info"><strong>${name}</strong><input class="angle-input" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" aria-label="${name} degrees" value="0" /><output hidden>0°</output></span>`;
+   wrap.appendChild(dial);dials.push(dial);
+   const field=dial.querySelector('input.angle-input');
+   // Editing the number must not drag the ray or move the page.
+   field.addEventListener('pointerdown',ev=>ev.stopPropagation());
+   field.addEventListener('pointermove',ev=>ev.stopPropagation());
+   field.addEventListener('click',ev=>ev.stopPropagation());
+   field.addEventListener('focus',()=>field.select());
+   const commitAngle=()=>{
+    const raw=field.value.trim().replace(',', '.').replace(/°/g,'');
+    const next=Number(raw);
+    if(raw===''||!Number.isFinite(next)||next < -180||next > 180){
+     field.value=String(Math.round((sharedView?(sharedAngles||currentAngles('a')):currentAngles(context.id==='global'?'a':context.id))[axis]*100)/100);
+     return;
+    }
+    const before=snapshotState();
+    setAnglesByRay(axis,next,sharedView?'a':context.id);
+    recordAction(before);
+    field.value=String(next);
+   };
+   field.addEventListener('keydown',ev=>{
+    ev.stopPropagation();
+    if(ev.key==='Enter'){ev.preventDefault();field.blur();}
+    if(ev.key==='Escape'){ev.preventDefault();field.dataset.cancelled='1';field.blur();updateRays();}
+   });
+   field.addEventListener('blur',()=>{if(field.dataset.cancelled==='1'){delete field.dataset.cancelled;return;}commitAngle();});
+   let pointerId=null,rayStart=null;
+   const allowed=()=>sharedView||context.id!=='global';
+   const actualId=()=>sharedView?'a':context.id;
+   const doPointer=event=>{
+    if(!allowed())return;
+    const rect=dial.querySelector('svg').getBoundingClientRect();
+    const x=(event.clientX-rect.left)*94/rect.width-46,y=43-(event.clientY-rect.top)*86/rect.height;
+    if(Math.hypot(x,y)<4)return;
+    setAnglesByRay(axis,Math.atan2(y,x)*DEG,actualId());
+   };
+   dial.addEventListener('pointerdown',ev=>{if(pointerId!==null||!allowed())return;rayStart=snapshotState();pointerId=ev.pointerId;ev.preventDefault();dial.setPointerCapture(pointerId);doPointer(ev);});
+   dial.addEventListener('pointermove',ev=>{if(ev.pointerId===pointerId){ev.preventDefault();doPointer(ev);}});
+   const finish=ev=>{if(ev.pointerId===pointerId){pointerId=null;recordAction(rayStart);rayStart=null;}};
+   for(const type of ['pointerup','pointercancel','lostpointercapture'])dial.addEventListener(type,finish);
+   dial.addEventListener('keydown',ev=>{if(['ArrowRight','ArrowUp','ArrowLeft','ArrowDown'].includes(ev.key)&&allowed()){
+    ev.preventDefault();const before=snapshotState(),delta=['ArrowRight','ArrowUp'].includes(ev.key)?1:-1;
+    setAnglesByRay(axis,(sharedView?(sharedAngles||currentAngles('a')):currentAngles(context.id))[axis]+delta*(ev.shiftKey?10:5),actualId());recordAction(before);
+   }});
+  }
  }
  updateRays();
 }
 function updateRays(){
- if(rayElements.length<3)return;
- const angles=currentAngles();
- angles.forEach((degree,i)=>{
-  const dial=rayElements[i];if(!dial)return;
-  const angle=degree/DEG,x=46+35*Math.cos(angle),y=43-35*Math.sin(angle);
-  const line=dial.querySelector('.moving-ray'),tip=dial.querySelector('.ray-tip');
-  line.setAttribute('x2',x.toFixed(2));line.setAttribute('y2',y.toFixed(2));
-  tip.setAttribute('cx',x.toFixed(2));tip.setAttribute('cy',y.toFixed(2));
-  dial.querySelector('output').textContent=`${Math.round(degree)}°`;
-  dial.setAttribute('aria-valuenow',String(Math.round(degree)));
- });
+ for(const group of rayGroups){
+  const angles=sharedView?(sharedAngles||currentAngles('a')):currentAngles(group.id==='global'?'a':group.id);
+  angles.forEach((degree,i)=>{
+   const dial=group.dials[i];if(!dial)return;
+   const angle=degree/DEG,x=46+35*Math.cos(angle),y=43-35*Math.sin(angle);
+   dial.querySelector('.moving-ray').setAttribute('x2',x.toFixed(2));
+   dial.querySelector('.moving-ray').setAttribute('y2',y.toFixed(2));
+   dial.querySelector('.ray-tip').setAttribute('cx',x.toFixed(2));
+   dial.querySelector('.ray-tip').setAttribute('cy',y.toFixed(2));
+   dial.querySelector('output').textContent=`${Math.round(degree)}°`;
+   const field=dial.querySelector('input.angle-input');
+   if(document.activeElement!==field)field.value=String(Math.round(degree*100)/100||0);
+   dial.setAttribute('aria-valuenow',String(Math.round(degree)));
+  });
+ }
 }
 
 class Chart{
@@ -352,19 +498,35 @@ class Chart{
   else addPlaneGeometry(this);
   if(this.editable)this.attachPointerEvents();
   else this.attachResultRotation();
-  this.controls.addEventListener('change',()=>{if(webReady&&!cameraSyncing)syncCameraFrom(this);});
+  this.controls.addEventListener('change',()=>{if(webReady&&!cameraSyncing){updateRays();scheduleSave();}});
   this.controls.addEventListener('start',()=>{if(!this.gesture){this._orbitStart=snapshotState();this.lastOrbit=true;this.status.textContent=t('orbitStart');}});
   this.controls.addEventListener('end',()=>{if(this.lastOrbit&&!this.gesture){this.status.textContent=t('orbitEnd');this.lastOrbit=false;recordAction(this._orbitStart);this._orbitStart=null;}});
   new ResizeObserver(()=>this.resize()).observe(this.root);
   this.resize();this.updateGeometry();
   this.status.textContent=t(this.editable?'readyEdit':'readyResult');
  }
+ // A one-time frustum fit for opening a compact mobile plot.
+ // It does not change camera position, Euler angles, saved zoom or matrix data.
+ // Subsequent finger/wheel zoom still uses the existing OrbitControls mechanism.
+ computeExpandedFitSpan(){
+  const w=Math.max(1,this.root.clientWidth),h=Math.max(1,this.root.clientHeight),aspect=w/h;
+  const inv=this.camera.quaternion.clone().invert();
+  const target=this.controls.target;
+  let mx=0,my=0;
+  for(const x of [-3,3])for(const y of [-3,3])for(const z of [-3,3]){
+   const p=new THREE.Vector3(x,y,z).sub(target).applyQuaternion(inv);
+   mx=Math.max(mx,Math.abs(p.x));my=Math.max(my,Math.abs(p.y));
+  }
+  // 14% breathing room also helps keep axis labels inside the canvas.
+  const required=aspect>=1?Math.max(my,mx/aspect):Math.max(mx,my*aspect);
+  return Math.max(4.6,required*this.camera.zoom*1.14);
+ }
  resetCamera(beforeControls=false){
   this.camera.position.set(8,-9,7);this.camera.lookAt(0,0,0);this.camera.zoom=1;this.camera.updateProjectionMatrix();
   if(!beforeControls){this.controls.target.set(0,0,0);this.controls.update();this.status.textContent=t('resetViewDone');this.refreshWarning();}
  }
  resize(){
-  const w=Math.max(1,this.root.clientWidth),h=Math.max(1,this.root.clientHeight),aspect=w/h,span=4.6;
+  const w=Math.max(1,this.root.clientWidth),h=Math.max(1,this.root.clientHeight),aspect=w/h,span=this.expandedFitSpan||4.6;
   if(aspect>=1){this.camera.left=-span*aspect;this.camera.right=span*aspect;this.camera.top=span;this.camera.bottom=-span;}
   else{this.camera.left=-span;this.camera.right=span;this.camera.top=span/aspect;this.camera.bottom=-span/aspect;}
   this.camera.updateProjectionMatrix();this.renderer.setSize(w,h,false);
@@ -372,7 +534,19 @@ class Chart{
   this.labelsCanvas.width=Math.round(w*dpr);
   this.labelsCanvas.height=Math.round(h*dpr);
   this.labelsCtx.setTransform(dpr,0,0,dpr,0,0);
+  this.updateMarkerVisibility();
   this.refreshWarning();
+ }
+ updateMarkerVisibility(){
+  if(!this.editable)return;
+  const panel=this.root.closest('.panel');
+  const compact=panel && !panel.classList.contains('expanded');
+  const editing=editEnabled[this.id];
+  const minPixels=compact && editing?11:7;
+  const worldPerPixel=(this.camera.top-this.camera.bottom)/(Math.max(1,this.root.clientHeight)*this.camera.zoom);
+  const radius=Math.max(.125,Math.min(.24,minPixels*worldPerPixel));
+  for(const marker of this.markers){marker.scale.setScalar(radius/.125);}
+  this.markerRadius=radius;
  }
  updateGeometry(){
   for(let c=0;c<3;c++){
@@ -383,9 +557,11 @@ class Chart{
    const vs=CUBE.vs.map(v=>projectBPoint(v));
    for(const {i,j,line} of this.cubeLines)updateLine(line,vs[i],vs[j]);
   }
+  this.updateMarkerVisibility();
   this.halo.visible=this.selected>=0;
   if(this.selected>=0)this.halo.position.copy(matrices[this.id][this.selected]);
   if(this.live){
+   this.live.style.display=this.gesture?'block':'none';
    if(this.selected<0)this.live.textContent=LABEL[this.id]+': '+t('tapMarker');
    else{const p=matrices[this.id][this.selected];this.live.textContent=`${LABEL[this.id]}${this.selected+1} = (${format(p.x)}, ${format(p.y)}, ${format(p.z)})`;}
   }
@@ -429,12 +605,14 @@ class Chart{
   if(!this.gesture||(ev&&ev.pointerId!==this.gesture.pointerId))return;
   try{if(this.canvas.hasPointerCapture(this.gesture.pointerId))this.canvas.releasePointerCapture(this.gesture.pointerId);}catch(_){ }
   recordAction(this.gesture.undoStart);
-  this.gesture=null;this.controls.enabled=true;this.root.classList.remove('dragging');
+  this.gesture=null;this.controls.enabled=editEnabled[this.id];this.root.classList.remove('dragging');
+  if(this.live)this.live.style.display='none';
   if(this.selected>=0)this.status.textContent=`${LABEL[this.id]}${this.selected+1}: ${t('vectorFinished')}`;
  }
  attachPointerEvents(){
   const canvas=this.canvas;
   canvas.addEventListener('pointerdown',ev=>{
+   if(!editEnabled[this.id])return;
    if(this.gesture){ev.preventDefault();ev.stopImmediatePropagation();return;}
    if(ev.pointerType==='mouse'&&ev.button!==0)return;
    const i=this.pickMarker(ev);
@@ -470,7 +648,7 @@ class Chart{
    return a.length>=2?Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y):null;
   };
   canvas.addEventListener('pointerdown',ev=>{
-   if(this.mode!=='z'||(ev.pointerType==='mouse'&&ev.button!==0))return;
+   if(!editEnabled[this.id]||this.mode!=='z'||sharedView||(ev.pointerType==='mouse'&&ev.button!==0))return;
    ev.preventDefault();ev.stopImmediatePropagation();
    if(touches.size===0)rotationStart=snapshotState();
    touches.set(ev.pointerId,{x:ev.clientX,y:ev.clientY});
@@ -487,10 +665,7 @@ class Chart{
     if(lastDistance&&next){
      this.camera.zoom=clamp(this.camera.zoom*next/lastDistance,.55,5);
      this.camera.updateProjectionMatrix();
-     for(const chart of Object.values(charts)){
-      if(chart!==this){chart.camera.zoom=this.camera.zoom;chart.camera.updateProjectionMatrix();}
-     }
-     syncCameraFrom(this);
+     updateRays();scheduleSave();
     }
     lastDistance=next;lastX=null;
    }else if(lastX!==null){
@@ -501,7 +676,7 @@ class Chart{
     this.camera.position.copy(this.controls.target).add(offset);
     this.camera.up.applyQuaternion(q);
     this.camera.lookAt(this.controls.target);
-    syncCameraFrom(this);
+    updateRays();scheduleSave();
    }else lastX=ev.clientX;
    this.status.textContent=t('orbitEnd');
   },true);
@@ -532,7 +707,7 @@ class Chart{
   // projection their visible circle radius is independent of orientation.
   // Warn only when two actual visible circles touch or overlap on screen.
   const points=matrices[this.id].map(p=>this.screenPos(p));
-  const radius=.125*this.root.clientHeight*this.camera.zoom/(this.camera.top-this.camera.bottom);
+  const radius=(this.markerRadius||.125)*this.root.clientHeight*this.camera.zoom/(this.camera.top-this.camera.bottom);
   let intersects=false;
   for(let i=0;i<3&&!intersects;i++)for(let j=i+1;j<3;j++){
    const d=Math.hypot(points[i].x-points[j].x,points[i].y-points[j].y);
@@ -673,15 +848,20 @@ const undoHistory=[];
 let persistenceReady=false,restoringState=false,saveTimer=null;
 const finite=v=>typeof v==='number'&&Number.isFinite(v);
 const roundState=v=>Number(v.toFixed(8));
+function cameraData(chart){const c=chart.camera;return {position:c.position.toArray().map(roundState),up:c.up.toArray().map(roundState),zoom:roundState(c.zoom),target:chart.controls.target.toArray().map(roundState)};}
+function validCamera(c){
+ const xyz=arr=>Array.isArray(arr)&&arr.length===3&&arr.every(n=>finite(n)&&Math.abs(n)<10000);
+ return !!c&&xyz(c.position)&&xyz(c.up)&&xyz(c.target)&&finite(c.zoom)&&c.zoom>=.55&&c.zoom<=5&&Math.hypot(...c.up)>.001&&Math.hypot(...c.position.map((n,i)=>n-c.target[i]))>.001;
+}
 function snapshotState(){
- const c=charts.a?.camera;
+ const c=charts.a;
  return {version:1,
   a:matrices.a.map(p=>[roundState(p.x),roundState(p.y),roundState(p.z)]),
   b:matrices.b.map(p=>[roundState(p.x),roundState(p.y),roundState(p.z)]),
-  camera:c?{
-   position:c.position.toArray().map(roundState),up:c.up.toArray().map(roundState),
-   zoom:roundState(c.zoom),target:charts.a.controls.target.toArray().map(roundState)
-  }:null,
+  camera:c?cameraData(c):null,
+  cameras:Object.fromEntries(['a','b','ba'].map(id=>[id,cameraData(charts[id])])),
+  sameView:sharedView,
+  sharedAngles:sharedAngles?.map(roundState)||null,
   modes:Object.fromEntries(['a','b','ba'].map(id=>[id,charts[id]?.mode||'xy'])),
   language:lang
  };
@@ -690,11 +870,9 @@ function isValidState(value){
  if(!value||value.version!==1)return false;
  const validColumns=cols=>Array.isArray(cols)&&cols.length===3&&cols.every(col=>
   Array.isArray(col)&&col.length===3&&col.every(n=>finite(n)&&Math.abs(n)<=3));
- const xyz=arr=>Array.isArray(arr)&&arr.length===3&&arr.every(n=>finite(n)&&Math.abs(n)<10000);
- if(!validColumns(value.a)||!validColumns(value.b))return false;
- const c=value.camera;
- if(!c||!xyz(c.position)||!xyz(c.up)||!xyz(c.target)||!finite(c.zoom)||c.zoom<.55||c.zoom>5)return false;
- if(Math.hypot(...c.up)<.001||Math.hypot(...c.position.map((n,i)=>n-c.target[i]))<.001)return false;
+ if(!validCamera(value.camera))return false;
+ if(value.cameras && !['a','b','ba'].every(id=>validCamera(value.cameras[id])))return false;
+ if(value.sharedAngles && (!Array.isArray(value.sharedAngles)||value.sharedAngles.length!==3||!value.sharedAngles.every(finite)))return false;
  return true;
 }
 function setSaveMessage(msg){
@@ -728,7 +906,7 @@ function applyState(state){
  try{
   for(const id of ['a','b'])for(let i=0;i<3;i++)matrices[id][i].fromArray(state[id][i]);
   for(const id of ['a','b','ba']){
-   const ch=charts[id],c=state.camera;
+   const ch=charts[id],c=state.cameras?.[id]||state.camera;
    ch.camera.position.fromArray(c.position);
    ch.camera.up.fromArray(c.up);
    ch.controls.target.fromArray(c.target);
@@ -740,11 +918,51 @@ function applyState(state){
    ch.setMode(['xy','z'].includes(state.modes?.[id])?state.modes[id]:'xy');
    ch.selected=-1;ch.updateGeometry();ch.refreshWarning();
   }
+  sharedView=!!state.sameView;
+  // Rebuild from the restored camera: earlier JSON stored angles relative to the old base view.
+  sharedAngles=sharedView?currentAngles('a'):null;
+  for(const id of ['a','b','ba'])editEnabled[id]=false;
   for(const id of ['a','b'])renderMatrix(id);
-  recalcBA();syncCameraFrom(charts.a);
+  recalcBA();updateControlAccess();
   if(['ru','en','he'].includes(state.language))setLanguage(state.language);
   updateRays();
  }finally{restoringState=false;}
+}
+// Explicit factory reset. Do not derive defaults from a browser-restored state.
+// Keep the current language, record one undo step, and save the fresh state.
+function restartApplication(){
+ const before=snapshotState();
+ if(expanded)setExpanded(expanded);
+ restoringState=true;
+ try{
+  for(const id of ['a','b']){
+   const source=id==='a'?initialA:initialB;
+   for(let i=0;i<3;i++)matrices[id][i].copy(source[i]);
+  }
+  sharedView=false;
+  sharedAngles=null;
+  for(const id of ['a','b','ba']){
+   editEnabled[id]=false;
+   const chart=charts[id];
+   chart.gesture=null;
+   chart.selected=-1;
+   chart.root.classList.remove('dragging');
+   chart.camera.up.copy(BASE_UP);
+   chart.resetCamera();
+   const damping=chart.controls.enableDamping;
+   chart.controls.enableDamping=false;chart.controls.update();chart.controls.enableDamping=damping;
+   chart.setMode('xy');
+   chart.updateGeometry();
+  }
+  renderMatrix('a');
+  renderMatrix('b');
+  recalcBA();
+  updateControlAccess();
+  updateRays();
+ }finally{restoringState=false;}
+ recordAction(before);
+ storeImmediately();
+ setSaveMessage(t('restartDone'));
 }
 function undoAction(){
  if(!undoHistory.length){setSaveMessage(t('nothingToUndo'));return;}
@@ -761,6 +979,7 @@ function exportState(){
 }
 function setupStateControls(){
  document.getElementById('undo-action').addEventListener('click',undoAction);
+ document.getElementById('restart-action').addEventListener('click',restartApplication);
  document.getElementById('save-state').addEventListener('click',exportState);
  const chooser=document.getElementById('load-state-input');
  document.getElementById('load-state').addEventListener('click',()=>chooser.click());
@@ -791,35 +1010,44 @@ function restoreBrowserState(){
 let webReady=false,cameraSyncing=false;
 for(const id of ['a','b','ba']){charts[id]=new Chart(id);}
 webReady=true;
-syncCameraFrom(charts.a);
 installRays();
+updateControlAccess();
 renderMatrix('a');renderMatrix('b');recalcBA();
+document.getElementById('sync-view').addEventListener('click',()=>setSharedView(!sharedView));
+for(const btn of document.querySelectorAll('[data-edit]'))btn.addEventListener('click',()=>setEditMode(btn.dataset.edit,!editEnabled[btn.dataset.edit]));
 for(const btn of document.querySelectorAll('.mode'))btn.addEventListener('click',()=>charts[btn.dataset.chart].setMode(btn.dataset.mode));
 for(const btn of document.querySelectorAll('[data-reset]'))btn.addEventListener('click',()=>{
  const before=snapshotState();
  const id=btn.dataset.reset;
- if(id==='camera-ba'){charts.ba.resetCamera();syncCameraFrom(charts.ba);recordAction(before);return;}
+ if(id==='camera-ba'){charts.ba.resetCamera();updateRays();recordAction(before);return;}
  const source=id==='a'?initialA:initialB;
  for(let c=0;c<3;c++)matrices[id][c].copy(source[c]);
  charts[id].selected=-1;updateFromMatrix(id);
  charts[id].status.textContent=`${t('matrixRestored')} ${id.toUpperCase()}.`;recordAction(before);
 });
-let expanded=null;
 function setExpanded(id){
  const current=document.getElementById('panel-'+id);
- if(expanded===id){current.classList.remove('expanded');document.body.classList.remove('has-expanded');expanded=null;}
+ if(expanded===id){current.classList.remove('expanded');document.body.classList.remove('has-expanded');expanded=null;charts[id].expandedFitSpan=null;}
  else{
-  if(expanded)document.getElementById('panel-'+expanded).classList.remove('expanded');
+  if(expanded){document.getElementById('panel-'+expanded).classList.remove('expanded');charts[expanded].expandedFitSpan=null;}
   current.classList.add('expanded');document.body.classList.add('has-expanded');expanded=id;
  }
  for(const btn of document.querySelectorAll('[data-expand]'))btn.textContent=btn.dataset.expand===expanded?t('collapse'):t('expand');
- requestAnimationFrame(()=>{for(const chart of Object.values(charts))chart.resize();});
+ for(const id of ['a','b','ba'])updatePlaneEquation(id);
+ updateControlAccess();
+ requestAnimationFrame(()=>{
+  if(expanded && window.matchMedia('(max-width:690px)').matches){
+   const chart=charts[expanded];chart.expandedFitSpan=null;
+   chart.expandedFitSpan=chart.computeExpandedFitSpan();
+  }
+  for(const chart of Object.values(charts))chart.resize();
+ });
 }
 for(const btn of document.querySelectorAll('[data-expand]'))btn.addEventListener('click',()=>setExpanded(btn.dataset.expand));
 window.addEventListener('keydown',ev=>{if(ev.key==='Escape'){if(document.getElementById('help-dialog').open)document.getElementById('help-dialog').close();else if(expanded)setExpanded(expanded);}});
 
 function setLanguage(next){
- lang=next;document.documentElement.lang=next;document.title=t('appTitle')+' · Web 03f';
+ lang=next;document.documentElement.lang=next;document.title=t('appTitle')+' · Web 03q';
  for(const el of document.querySelectorAll('[data-i18n]'))el.textContent=t(el.dataset.i18n);
  for(const el of document.querySelectorAll('[data-lang]'))el.classList.toggle('active',el.dataset.lang===next);
  const body=document.getElementById('help-body');body.innerHTML=I18N[next].helpHtml;body.dir=next==='he'?'rtl':'ltr';
