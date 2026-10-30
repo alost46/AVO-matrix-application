@@ -1,0 +1,85 @@
+/* AVO Core 1.0: visual and interaction CSS, extracted from validated 01e. */
+:root{font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif;color:#203245;background:#eef3f7}*{box-sizing:border-box}
+body{margin:0}.shell{max-width:1520px;margin:auto;padding:13px 14px calc(38px + var(--keyboard-occlusion,0px))}
+header{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:8px}.top-actions{margin-left:auto;display:flex;gap:6px;align-items:center;flex-wrap:wrap}.language-button{font-size:20px;padding:4px 7px;border:1px solid #c8d6e2;border-radius:9px;background:white;line-height:1.3}.language-button.active{outline:2px solid #235a91}.help-btn{border:2px solid #517496;background:#fff;color:#254e74;font-size:18px;font-weight:900;width:36px;height:36px;border-radius:50%}h1{font-size:22px;margin:0}.tag{background:#dfebf6;color:#305575;border-radius:99px;font-size:12px;padding:5px 11px;font-weight:700}
+ .lead{font-size:13px;line-height:1.55;color:#485e73;margin:0 0 13px}
+.state-toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 12px;padding:9px 11px;background:#fff;border:1px solid #cbd6e0;border-radius:12px}
+.state-toolbar button{font-size:13px;font-weight:700;border:1px solid #b9ccda;background:#f6faff;color:#244e77;padding:8px 12px;border-radius:8px;min-height:37px}
+.state-toolbar button:disabled{opacity:.46;cursor:default}
+.state-toolbar output{font-size:12px;color:#476278;flex:1 1 170px;line-height:1.4}
+
+.layout{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:start}
+.panel{background:#fff;border:1px solid #cbd6e0;border-radius:13px;overflow:hidden;box-shadow:0 2px 10px #00000008;min-width:0}
+.bar{background:#f8fbfe;border-bottom:1px solid #e0e7ee;padding:9px 10px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-height:59px}
+.bar strong{font-size:15px;margin-right:auto}.mode-group{display:flex;background:#e4edf6;border-radius:8px;padding:3px;gap:3px}
+button{font:inherit;cursor:pointer;touch-action:manipulation}.mode{border:0;border-radius:6px;padding:7px 11px;background:transparent;color:#3e5870;font-size:13px;font-weight:750}
+.mode.active{background:#285789;color:#fff}.btn{background:#fff;border:1px solid #c5d3df;border-radius:7px;padding:8px 9px;font-size:12px;font-weight:650;color:#325374}
+.btn:focus-visible,.mode:focus-visible{outline:3px solid #579bd0;outline-offset:2px}
+.plot{height:clamp(265px,31vw,460px);position:relative;background:#fff;overflow:hidden}
+.plot canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}.plot.dragging canvas{cursor:grabbing}
+.axis-label-layer{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
+.overlay{position:absolute;top:8px;left:8px;max-width:calc(100% - 16px);font-size:11px;line-height:1.4;background:#fffffff0;border:1px solid #d7e2ea;border-radius:7px;padding:6px 8px;pointer-events:none;font-weight:650;z-index:3}
+.plane-equation{font-size:12px;line-height:1.55;padding:8px 10px;background:#f8fbff;border-top:1px solid #dce5ed;color:#233f57;font-variant-numeric:tabular-nums}.plane-equation strong{font-weight:750}.plane-equation .formula{display:block;direction:ltr;text-align:left;white-space:normal;overflow-wrap:anywhere;font-family:ui-monospace,Consolas,monospace;margin-top:2px}.status{font-size:12px;line-height:1.45;padding:8px 10px;min-height:51px;color:#325372;border-top:1px solid #e6ecf1}
+.data{border-top:1px solid #dce5ed;padding:10px 12px 13px}.data h2{font-size:14px;margin:0 0 4px}.data p{font-size:11px;color:#62768a;margin:0 0 7px;line-height:1.5}
+.matrix{border-collapse:separate;border-spacing:3px;width:100%;font-variant-numeric:tabular-nums;table-layout:fixed}
+.matrix td,.matrix input{background:#f7f9fb;border:1px solid #e1e7ee;border-radius:5px;text-align:center;font-size:14px;font-weight:740;padding:8px 2px;width:100%;min-width:0}
+.matrix input{font-family:inherit;outline-offset:1px}.matrix input:focus{background:#fff;border-color:#497ca5;outline:1px solid #497ca5}
+.red{color:#e02d26}.blue{color:#2255dc}.green{color:#7ED321}
+.warning{font-size:12px;font-weight:800;color:#6a4500;background:#fff0bb;border:1px solid #ddbb56;border-radius:8px;padding:8px 10px;margin:8px 0 0}
+.view-panel{background:#fff;border:1px solid #cbd6e0;border-radius:12px;padding:10px 12px;margin-bottom:12px}.view-heading{display:flex;flex-wrap:wrap;gap:10px;align-items:baseline;margin-bottom:7px}.view-heading strong{font-size:14px}.view-heading small{font-size:11px;color:#617589}.rays{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}.ray-dial{border:1px solid #d8e3ec;border-radius:9px;background:#fafcfe;display:flex;align-items:center;justify-content:center;gap:8px;min-height:83px;touch-action:none;user-select:none;cursor:pointer}.ray-dial:active{background:#e7f3ff}.ray-dial svg{width:93px;height:75px;overflow:visible;touch-action:none;flex:none}.ray-info{display:flex;flex-direction:column;gap:3px;align-items:center}.ray-info strong{font-size:16px}.ray-info input.angle-input{width:65px;max-width:100%;box-sizing:border-box;border:1px solid #b7c9da;border-radius:5px;background:#fff;color:#265c90;font-size:14px;font-variant-numeric:tabular-nums;font-weight:700;text-align:center;padding:3px 1px;touch-action:manipulation;user-select:text;cursor:text}.ray-info input.angle-input:focus{outline:2px solid #2667b2;outline-offset:1px}.ray-info output{color:#265c90;font-size:14px;font-variant-numeric:tabular-nums;font-weight:700}.help-dialog{border:1px solid #a9bac8;border-radius:13px;width:min(640px,calc(100vw - 26px));max-height:85dvh;padding:0;background:white;box-shadow:0 15px 70px #0006}.help-dialog::backdrop{background:#1d2e43aa}.help-inner{padding:18px 22px;overflow:auto;max-height:85dvh}.help-inner h2{font-size:19px;margin:0 0 10px}.help-inner p{font-size:14px;line-height:1.65}.help-close{float:right;font-size:19px;background:white;border:1px solid #bac9d6;border-radius:8px;padding:4px 11px}.legend{font-size:11px;display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;color:#51667b}.legend b{font-size:14px}
+.help{font-size:13px;line-height:1.55;color:#435a6f;background:#fff;border:1px solid #d0dbe4;border-radius:12px;padding:11px 14px;margin-top:12px}
+.note{font-size:11px;color:#768698;margin:10px 2px 0}
+.panel.expanded{position:fixed;left:9px;right:9px;top:calc(var(--visual-top,0px) + 9px);height:calc(var(--visual-height,100dvh) - 18px);z-index:50;display:flex;flex-direction:column;overflow:auto;border-radius:12px;box-shadow:0 0 0 9999px #15283dcc}
+.panel.expanded .plot{height:auto;flex:1;min-height:235px}.panel.expanded .data{flex:0 0 auto}.panel.expanded .status{min-height:34px}.panel.expanded .bar{flex:0 0 auto}
+body.has-expanded{overflow:hidden}.matrix input{scroll-margin-top:40px;scroll-margin-bottom:110px;caret-color:#244d78}.matrix input:focus{box-shadow:0 0 0 2px #87b9df;position:relative;z-index:1}body.keyboard-focus .panel.expanded .plot{flex:0 0 auto!important;height:min(31dvh,230px)!important;min-height:125px}body.keyboard-focus .panel.expanded .data{padding-bottom:60px}.panel.expanded .matrix input{font-size:16px!important}
+@media(max-width:1130px){.layout{grid-template-columns:repeat(2,minmax(0,1fr))}.plot{height:clamp(285px,42vw,420px)}}
+@media(max-width:690px){.shell{padding:9px 9px calc(22px + var(--keyboard-occlusion,0px))}h1{font-size:19px}.layout{grid-template-columns:1fr;gap:11px}.plot{height:min(53dvh,490px);min-height:320px}.matrix td,.matrix input{font-size:16px;padding:9px 3px}.bar strong{font-size:14px}.panel.expanded{left:5px;right:5px;top:calc(var(--visual-top,0px) + 5px);height:calc(var(--visual-height,100dvh) - 10px)}.panel.expanded .plot{min-height:180px}.panel.expanded .data{padding:6px 9px}.panel.expanded .matrix td,.panel.expanded .matrix input{padding:7px;font-size:16px}}
+@media(max-width:690px){.rays{gap:5px}.ray-dial{gap:0;min-height:72px}.ray-dial svg{width:57px;height:66px}.ray-info strong{font-size:13px}.ray-info output{font-size:12px}.view-panel{padding:8px 5px}.view-heading{padding:0 5px}.top-actions{margin-left:0}.lead{font-size:12px}}
+@media(min-width:691px) and (max-width:1130px){.ray-dial svg{height:67px}}
+.flag-icon{display:block;width:27px;height:18px;border:1px solid #b8c8d5;border-radius:2px;box-sizing:content-box}
+
+.sync-tools{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;font-size:12px;color:#51667b}
+#sync-view{font-size:14px;padding:10px 13px}
+#sync-view.active,.edit-toggle.active{background:#2466a5;color:#fff;border-color:#2466a5}
+.view-panel[hidden],.local-rays[hidden]{display:none!important}
+.local-rays{background:#f7fbff;border-bottom:1px solid #dce5ed;padding:8px 10px}
+/* Local ray controls are visible for a chart being edited, even at normal size. */
+.panel .plot canvas{touch-action:pan-y;cursor:default}
+.panel.editing .plot canvas{touch-action:none;cursor:grab}
+.panel.editing .plot.dragging canvas{cursor:grabbing}
+/* Fit X/Y/Z ray handles and numeric inputs above compact chart panels. */
+.local-rays .rays{gap:4px}
+.local-rays .ray-dial{gap:3px;min-width:0;padding:8px 3px;min-height:94px}
+.local-rays .ray-dial svg{width:76px;height:78px}
+.local-rays .ray-info{min-width:0}
+.local-rays .ray-info input.angle-input{width:52px;font-size:13px}
+@media(max-width:690px){.local-rays .ray-dial svg{width:64px;height:75px}.local-rays .ray-info input.angle-input{width:47px}}
+
+/* 03p: mobile expanded plot gets a genuinely larger drawing surface.
+   The panel itself scrolls, instead of squeezing the plot to fit the matrix. */
+@media(max-width:690px){
+ .panel.expanded .plot{flex:0 0 auto;height:clamp(420px,68dvh,650px);min-height:420px}
+ .panel.expanded .bar,.panel.expanded .local-rays,.panel.expanded .plane-equation{flex:0 0 auto}
+ body.keyboard-focus .panel.expanded .plot{height:min(31dvh,230px)!important;min-height:125px}
+}
+/* 03r: AVO signature next to application title. */
+.header-brand{display:flex;align-items:center;gap:9px;min-width:0}
+.header-brand img{display:block;width:27px;height:35px;object-fit:contain;flex:none}
+.header-brand h1{margin:0}
+@media(max-width:690px){.header-brand img{width:24px;height:31px}.header-brand{gap:6px}}
+
+/* RTL alignment for Hebrew prose, without mirroring numeric inputs or 3D plots. */
+.hebrew-text .lead,.hebrew-text .help,.hebrew-text .note,.hebrew-text .data p,.hebrew-text .data h2,.hebrew-text .plane-equation strong,.hebrew-text .status,.hebrew-text .state-toolbar output,.hebrew-text .sync-tools span,.hebrew-text .view-heading{direction:rtl;text-align:right}
+.hebrew-text .plane-equation .formula{direction:ltr;text-align:left}
+.hebrew-text .help-inner{direction:rtl;text-align:right}
+/* Matrix Powers 01b: exponent control */
+.power-toolbar{display:flex;align-items:center;flex-wrap:wrap;gap:9px;padding:9px 12px;margin:0 0 12px;background:#fff;border:1px solid #cbd6e0;border-radius:10px;font-size:13px;color:#244e77}
+.power-toolbar label{font-weight:750}.power-toolbar input{width:67px;padding:7px;border:1px solid #b9ccda;border-radius:7px;font-size:16px;text-align:center}
+.power-toolbar #power-formula{font-weight:800;color:#1e4e82;font-size:17px}.power-toolbar [data-i18n="powerHint"]{font-size:12px;color:#607487}
+/* Compact matrix cells, particularly on narrow displays. */
+.matrix{border-spacing:2px}.matrix td,.matrix input{font-size:12px;padding:5px 1px}
+@media(max-width:690px){.matrix td,.matrix input{font-size:14px;padding:6px 2px}}
+.matrix-characteristics{margin-top:10px;border-top:1px solid #dce5ed;padding-top:9px;font-size:12px;line-height:1.65;color:#28465e}
+.matrix-characteristics .math-line{font-family:ui-monospace,Consolas,monospace;direction:ltr;text-align:left;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.matrix-characteristics strong{font-size:12px}
+

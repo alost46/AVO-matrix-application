@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="ru">
+<head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<title>Делители нуля матрицы · AVO Core 1.0</title>
+<link rel="stylesheet" href="../avo-core/zero-divisors-02i/core.css">
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}</script>
+<link rel="icon" type="image/png" sizes="32x32" href="https://alost46.github.io/AVO-matrix-application/favicon-32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="https://alost46.github.io/AVO-matrix-application/apple-touch-icon.png">
+<link rel="manifest" href="./manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="AVO Matrices">
+<meta name="theme-color" content="#f4f8fc">
+</head>
+<body>
+<script src="../avo-core/zero-divisors-02i/messages.js"></script>
+<script src="../avo-core/zero-divisors-02i/ui.js"></script>
+<script src="../avo-core/zero-divisors-02i/core.js"></script>
+<script src="./model.js"></script>
+<script>
+ document.body.insertAdjacentHTML('afterbegin', AVOCoreUI(AVOZeroDivisors));
+ // The shared UI template contains fallback labels from Matrix Powers.
+ // Replace their visible text before the asynchronous 3D modules start.
+ for (const [key, value] of Object.entries({
+   appTitle:'Делители нуля матрицы', edition:'Веб-версия 02i',
+   objectA:'Исходная A', transformB:'Правый делитель Rₖ',
+   resultBA:'Левый делитель Lₖ', matrixB:'Матрица Rₖ',
+   matrixBA:'Матрица Lₖ', descrB:'Ненулевая Rₖ удовлетворяет ARₖ = 0.',
+   descrBA:'Ненулевая Lₖ удовлетворяет LₖA = 0.'
+ })) {
+   const el=document.querySelector('[data-i18n="'+key+'"]');
+   if(el)el.textContent=value;
+ }
+ document.querySelector('#plot-b .overlay').textContent='Rₖ: правый делитель нуля';
+ document.querySelector('#plot-ba .overlay').textContent='Lₖ: левый делитель нуля';
+
+ // Application-specific selectors above their respective plots. Shared Core is unchanged.
+ for (const [panelId,side,label,id] of [
+   ['panel-b','right','Правый базисный делитель','right-index'],
+   ['panel-ba','left','Левый базисный делитель','left-index']
+ ]) {
+   const panel=document.getElementById(panelId);
+   const row=document.createElement('div');
+   row.className='zero-choice';
+   row.style.cssText='display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;padding:8px 10px;background:#f4f8fc;border-bottom:1px solid #d9e4ee;font-size:13px;';
+   const lab=document.createElement('label');
+   lab.htmlFor=id;
+   lab.id=side+'-label';
+   lab.textContent=label;
+   const sel=document.createElement('select');sel.id=id;
+   sel.style.cssText='min-width:48px;padding:3px 5px;';
+   row.append(lab,sel);
+   panel.insertBefore(row,document.getElementById(side==='right'?'plot-b':'plot-ba'));
+ }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+try {
+ window.AVOInstance=AVOCore.start({...AVOZeroDivisors,THREE,OrbitControls});
+} catch(err) {
+ window.AVOStartupError=true;
+ console.error('AVO Core start failed:',err);
+ const msg='Ошибка запуска графиков: '+(err?.message||String(err));
+ for(const id of ['a','b','ba']){
+   const el=document.getElementById('status-'+id);
+   if(el)el.textContent=msg;
+ }
+}
+</script>
+<script>
+// Report missing modules only when application startup did not execute.
+setTimeout(()=>{
+ if(window.AVOInstance || window.AVOStartupError)return;
+ const errors={ru:'Графические модули не запустились. Проверьте соединение и обновите страницу.',en:'Three.js could not load. Check your internet connection and refresh the page.',he:'טעינת Three.js נכשלה. בדקו את החיבור לאינטרנט ורעננו את הדף.'};
+ const labels=['Загрузка…','Loading…','טוען…'];
+ for(const id of ['a','b','ba']){
+  const el=document.getElementById('status-'+id);
+  if(el && labels.includes(el.textContent.trim()))el.textContent=errors[document.documentElement.lang]||errors.ru;
+ }
+},9000);
+</script>
+</body>
+</html>
