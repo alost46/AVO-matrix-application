@@ -155,3 +155,16 @@
 .ray-x .ray-dial i{background:#d63c38}.ray-y .ray-dial i{background:#258945}.ray-z .ray-dial i{background:#2469aa}
 .controls .ray-control input[type=range]{width:62px;min-width:62px;max-width:62px;accent-color:#236898;cursor:pointer;touch-action:pan-y}
 @media(max-width:620px){.controls .ray-controls{width:100%;justify-content:space-around}.controls .ray-control input[type=range]{width:70px;min-width:70px;max-width:70px}}
+
+/* 01ai: circular ray controllers and three editable camera angles. */
+.controls .ray-controls{display:inline-flex;gap:9px;align-items:center;width:auto;justify-content:flex-start}
+.controls .ray-control{display:inline-flex;gap:3px;align-items:center;touch-action:pan-y}
+.controls .ray-dial{position:relative;display:block;width:38px;height:38px;min-width:38px;border:2px solid #89a8c2;border-radius:50%;background:radial-gradient(circle at center,#f9fcff 0 22%,#dfeefa 24% 28%,#fff 31%);padding:0;cursor:grab;touch-action:none;user-select:none}
+.controls .ray-dial:active{cursor:grabbing}
+.controls .ray-dial i{position:absolute;left:50%;top:50%;width:3px;height:15px;border-radius:3px;transform-origin:50% 100%;transform:translate(-50%, -100%) rotate(0deg);background:#236898;pointer-events:none}
+.controls .ray-x .ray-dial i{background:#ce3939}.controls .ray-y .ray-dial i{background:#258945}.controls .ray-z .ray-dial i{background:#236898}
+.controls .angle-fields{display:inline-flex;gap:7px;align-items:center;flex-wrap:wrap;direction:ltr}
+.controls .angle-fields label{display:inline-flex;gap:2px;align-items:center;font-size:15px;font-weight:800;direction:ltr}
+.controls .angle-fields input[type=number]{box-sizing:border-box;width:55px;min-width:55px;padding:4px 2px;font-size:15px;font-weight:800;text-align:center;border:1px solid #9db7c9;border-radius:4px;background:#fff;color:#17324d}
+.matrix tr > td.matrix-number{font-weight:900!important;font-size:17px!important;color:#10283f!important}
+@media(max-width:620px){.controls .ray-controls{width:auto;justify-content:flex-start}.controls .angle-fields input[type=number]{width:53px;min-width:53px}}

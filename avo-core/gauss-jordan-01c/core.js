@@ -11,10 +11,10 @@ function setExpandIcon(btn,isExpanded){btn.innerHTML=isExpanded?COLLAPSE_ICON:EX
 let THREE,OrbitControls;
 try{THREE=await import('three');({OrbitControls}=await import('three/addons/controls/OrbitControls.js'));}catch(e){$('#message').textContent=t('missing');console.error(e);return;}
 function clone(a){return a.map(r=>r.slice());}
-function snapshot(){return {input:clone(input),lang,cameras:charts.map(c=>({p:c.camera.position.toArray(),target:c.controls.target.toArray(),zoom:c.camera.zoom,axisMode:c.axisMode,rotationMode:c.rotationMode}))};}
+function snapshot(){return {input:clone(input),lang,cameras:charts.map(c=>({p:c.camera.position.toArray(),target:c.controls.target.toArray(),zoom:c.camera.zoom,axisMode:c.axisMode,rotationMode:c.rotationMode,zAngle:c.zAngle||0}))};}
 function validState(s){return !!s&&Array.isArray(s.input)&&s.input.length===3&&s.input.every(r=>Array.isArray(r)&&r.length===4&&r.every(n=>Number.isFinite(n)&&Math.abs(n)<1e8))&&(!s.cameras||Array.isArray(s.cameras));}
 function push(){history.push(snapshot());if(history.length>50)history.shift();$('#undo').disabled=false;}
-function setState(s){input=clone(s.input);lang=tr[s.lang]?s.lang:'ru';refresh();if(s.cameras)charts.forEach((c,i)=>{const v=s.cameras[i];if(v&&Array.isArray(v.p)&&v.p.length===3&&v.p.every(Number.isFinite)&&Array.isArray(v.target)&&v.target.length===3){applyCameraState(c,v);if(v.axisMode==='XY'||v.axisMode==='Z')setAxisMode(c,v.axisMode);if(typeof v.rotationMode==='boolean')setRotationMode(c,v.rotationMode);}});}
+function setState(s){input=clone(s.input);lang=tr[s.lang]?s.lang:'ru';refresh();if(s.cameras)charts.forEach((c,i)=>{const v=s.cameras[i];if(v&&Array.isArray(v.p)&&v.p.length===3&&v.p.every(Number.isFinite)&&Array.isArray(v.target)&&v.target.length===3){applyCameraState(c,v);if(Number.isFinite(v.zAngle))c.zAngle=v.zAngle;if(v.axisMode==='XY'||v.axisMode==='Z')setAxisMode(c,v.axisMode);if(typeof v.rotationMode==='boolean')setRotationMode(c,v.rotationMode);}});}
 function geometryPlane(row,color){const [a,b,c,d]=row,normal=new THREE.Vector3(a,b,c);if(normal.length()<1e-8)return null;const center=normal.clone().multiplyScalar(d/normal.lengthSq()),n=normal.normalize();const helper=Math.abs(n.z)<.87?new THREE.Vector3(0,0,1):new THREE.Vector3(0,1,0);const u=new THREE.Vector3().crossVectors(n,helper).normalize(),v=new THREE.Vector3().crossVectors(n,u).normalize();const geo=new THREE.PlaneGeometry(9,9,12,12);const mat=new THREE.MeshBasicMaterial({color,transparent:true,opacity:.36,side:THREE.DoubleSide,depthWrite:false});const mesh=new THREE.Mesh(geo,mat);const basis=new THREE.Matrix4().makeBasis(u,v,n);mesh.quaternion.setFromRotationMatrix(basis);mesh.position.copy(center);const edges=new THREE.LineSegments(new THREE.EdgesGeometry(geo),new THREE.LineBasicMaterial({color,transparent:true,opacity:.95}));mesh.add(edges);return mesh;}
 const colors=[0xe12d28,0x1763c4,0x238d36];
 function makeAxisLabel(letter,point){
@@ -53,7 +53,7 @@ yRod.position.set(0,8.0,0);yRod.renderOrder=998;scene.add(yRod);
 scene.add(makeAxisLabel('X',[6.9,0,0]));scene.add(makeAxisLabel('Y',[0,16.4,0]));scene.add(makeAxisLabel('Z',[0,0,6.9]));
 const grid=new THREE.GridHelper(10,10,0x526a82,0xb8c8d8);grid.rotation.x=Math.PI/2;scene.add(grid);const group=new THREE.Group();scene.add(group);
 const dot=makeSolutionMarker();scene.add(dot);
-const chart={scene,camera,renderer,controls,group,dot,host,i,rotationMode:false,axisMode:'XY'};charts.push(chart);controls.addEventListener('change',()=>{});setRotationMode(chart,false);return chart;}
+const chart={scene,camera,renderer,controls,group,dot,host,i,rotationMode:false,axisMode:'XY',zAngle:0};charts.push(chart);controls.addEventListener('change',()=>{});setRotationMode(chart,false);return chart;}
 
 function updateChart(ch,rows,solution){ch.group.clear();rows.forEach((r,i)=>{const obj=geometryPlane(r,colors[i]);if(obj)ch.group.add(obj);});ch.dot.visible=!!solution;if(solution){ch.dot.position.set(...solution);ch.dot.scale.set(1,1,1);}}
 // Use OrbitControls' built-in polar-angle limits, not custom touch handlers.
@@ -111,49 +111,73 @@ function setRotationMode(chart,enabled){
     btn.title=btn.textContent;
   }
 }
-// Three independent ray controls. Native range inputs provide accessible drag
-// and keyboard interaction; the needle shows the requested rotation.
+// Three circular ray dials. Drag the needle around the circle; no sliders.
 function makeRayControls(i){
-  return `<div class="ray-controls" role="group" aria-label="XYZ rotation">${['X','Y','Z'].map(axis=>`<label class="ray-control ray-${axis.toLowerCase()}"><span>${axis}</span><span class="ray-dial" aria-hidden="true"><i></i></span><input type="range" min="-45" max="45" step="1" value="0" data-ray="${axis}" data-chart="${i}" aria-label="${axis}" title="${axis}"></label>`).join('')}</div>`;
+  return `<div class="ray-controls" role="group" aria-label="XYZ rotation">${['X','Y','Z'].map(axis=>`<div class="ray-control ray-${axis.toLowerCase()}"><span>${axis}</span><button class="ray-dial" type="button" data-ray="${axis}" data-chart="${i}" aria-label="${axis} rotation" title="${axis}"><i></i></button></div>`).join('')}</div>`;
 }
 function turnRay(chart,axis,degrees){
   if(!degrees)return;
   const ctl=chart.controls;
-  // Release the polar lock temporarily, allowing the control to work in Z mode.
   const wasZ=chart.axisMode==='Z';
   if(wasZ){ctl.minPolarAngle=0;ctl.maxPolarAngle=Math.PI;}
-  const radians=degrees*Math.PI/180;
-  const vec=new THREE.Vector3();
-  if(axis==='X')vec.set(1,0,0);
-  else if(axis==='Y')vec.set(0,1,0);
-  else vec.set(0,0,1);
-  const q=new THREE.Quaternion().setFromAxisAngle(vec,radians);
+  const vec=axis==='X'?new THREE.Vector3(1,0,0):axis==='Y'?new THREE.Vector3(0,1,0):new THREE.Vector3(0,0,1);
+  const q=new THREE.Quaternion().setFromAxisAngle(vec,degrees*Math.PI/180);
   chart.camera.position.sub(ctl.target).applyQuaternion(q).add(ctl.target);
-  // Maintain the customary Z-up orientation used throughout the app.
   chart.camera.up.set(0,0,1);
   chart.camera.lookAt(ctl.target);
   ctl.update();
   if(wasZ)setAxisMode(chart,'Z');
+  updateAngleFields(chart);
 }
-function wireRayControls(container){
-  container.querySelectorAll('[data-ray]').forEach(input=>{
-    let previous=0;
-    input.addEventListener('input',()=>{
-      const next=Number(input.value);
-      turnRay(charts[Number(input.dataset.chart)],input.dataset.ray,next-previous);
-      previous=next;
-      input.closest('.ray-control').querySelector('.ray-dial i').style.transform=`translateX(-50%) rotate(${next}deg)`;
-    });
-    const reset=()=>{
-      input.value='0';previous=0;
-      input.closest('.ray-control').querySelector('.ray-dial i').style.transform='translateX(-50%) rotate(0deg)';
-    };
-    input.addEventListener('change',reset);
-    input.addEventListener('pointerup',reset);
-    input.addEventListener('pointercancel',reset);
+function angleValues(chart){
+  const p=chart.camera.position.clone().sub(chart.controls.target);
+  // X/Y are horizontal and vertical view angles. Z is independently editable
+  // as a Z-axis turn offset, matching the Z ray.
+  return [Math.atan2(p.y,p.x)*180/Math.PI,Math.atan2(p.z,Math.hypot(p.x,p.y))*180/Math.PI,chart.zAngle||0];
+}
+function updateAngleFields(chart){
+  const vals=angleValues(chart);
+  chart.host.closest('.panel')?.querySelectorAll('[data-angle]').forEach(el=>{
+    if(document.activeElement!==el)el.value=String(Math.round(vals[['X','Y','Z'].indexOf(el.dataset.angle)]*10)/10);
   });
 }
-function buildCards(){const container=$('#cards');container.innerHTML='';charts.forEach(c=>{c.controls.dispose();c.renderer.dispose()});charts=[];for(let i=0;i<4;i++){const div=document.createElement('article');div.className='panel';div.innerHTML=`<h2 id="heading${i}"></h2><div class="plot" id="plot${i}"><button class="expand" data-expand="${i}" type="button">${EXPAND_ICON}</button></div><div class="controls"><label>${t('rays')}: <span id="angle${i}"></span></label><button data-camera="${i}">↺ ${t('axis')}</button><button data-rotate="${i}" type="button" aria-pressed="false">${t('rotateOff')}</button><span class="axis-switch" role="group" aria-label="Rotation axis"><button data-axis-mode="XY" data-chart="${i}" type="button" aria-pressed="true">XY</button><button data-axis-mode="Z" data-chart="${i}" type="button" aria-pressed="false">Z</button></span>${makeRayControls(i)}</div><div class="matwrap"><div class="matpair"><table class="matrix" id="mat${i}"></table><div class="avoe-grid" id="eq${i}"></div></div></div><div class="description" id="desc${i}"></div>`;container.appendChild(div);if(i===0){const toolbar=document.querySelector('header .toolbar');if(toolbar)div.querySelector('h2').after(toolbar);}createChart(i,div.querySelector('.plot'));}
+function setNumericAngle(chart,axis,requested){
+  if(!Number.isFinite(requested))return;
+  requested=Math.max(-3600,Math.min(3600,requested));
+  const values=angleValues(chart);
+  if(axis==='Z'){
+    const delta=requested-values[2];chart.zAngle=requested;turnRay(chart,'Z',delta);
+  }else{
+    const index=axis==='X'?0:1;
+    const dest=index===0?requested:Math.max(-89.5,Math.min(89.5,requested));
+    const a=(index===0?dest:values[0])*Math.PI/180;
+    const e=(index===1?dest:values[1])*Math.PI/180;
+    const distance=chart.camera.position.distanceTo(chart.controls.target);
+    const ctl=chart.controls;
+    const wasZ=chart.axisMode==='Z';
+    ctl.minPolarAngle=0;ctl.maxPolarAngle=Math.PI;
+    chart.camera.position.set(Math.cos(e)*Math.cos(a)*distance,Math.cos(e)*Math.sin(a)*distance,Math.sin(e)*distance).add(ctl.target);
+    chart.camera.up.set(0,0,1);chart.camera.lookAt(ctl.target);ctl.update();
+    if(wasZ)setAxisMode(chart,'Z');
+  }
+  updateAngleFields(chart);
+}
+function wireRayControls(container){
+  container.querySelectorAll('.ray-dial[data-ray]').forEach(dial=>{
+    let last=null;
+    const needle=dial.querySelector('i');
+    const getAngle=ev=>{const r=dial.getBoundingClientRect();return Math.atan2(ev.clientY-(r.top+r.height/2),ev.clientX-(r.left+r.width/2))*180/Math.PI;};
+    dial.addEventListener('pointerdown',ev=>{ev.preventDefault();dial.setPointerCapture(ev.pointerId);last=getAngle(ev);needle.style.transform=`translate(-50%, -100%) rotate(${last+90}deg)`;});
+    dial.addEventListener('pointermove',ev=>{if(last===null)return;const next=getAngle(ev);let delta=next-last;if(delta>180)delta-=360;if(delta< -180)delta+=360;last=next;const chart=charts[Number(dial.dataset.chart)];if(dial.dataset.ray==='Z')chart.zAngle=(chart.zAngle||0)+delta;turnRay(chart,dial.dataset.ray,delta);needle.style.transform=`translate(-50%, -100%) rotate(${next+90}deg)`;});
+    const stop=()=>{last=null;needle.style.transform='translate(-50%, -100%) rotate(0deg)';};
+    dial.addEventListener('pointerup',stop);dial.addEventListener('pointercancel',stop);dial.addEventListener('lostpointercapture',stop);
+  });
+  container.querySelectorAll('[data-angle]').forEach(field=>{
+    field.addEventListener('change',()=>{const value=Number(field.value.replace(',','.'));if(Number.isFinite(value)&&field.value.trim())setNumericAngle(charts[Number(field.dataset.chart)],field.dataset.angle,value);else updateAngleFields(charts[Number(field.dataset.chart)]);});
+    field.addEventListener('keydown',ev=>{if(ev.key==='Enter')field.blur();});
+  });
+}
+function buildCards(){const container=$('#cards');container.innerHTML='';charts.forEach(c=>{c.controls.dispose();c.renderer.dispose()});charts=[];for(let i=0;i<4;i++){const div=document.createElement('article');div.className='panel';div.innerHTML=`<h2 id="heading${i}"></h2><div class="plot" id="plot${i}"><button class="expand" data-expand="${i}" type="button">${EXPAND_ICON}</button></div><div class="controls"><span class="angle-fields">${['X','Y','Z'].map(axis=>`<label>${axis} <input type="number" step="1" min="-3600" max="3600" data-angle="${axis}" data-chart="${i}" aria-label="${axis} angle">°</label>`).join('')}</span><button data-camera="${i}">↺ ${t('axis')}</button><button data-rotate="${i}" type="button" aria-pressed="false">${t('rotateOff')}</button><span class="axis-switch" role="group" aria-label="Rotation axis"><button data-axis-mode="XY" data-chart="${i}" type="button" aria-pressed="true">XY</button><button data-axis-mode="Z" data-chart="${i}" type="button" aria-pressed="false">Z</button></span>${makeRayControls(i)}</div><div class="matwrap"><div class="matpair"><table class="matrix" id="mat${i}"></table><div class="avoe-grid" id="eq${i}"></div></div></div><div class="description" id="desc${i}"></div>`;container.appendChild(div);if(i===0){const toolbar=document.querySelector('header .toolbar');if(toolbar)div.querySelector('h2').after(toolbar);}createChart(i,div.querySelector('.plot'));}
  container.querySelectorAll('[data-expand]').forEach(btn=>{setExpandIcon(btn,false);btn.onclick=()=>{const idx=+btn.dataset.expand;expanded=expanded===idx?-1:idx;container.querySelectorAll('.panel').forEach((el,n)=>el.classList.toggle('expanded',n===expanded));container.querySelectorAll('[data-expand]').forEach(other=>setExpandIcon(other,+other.dataset.expand===expanded));setTimeout(resize,10);};});
  container.querySelectorAll('[data-camera]').forEach(btn=>btn.onclick=()=>{const c=charts[+btn.dataset.camera];applyCameraState(c,{p:[11,-13,10],target:[0,0,0],zoom:c.camera.zoom});});
  wireRayControls(container);
@@ -181,11 +205,11 @@ function translate(){document.documentElement.lang=lang;document.documentElement
 function refresh(keepInputs=false){translate();present(keepInputs);try{localStorage.setItem('avo-gauss-jordan-01a',JSON.stringify(snapshot()));}catch(e){}}
 function resize(){charts.forEach(c=>{const w=c.host.clientWidth,h=c.host.clientHeight;if(w&&h){c.camera.aspect=w/h;c.camera.updateProjectionMatrix();c.renderer.setSize(w,h,false);}});}
 buildCards();refresh();resize();addEventListener('resize',resize);
-function animate(){requestAnimationFrame(animate);charts.forEach(c=>{c.controls.update();c.renderer.render(c.scene,c.camera);const p=c.camera.position.clone().sub(c.controls.target);const a=[Math.atan2(p.y,p.x)*180/Math.PI,Math.atan2(p.z,Math.hypot(p.x,p.y))*180/Math.PI];const el=$(`#angle${c.i}`);if(el)el.textContent=a.map(n=>n.toFixed(0)+'°').join(' / ');});}animate();
+function animate(){requestAnimationFrame(animate);charts.forEach(c=>{c.controls.update();c.renderer.render(c.scene,c.camera);const p=c.camera.position.clone().sub(c.controls.target);const a=[Math.atan2(p.y,p.x)*180/Math.PI,Math.atan2(p.z,Math.hypot(p.x,p.y))*180/Math.PI];updateAngleFields(c);});}animate();
 $('#restart').onclick=()=>{push();input=clone(DEFAULT);refresh();};
 $('#reset').onclick=()=>{push();for(let r=0;r<3;r++)for(let c=0;c<3;c++)input[r][c]=r===c?1:0;refresh();};
 $('#undo').disabled=true;$('#undo').onclick=()=>{if(!history.length)return;const previous=history.pop();setState(previous);$('#undo').disabled=!history.length;};
-$('#views').onclick=()=>{push();const source=charts[0];const v={p:source.camera.position.toArray(),target:source.controls.target.toArray(),zoom:source.camera.zoom};charts.slice(1).forEach(c=>applyCameraState(c,v));};
+$('#views').onclick=()=>{push();const source=charts[0];const v={p:source.camera.position.toArray(),target:source.controls.target.toArray(),zoom:source.camera.zoom};charts.slice(1).forEach(c=>{applyCameraState(c,v);c.zAngle=source.zAngle;updateAngleFields(c);});};
 $('#save').onclick=()=>{const a=document.createElement('a');const blob=new Blob([JSON.stringify({schema:'avo-gauss-jordan-01a',...snapshot()},null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);a.href=url;a.download='AVO_Gauss_Jordan_state.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),2000);};
 $('#load').onclick=()=>$('#file').click();$('#file').onchange=async e=>{const file=e.target.files[0];if(!file)return;try{const data=JSON.parse(await file.text());if(!validState(data))throw Error('invalid');push();setState(data);$('#message').textContent=t('restore');}catch(err){$('#message').textContent=t('invalid');}e.target.value='';};
 $('#help').onclick=()=>$('#helpDialog').showModal();$('#closeHelp').onclick=$('#okHelp').onclick=()=>$('#helpDialog').close();document.querySelectorAll('[data-lang]').forEach(b=>b.onclick=()=>{lang=b.dataset.lang;refresh();});
