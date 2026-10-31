@@ -145,3 +145,13 @@
 .controls .axis-switch button+button{border-left:1px solid #8ca9c2}
 .controls .axis-switch button[aria-pressed="true"]{background:#175789;color:white}
 .controls .axis-switch button:focus-visible{outline:2px solid #f0a424;outline-offset:-3px}
+
+/* 01ah: three accessible ray controls below each graph. */
+.controls .ray-controls{display:flex;align-items:center;gap:7px;flex-wrap:wrap;direction:ltr;margin-inline-start:2px}
+.controls .ray-control{display:flex;align-items:center;gap:4px;font-size:15px!important;white-space:nowrap;touch-action:pan-y}
+.ray-control>span:first-child{font-size:15px;font-weight:800}
+.ray-dial{display:inline-block;position:relative;flex:none;width:24px;height:24px;border:1px solid #9db7c9;border-radius:50%;background:#fff}
+.ray-dial i{position:absolute;width:3px;height:10px;border-radius:3px;background:#2469aa;bottom:11px;left:50%;transform:translateX(-50%) rotate(0deg);transform-origin:50% 100%;pointer-events:none}
+.ray-x .ray-dial i{background:#d63c38}.ray-y .ray-dial i{background:#258945}.ray-z .ray-dial i{background:#2469aa}
+.controls .ray-control input[type=range]{width:62px;min-width:62px;max-width:62px;accent-color:#236898;cursor:pointer;touch-action:pan-y}
+@media(max-width:620px){.controls .ray-controls{width:100%;justify-content:space-around}.controls .ray-control input[type=range]{width:70px;min-width:70px;max-width:70px}}
