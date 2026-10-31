@@ -130,3 +130,18 @@
 }
 
 .app-version{display:inline-block;font-size:14px;line-height:1.3;vertical-align:middle;border-radius:7px;padding:3px 7px;background:#d6e9f7;color:#174668;font-weight:800}
+
+/* 01af: mobile scrolling is enabled by default; rotate only on demand. */
+.plot{touch-action:pan-y}
+.plot canvas{touch-action:pan-y}
+.plot.rotation-active,.plot.rotation-active canvas{touch-action:none}
+.controls button[data-rotate]{font-weight:800;border-color:#8baec5;background:#fff}
+.controls button[data-rotate][aria-pressed="true"]{background:#185789;border-color:#185789;color:white}
+.controls button[data-rotate]:focus-visible{outline:3px solid #f0a424;outline-offset:2px}
+
+/* 01ag: XY/Z orbit axis selector, independent in each panel. */
+.controls .axis-switch{display:inline-flex;flex-shrink:0;border:1px solid #8ca9c2;border-radius:7px;overflow:hidden;direction:ltr}
+.controls .axis-switch button{border:0;border-radius:0;padding:5px 10px;min-width:42px;font-size:18px;font-weight:800;background:#e8f1f8;color:#214965}
+.controls .axis-switch button+button{border-left:1px solid #8ca9c2}
+.controls .axis-switch button[aria-pressed="true"]{background:#175789;color:white}
+.controls .axis-switch button:focus-visible{outline:2px solid #f0a424;outline-offset:-3px}
