@@ -1,0 +1,132 @@
+:root{--ink:#17324d;--line:#cfdae7;--pale:#edf4f9;--blue:#17699b}*{box-sizing:border-box}body{margin:0;font:20px system-ui,'Segoe UI',Arial,sans-serif;color:var(--ink);background:#eef4f9;font-weight:700}header{background:#dfeaf4;border-bottom:1px solid #bbccd9}.top{display:flex;align-items:center;gap:14px;padding:10px 14px}.logo{font-size:22px;white-space:nowrap}.heading{flex:1}.heading h1{margin:0;font-size:27px}.heading p{margin:3px 0;color:#547089}.flags{display:flex;gap:5px}.flags button{font-size:23px;padding:5px 8px}.flags button.active{border-color:#17699b;background:#d0e8fb}.toolbar{padding:8px 14px;display:flex;gap:7px;flex-wrap:wrap;align-items:center}button{cursor:pointer;border:1px solid #aac1d3;border-radius:6px;background:white;padding:7px 10px;color:#153b58;font:inherit;font-weight:700}button:hover{background:#e7f4fd}button:disabled{opacity:1;cursor:default;font-weight:800 !important;color:#8a98a8;background:#f2f6fa}#message{color:#557088}main{padding:11px}.cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.panel{border:1px solid var(--line);background:white;border-radius:9px;min-width:0;overflow:hidden}.panel h2{font-size:20px;margin:0;background:#e5edf5;padding:10px}.plot{height:360px;position:relative;background:#fff;touch-action:none}.plot canvas{width:100%;height:100%;display:block}.plot .expand{position:absolute;right:7px;top:7px;z-index:2}.controls{padding:7px;border-block:1px solid #dae6ef;background:#f7fbfe;display:flex;flex-wrap:wrap;align-items:center;gap:7px}.controls label{font-size:18px;white-space:nowrap}.controls input[type=range]{width:68px;vertical-align:middle}.controls input[type=number]{width:49px}.matwrap{padding:8px}.matrix{border-collapse:separate;border-spacing:4px 5px;margin:0 auto;table-layout:fixed}.matrix td{width:58px;text-align:center;font:700 20px ui-monospace,Consolas,monospace}.matrix td:last-child{border-left:2px solid #6d8ca6;padding-left:10px;width:68px;color:#193d6b}.matrix input{width:61px;padding:7px 4px;border:1px solid #bccbd8;border-radius:4px;text-align:center;font:700 20px ui-monospace,monospace}.matrix input.b{width:65px}.matrix input:focus{outline:2px solid #2379bd;background:#f1f9ff}.description{padding:11px 12px 15px;color:#243e59;min-height:58px;font-size:18px;line-height:1.55;overflow-wrap:anywhere}.description p{margin:5px 0}.summary{background:white;border:1px solid var(--line);padding:13px 16px;margin-top:12px;border-radius:8px;font-size:20px;font-weight:600}.expanded{position:fixed!important;inset:8px!important;z-index:99;overflow:auto;box-shadow:0 0 0 100vmax #102941b8}.expanded .plot{height:60vh}.expanded .expand{position:absolute;top:7px;right:7px}dialog{max-width:740px;width:90vw;max-height:84vh;overflow:auto;border:1px solid #98b6cf;border-radius:10px;padding:20px;color:#17324d}dialog::backdrop{background:#112c46aa}.dialogtop{display:flex;justify-content:space-between;align-items:center}.dialogtop h2{margin:0 0 15px}#helpContent{line-height:1.6}#helpContent h3{margin-bottom:4px}#okHelp{margin-top:12px;background:#17699b;color:white}@media(max-width:950px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:620px){.cards{grid-template-columns:1fr}.plot{height:360px}.heading h1{font-size:19px}.top{flex-wrap:wrap}.heading{min-width:200px}}@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
+
+.logo{display:flex;align-items:center;gap:9px}.logo img{height:57px;width:46px;object-fit:contain}.matrix input{appearance:textfield;-moz-appearance:textfield}.matrix input::-webkit-inner-spin-button,.matrix input::-webkit-outer-spin-button{appearance:none;margin:0}
+
+/* Version 01c: readable text and flags without emoji font dependency */
+.flags button{width:46px;height:38px;padding:4px;display:grid;place-items:center;flex:0 0 auto}
+.flags button svg{width:35px;height:24px;display:block;border:1px solid #b4c2d2;border-radius:2px}
+#help{font-weight:800;font-size:23px;border-radius:50%;width:41px;height:41px;padding:0}
+.panel>.toolbar{display:flex;flex-wrap:wrap;gap:6px;padding:10px;border-bottom:1px solid #cfdae7;background:#f1f7fc;align-items:center}
+.panel>.toolbar button{font-size:17px;line-height:1.2;padding:8px 9px}
+.panel>.toolbar #message{font-size:15px;flex-basis:100%}
+.matrix td{width:clamp(40px,3vw,58px)}.matrix td:last-child{width:clamp(50px,3.4vw,68px);padding-left:5px}
+.matrix input{width:100%;min-width:0;padding:7px 1px;font-size:20px}.matrix input.b{width:100%}
+.matrix{border-spacing:3px 5px;max-width:100%}.matwrap{padding:8px 4px}
+@media(max-width:620px){.panel>.toolbar button{font-size:18px}.heading h1{font-size:23px}.matrix td{width:60px}.matrix td:last-child{width:70px}}
+
+/* Version 01d: readable type and help beside language flags */
+.panel h2{font-size:20px;font-weight:750;line-height:1.3}
+.panel>.toolbar button{font-size:20px;line-height:1.25}
+.panel>.toolbar #message{font-size:20px}
+.controls label,.controls button,.description,.heading p,#helpContent{font-size:20px}
+.matrix td,.matrix input{font-size:20px}
+.summary{font-size:20px}
+.flags #help{font-size:24px;font-weight:800;border-radius:50%;width:38px;height:38px;padding:0;display:grid;place-items:center;background:white;color:#153b58}
+.flags{align-items:center}
+@media(max-width:620px){.panel>.toolbar button{font-size:20px}.heading p{font-size:18px}}
+
+/* 01f overrides */
+.panel h2{font-size:22px !important;font-weight:800 !important;}
+
+.matrix input.invalid{outline:3px solid #bb1d1d;background:#fff0f0;color:#990000}
+
+/* 01n: matrix left, larger bold equations with wider separation on the right. */
+.matwrap{overflow-x:auto; padding:10px 8px}
+.matrix{margin:0; width:max-content; max-width:none; border-spacing:4px 8px}
+.matrix td{width:clamp(40px,2.8vw,52px)}
+.matrix td:last-child{border-left:0;padding-left:0;width:auto;color:var(--ink)}
+.matrix td:nth-child(4){border-left:2px solid #6d8ca6;padding-left:7px;width:clamp(48px,3.1vw,58px);color:#193d6b}
+.matrix .equation-cell{font:800 20px system-ui,'Segoe UI',Arial,sans-serif;white-space:nowrap;text-align:left;letter-spacing:-.1px;vertical-align:middle;padding-left:26px;color:#17324d}
+.matrix input{font-size:20px; padding:6px 2px}
+@media(max-width:620px){
+ .matrix td{width:52px}
+ .matrix td:nth-child(4){width:58px}
+ .matrix .equation-cell{font-size:20px;padding-left:20px}
+}
+
+
+/* 01o tweaks: clearer disabled Undo, heading-style summary label, bold result, wider equation gap */
+#undo:disabled{font-weight:800 !important;opacity:1;color:#8a98a8;background:#f2f6fa}
+.summary{font-size:20px;font-weight:700}
+.summary-label{font-size:22px;font-weight:800;line-height:1.25;color:#17324d}
+.summary-value{font-size:20px;font-weight:800;color:#17324d}
+.summary-rank{font-size:20px;font-weight:700;color:#17324d}
+.matrix .equation-cell{padding-left:42px !important;font-size:20px !important;font-weight:800 !important}
+@media(max-width:620px){.matrix .equation-cell{padding-left:34px !important}}
+
+
+/* 01p tweaks */
+.summary-label{font-size:25px !important;font-weight:800 !important}
+.summary-value{font-size:20px !important;font-weight:800 !important}
+.summary-rank{font-size:20px !important;font-weight:700 !important}
+.matrix input{font-weight:800 !important}
+.matrix .equation-cell{font:800 20px ui-monospace,Consolas,monospace !important; white-space:nowrap; letter-spacing:0 !important}
+.eqwrap{display:inline-flex; align-items:baseline; white-space:nowrap; gap:0}
+.eqslot{display:inline-block; width:9ch; text-align:right}
+.eqrhsop{display:inline-block; width:3ch; text-align:center}
+.eqrhs{display:inline-block; min-width:6ch; text-align:right}
+.eqblank{opacity:0}
+
+
+/* 01q tweaks: standard SVG maximize icon, bolder input numbers, more compact equations */
+.plot .expand{display:grid;place-items:center;width:36px;height:36px;padding:0;background:rgba(255,255,255,.96)}
+.plot .expand svg{width:18px;height:18px;display:block;stroke:#153b58;stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.matrix input{font-weight:800 !important;color:#17324d}
+.matrix .equation-cell{padding-left:26px !important;font:800 18px ui-monospace,Consolas,monospace !important;letter-spacing:0 !important}
+.eqslot{width:8ch;text-align:right}
+.eqrhsop{width:2ch;text-align:center}
+.eqrhs{display:inline-block;min-width:5ch;text-align:right}
+@media(max-width:620px){.matrix .equation-cell{font-size:17px !important;padding-left:22px !important}}
+
+/* 01r: decimal-point columns and compact equations */
+.matrix .equation-cell{padding-left:18px !important;font:800 16px ui-monospace,Consolas,monospace !important;white-space:nowrap}
+.eqwrap{display:inline-flex;align-items:center;white-space:nowrap;gap:0;font-variant-numeric:tabular-nums}
+.eq-term{display:inline-grid;grid-template-columns:1ch 4.8ch 1ch;white-space:nowrap;align-items:baseline}
+.eq-sign{text-align:center}
+.eq-num{text-align:right;font-variant-numeric:tabular-nums}
+.eq-var{text-align:left}
+.eq-empty{visibility:hidden}
+.eq-equals{display:inline-block;width:2ch;text-align:center}
+.eq-answer{display:inline-block;min-width:5ch;text-align:right}
+.summary-value{margin-inline-start:.65ch}
+@media(max-width:620px){.matrix .equation-cell{padding-left:14px !important;font-size:16px !important}}
+
+/* 01s: exact per-column decimal alignment and two-character matrix gap */
+.matrix .equation-cell{padding-left:2ch !important;font:800 16px Consolas,ui-monospace,monospace !important;white-space:nowrap;vertical-align:middle}
+.eqwrap{display:inline-flex;gap:0;white-space:pre;align-items:baseline;font:inherit;font-variant-numeric:tabular-nums}
+.eq-field{white-space:pre;display:inline-block;flex:none}
+.eq-invisible{visibility:hidden}
+.eq-equals-fixed{white-space:pre;display:inline-block;flex:none}
+.matrix input{font-family:Consolas,ui-monospace,monospace !important;font-weight:900 !important;color:#10283f !important}
+@media(max-width:620px){.matrix .equation-cell{padding-left:2ch !important;font-size:16px !important}}
+
+
+/* 01v: One native HTML table per panel, real shared columns for all three equations. */
+.matwrap{padding:9px 5px;overflow-x:auto;overflow-y:hidden}
+.matrix{border-collapse:separate;border-spacing:0 5px;table-layout:auto;width:max-content;max-width:none;margin:0;direction:ltr}
+.matrix tr > td{height:28px;vertical-align:middle;box-sizing:content-box;line-height:1.2;border:0;min-width:0;white-space:nowrap;padding:0}
+.matrix tr > td.matrix-number{width:39px;max-width:39px;text-align:center;font:800 16px Consolas,'Liberation Mono',monospace;color:#143b60;padding:0 1px}
+.matrix tr > td.matrix-rhs{border-left:1px solid #8da8bc;padding-left:3px;width:45px;max-width:45px}
+.matrix .matrix-number input{width:100%;min-width:0;max-width:100%;font:900 17px Consolas,'Liberation Mono',monospace !important;text-align:center;padding:5px 0;color:#10283f;box-sizing:border-box}
+.matrix tr > td.eqc{font:800 14px Consolas,'Liberation Mono',monospace;letter-spacing:0;white-space:pre;box-sizing:border-box;padding:0;width:auto;max-width:none;text-align:left;color:#17324d;direction:ltr}
+.matrix tr > td.eq-first{padding-left:2ch}
+.matrix tr > td.eq-sign{min-width:1ch;text-align:right}
+.matrix tr > td.eq-integer{min-width:1ch;text-align:right}
+.matrix tr > td.eq-point{min-width:1ch;text-align:center}
+.matrix tr > td.eq-fraction{min-width:2ch;text-align:left}
+.matrix tr > td.eq-variable{min-width:1ch;text-align:left}
+.matrix tr > td.eq-equals{min-width:3ch;text-align:center}
+.matrix tr > td.eq-rhs-sign{min-width:1ch;text-align:right}
+.matrix tr > td.eq-rhs-int{min-width:1ch;text-align:right}
+.matrix tr > td.eq-rhs-point{min-width:1ch;text-align:center}
+.matrix tr > td.eq-rhs-frac{min-width:2ch;text-align:left}
+@media(max-width:620px){.matrix tr > td.matrix-number{width:41px;max-width:41px}.matrix tr > td.matrix-rhs{width:45px;max-width:45px}.matrix tr > td.eqc{font-size:14px}}
+/* Keep the 3-row alignment on narrow phones without shrinking editable fields excessively. */
+@media(max-width:620px){
+ .matrix tr > td.matrix-number{width:36px;max-width:36px}
+ .matrix tr > td.matrix-rhs{width:42px;max-width:42px}
+ .matrix .matrix-number input{font-size:15px !important}
+ .matrix tr > td.eqc{font-size:13px}
+}
+
+.app-version{display:inline-block;font-size:14px;line-height:1.3;vertical-align:middle;border-radius:7px;padding:3px 7px;background:#d6e9f7;color:#174668;font-weight:800}
