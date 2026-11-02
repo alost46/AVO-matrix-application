@@ -35,3 +35,6 @@
 @container (max-width:405px){
   #cards .matpair .matrix tr > td input{font-size:17px !important}
 }
+
+/* Invalid typed cells must override normal plane ink in all browsers. */
+#cards .matpair .matrix tr>td input.invalid{background:#080808 !important;color:#fff !important;-webkit-text-fill-color:#fff !important;border-color:#080808 !important}

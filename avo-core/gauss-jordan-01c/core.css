@@ -178,15 +178,14 @@
    exactly as updateChart() assigns geometryPlane(rows[r], colors[r]).
    Rows without a valid plane use neutral grey. Input fields stay editable. */
 .matrix tr.matrix-plane-0{--matrix-plane-ink:#e12d28}
-.matrix tr.matrix-plane-1{--matrix-plane-ink:#003bbd}
+.matrix tr.matrix-plane-1{--matrix-plane-ink:#6A5CFF}
 .matrix tr.matrix-plane-2{--matrix-plane-ink:#598d00} /* readable lime ink for bright salad-green plane #8bdc25 */
 .matrix tr.matrix-no-plane{--matrix-plane-ink:#667585}
 .matrix tr.matrix-plane-row > td.matrix-number,
 .matrix tr.matrix-plane-row > td.matrix-number input{
   color:var(--matrix-plane-ink) !important;
-  font-weight:900 !important;
 }
-/* Invalid values use black text and a black outline on a pale amber background. */
+/* Invalid entries are white on black; labels remain coloured. */
 .matrix tr.matrix-plane-row > td.matrix-number input.invalid{color:#111111 !important}
 
 /* 01am: editable input glyphs use their plane colour in Chromium, Safari and WebKit.
@@ -194,8 +193,24 @@
    override it; validation keeps its distinct black warning. */
 .matrix tr.matrix-plane-row > td.matrix-number input:not(.invalid){
   -webkit-text-fill-color:var(--matrix-plane-ink) !important;
-  font-weight:900 !important;
+  font-weight:400 !important;
 }
 .matrix tr.matrix-plane-row > td.matrix-number input.invalid{
-  -webkit-text-fill-color:#111111 !important;
+  -webkit-text-fill-color:#ffffff !important;
+  color:#ffffff !important;
+  background:#080808 !important;
+  border-color:#080808 !important;
 }
+
+/* 01as: exact opaque-colour chips label each row, even when its transparent
+   3D plane looks lighter. The chip is drawn only on the first cell. */
+.matrix tr.matrix-plane-row > td:first-child{position:relative;}
+.matrix tr.matrix-plane-row > td:first-child::before{
+  content:"";position:absolute;left:2px;top:50%;transform:translateY(-50%);
+  width:7px;height:16px;border-radius:2px;
+  background:var(--matrix-plane-chip,#999);z-index:1;pointer-events:none;
+}
+.matrix tr.matrix-plane-0{--matrix-plane-chip:#e12d28}
+.matrix tr.matrix-plane-1{--matrix-plane-chip:#6A5CFF}
+.matrix tr.matrix-plane-2{--matrix-plane-chip:#8bdc25}
+.matrix tr.matrix-no-plane{--matrix-plane-chip:#8896a6}

@@ -234,8 +234,8 @@ function buildCards(){const container=$('#cards');container.innerHTML='';charts.
 function parseCell(text){const raw=text.trim().replace(/\s+/g,'').replace(',', '.');if(!raw || !/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/.test(raw))return NaN;const n=Number(raw);return Number.isFinite(n)&&Math.abs(n)<=1e8?n:NaN;}
 function invalidInput(field){
   field.classList.add('invalid');
-  field.style.setProperty('color','#111111','important');
-  field.style.setProperty('-webkit-text-fill-color','#111111','important');
+  field.style.setProperty('color','#ffffff','important');
+  field.style.setProperty('-webkit-text-fill-color','#ffffff','important');
  $('#summary').textContent=lang==='ru'?'Ошибка ввода: исправьте выделенную ячейку матрицы. Результат пока не вычисляется.':lang==='he'?'שגיאת קלט: תקנו את התא המסומן. התוצאה אינה מחושבת כעת.':'Invalid input: correct the highlighted matrix cell. Result is temporarily unavailable.';
  charts.forEach(ch=>{ch.dot.visible=false;ch.group.visible=false;});
  for(let i=1;i<4;i++){$(`#mat${i}`).style.visibility='hidden';$(`#eq${i}`).style.visibility='hidden';$(`#desc${i}`).style.visibility='hidden';}
@@ -250,10 +250,10 @@ function colorMatrixRow(trEl,row,r){
   trEl.className='matrix-plane-row'+(noPlane?' matrix-no-plane':' matrix-plane-'+r);
   const ink=noPlane?'#667585':MATRIX_INK[r];
   trEl.querySelectorAll('input').forEach(field=>{
-    const c=field.classList.contains('invalid')?'#111111':ink;
+    const c=field.classList.contains('invalid')?'#ffffff':ink;
     field.style.setProperty('color',c,'important');
     field.style.setProperty('-webkit-text-fill-color',c,'important');
-    field.style.setProperty('font-weight','900','important');
+    field.style.setProperty('font-weight','400','important');
   });
 }
 function matrixUI(i,rows){const table=$(`#mat${i}`);table.innerHTML='';rows.forEach((row,r)=>{const trEl=document.createElement('tr');colorMatrixRow(trEl,row,r);row.forEach((v,c)=>{const cell=document.createElement('td');cell.className='matrix-number'+(c===3?' matrix-rhs':'');if(i===0){const field=document.createElement('input');field.type='text';field.inputMode='decimal';field.autocomplete='off';field.spellcheck=false;field.value=fmtInput(v);field.className=c===3?'b':'';field.setAttribute('aria-label',`row ${r+1} column ${c+1}`);
