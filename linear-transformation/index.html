@@ -79,6 +79,11 @@ body.has-expanded{overflow:hidden}.matrix input{scroll-margin-top:40px;scroll-ma
 .hebrew-text .lead,.hebrew-text .help,.hebrew-text .note,.hebrew-text .data p,.hebrew-text .data h2,.hebrew-text .plane-equation strong,.hebrew-text .status,.hebrew-text .state-toolbar output,.hebrew-text .sync-tools span,.hebrew-text .view-heading{direction:rtl;text-align:right}
 .hebrew-text .plane-equation .formula{direction:ltr;text-align:left}
 .hebrew-text .help-inner{direction:rtl;text-align:right}
+
+/* AVO navigation: same-tab return to the main catalogue. */
+.nav-home-link{display:inline-flex;align-items:center;justify-content:center;gap:5px;white-space:nowrap;text-decoration:none;background:#fff;color:#235a87;border:1px solid #b9ccda;border-radius:8px;padding:8px 11px;font-size:13px;font-weight:750;line-height:1.1;min-height:36px}
+.nav-home-link:hover{background:#e7f4fd}
+.nav-home-link:focus-visible{outline:3px solid #579bd0;outline-offset:2px}
 </style>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}</script>
 <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32.png">
@@ -91,7 +96,7 @@ body.has-expanded{overflow:hidden}.matrix input{scroll-margin-top:40px;scroll-ma
 </head>
 <body>
 <main class="shell">
-<header><div class="header-brand"><img src="./avo-logo.png" alt="AVO" width="27" height="35"><h1 data-i18n="appTitle">Линейное преобразование матриц</h1></div><span class="tag" data-i18n="edition">Веб-версия 03r</span><div class="top-actions"><button class="language-button active" data-lang="ru" aria-label="Русский"><svg class="flag-icon" viewBox="0 0 60 40" aria-hidden="true" focusable="false"><rect width="60" height="40" fill="#fff"/><rect y="13.333" width="60" height="13.334" fill="#1746a2"/><rect y="26.667" width="60" height="13.333" fill="#d52b1e"/></svg></button><button class="language-button" data-lang="en" aria-label="English"><svg class="flag-icon" viewBox="0 0 60 40" aria-hidden="true" focusable="false"><rect width="60" height="40" fill="#012169"/><path d="M0 0L60 40M60 0L0 40" stroke="#fff" stroke-width="12"/><path d="M0 0L60 40M60 0L0 40" stroke="#c8102e" stroke-width="4.5"/><path d="M30 0V40M0 20H60" stroke="#fff" stroke-width="14"/><path d="M30 0V40M0 20H60" stroke="#c8102e" stroke-width="7"/></svg></button><button class="language-button" data-lang="he" aria-label="עברית"><svg class="flag-icon" viewBox="0 0 60 40" aria-hidden="true" focusable="false"><rect width="60" height="40" fill="#fff"/><rect y="5" width="60" height="5" fill="#0038b8"/><rect y="30" width="60" height="5" fill="#0038b8"/><path d="M30 14 L36.3 25 H23.7 Z M30 26 L23.7 15 H36.3 Z" fill="none" stroke="#0038b8" stroke-width="1.7" stroke-linejoin="round"/></svg></button><button class="help-btn" id="open-help" aria-label="Help">?</button></div></header>
+<header><div class="header-brand"><img src="./avo-logo.png" alt="AVO" width="27" height="35"><h1 data-i18n="appTitle">Линейное преобразование матриц</h1></div><a id="avo-home-link" class="nav-home-link" href="../?lang=ru" aria-label="На главную">⌂ На главную</a><span class="tag" data-i18n="edition">Веб-версия 03r</span><div class="top-actions"><button class="language-button active" data-lang="ru" aria-label="Русский"><svg class="flag-icon" viewBox="0 0 60 40" aria-hidden="true" focusable="false"><rect width="60" height="40" fill="#fff"/><rect y="13.333" width="60" height="13.334" fill="#1746a2"/><rect y="26.667" width="60" height="13.333" fill="#d52b1e"/></svg></button><button class="language-button" data-lang="en" aria-label="English"><svg class="flag-icon" viewBox="0 0 60 40" aria-hidden="true" focusable="false"><rect width="60" height="40" fill="#012169"/><path d="M0 0L60 40M60 0L0 40" stroke="#fff" stroke-width="12"/><path d="M0 0L60 40M60 0L0 40" stroke="#c8102e" stroke-width="4.5"/><path d="M30 0V40M0 20H60" stroke="#fff" stroke-width="14"/><path d="M30 0V40M0 20H60" stroke="#c8102e" stroke-width="7"/></svg></button><button class="language-button" data-lang="he" aria-label="עברית"><svg class="flag-icon" viewBox="0 0 60 40" aria-hidden="true" focusable="false"><rect width="60" height="40" fill="#fff"/><rect y="5" width="60" height="5" fill="#0038b8"/><rect y="30" width="60" height="5" fill="#0038b8"/><path d="M30 14 L36.3 25 H23.7 Z M30 26 L23.7 15 H36.3 Z" fill="none" stroke="#0038b8" stroke-width="1.7" stroke-linejoin="round"/></svg></button><button class="help-btn" id="open-help" aria-label="Help">?</button></div></header>
 <div class="state-toolbar" role="group" aria-label="Save and restore matrices">
  <button type="button" id="undo-action" data-i18n="undo" disabled>Отменить</button>
  <button type="button" id="restart-action" data-i18n="restart">Начать заново</button>
@@ -1052,7 +1057,16 @@ for(const btn of document.querySelectorAll('[data-expand]'))btn.addEventListener
 window.addEventListener('keydown',ev=>{if(ev.key==='Escape'){if(document.getElementById('help-dialog').open)document.getElementById('help-dialog').close();else if(expanded)setExpanded(expanded);}});
 
 function setLanguage(next){
+ if(!['ru','en','he'].includes(next))next='ru';
  lang=next;document.documentElement.lang=next;document.title=t('appTitle')+' · Web 03r';
+ // Share language with the AVO home page, without changing math or cameras.
+ try{localStorage.setItem('avo-site-language',next);localStorage.setItem('avo-home-lang',next);}catch(_){}
+ const homeLink=document.getElementById('avo-home-link');
+ if(homeLink){
+  const labels={ru:'На главную',en:'Home',he:'לדף הראשי'};
+  homeLink.textContent='⌂ '+labels[next];homeLink.setAttribute('aria-label',labels[next]);
+  homeLink.setAttribute('href','../?lang='+encodeURIComponent(next));
+ }
  for(const el of document.querySelectorAll('[data-i18n]'))el.textContent=t(el.dataset.i18n);
  for(const el of document.querySelectorAll('[data-lang]'))el.classList.toggle('active',el.dataset.lang===next);
  const body=document.getElementById('help-body');body.innerHTML=I18N[next].helpHtml;body.dir=next==='he'?'rtl':'ltr';
@@ -1099,8 +1113,21 @@ const helpDialog=document.getElementById('help-dialog');
 document.getElementById('open-help').addEventListener('click',()=>helpDialog.showModal());
 document.getElementById('close-help').addEventListener('click',()=>helpDialog.close());
 helpDialog.addEventListener('click',ev=>{if(ev.target===helpDialog)helpDialog.close();});
+// Read the chosen site language BEFORE legacy initialization or state restore.
+const avoEntryLanguage=(()=>{
+ try{
+  const fromUrl=new URLSearchParams(window.location.search).get('lang');
+  if(['ru','en','he'].includes(fromUrl))return fromUrl;
+  const shared=localStorage.getItem('avo-site-language')||localStorage.getItem('avo-home-lang');
+  return ['ru','en','he'].includes(shared)?shared:null;
+ }catch(_){return null;}
+})();
 setLanguage('ru');
-setupStateControls();restoreBrowserState();persistenceReady=true;
+setupStateControls();restoreBrowserState();
+// The home-page language wins over older per-application saved language.
+if(avoEntryLanguage)setLanguage(avoEntryLanguage);
+persistenceReady=true;
+document.getElementById('avo-home-link').addEventListener('click',()=>storeImmediately());
 let focusedInput=null;
 function updateVisualViewport(){
  const vv=window.visualViewport;
