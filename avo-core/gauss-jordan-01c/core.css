@@ -171,3 +171,20 @@
 /* 01aj: ray dials are unavailable until Rotate is enabled. */
 .controls .ray-dial:disabled{opacity:.43;cursor:default;touch-action:pan-y}
 .controls .ray-dial:disabled i{opacity:.6}
+
+
+/* 01al: matrix row numbers have the colour of their corresponding plane.
+   Step rows are coloured by CURRENT row position after each operation/swap,
+   exactly as updateChart() assigns geometryPlane(rows[r], colors[r]).
+   Rows without a valid plane use neutral grey. Input fields stay editable. */
+.matrix tr.matrix-plane-0{--matrix-plane-ink:#e12d28}
+.matrix tr.matrix-plane-1{--matrix-plane-ink:#1763c4}
+.matrix tr.matrix-plane-2{--matrix-plane-ink:#187a2c} /* higher contrast shade of plane green #238d36 */
+.matrix tr.matrix-no-plane{--matrix-plane-ink:#667585}
+.matrix tr.matrix-plane-row > td.matrix-number,
+.matrix tr.matrix-plane-row > td.matrix-number input{
+  color:var(--matrix-plane-ink) !important;
+  font-weight:900 !important;
+}
+/* Validation remains red even when a row belongs to another plane. */
+.matrix tr.matrix-plane-row > td.matrix-number input.invalid{color:#990000 !important}
