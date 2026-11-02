@@ -188,3 +188,14 @@
 }
 /* Validation remains red even when a row belongs to another plane. */
 .matrix tr.matrix-plane-row > td.matrix-number input.invalid{color:#990000 !important}
+
+/* 01am: editable input glyphs use their plane colour in Chromium, Safari and WebKit.
+   The JavaScript also sets this directly, so cached historical input rules cannot
+   override it; validation keeps its distinct red warning. */
+.matrix tr.matrix-plane-row > td.matrix-number input:not(.invalid){
+  -webkit-text-fill-color:var(--matrix-plane-ink) !important;
+  font-weight:900 !important;
+}
+.matrix tr.matrix-plane-row > td.matrix-number input.invalid{
+  -webkit-text-fill-color:#990000 !important;
+}

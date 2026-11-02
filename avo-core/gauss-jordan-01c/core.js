@@ -233,21 +233,36 @@ function buildCards(){const container=$('#cards');container.innerHTML='';charts.
  container.querySelectorAll('[data-rotate]').forEach(btn=>btn.onclick=()=>{const ch=charts[+btn.dataset.rotate];setRotationMode(ch,!ch.rotationMode);});container.querySelectorAll('[data-axis-mode]').forEach(btn=>btn.onclick=()=>{const ch=charts[+btn.dataset.chart];setAxisMode(ch,btn.dataset.axisMode);});}
 function parseCell(text){const raw=text.trim().replace(/\s+/g,'').replace(',', '.');if(!raw || !/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/.test(raw))return NaN;const n=Number(raw);return Number.isFinite(n)&&Math.abs(n)<=1e8?n:NaN;}
 function invalidInput(field){
- field.classList.add('invalid');
+  field.classList.add('invalid');
+  field.style.setProperty('color','#990000','important');
+  field.style.setProperty('-webkit-text-fill-color','#990000','important');
  $('#summary').textContent=lang==='ru'?'Ошибка ввода: исправьте выделенную ячейку матрицы. Результат пока не вычисляется.':lang==='he'?'שגיאת קלט: תקנו את התא המסומן. התוצאה אינה מחושבת כעת.':'Invalid input: correct the highlighted matrix cell. Result is temporarily unavailable.';
  charts.forEach(ch=>{ch.dot.visible=false;ch.group.visible=false;});
  for(let i=1;i<4;i++){$(`#mat${i}`).style.visibility='hidden';$(`#eq${i}`).style.visibility='hidden';$(`#desc${i}`).style.visibility='hidden';}
 }
 // Matrices and equations are independent. All three equations are rendered
 // into ONE CSS grid, so columns cannot shift from one row to the next.
-function colorMatrixRow(trEl,row,r){trEl.className='matrix-plane-row'+(Math.hypot(row[0],row[1],row[2])<1e-8?' matrix-no-plane':' matrix-plane-'+r);}
+// 01am: Apply original-matrix row colours to the editable input glyphs too.
+// Explicit text fill resolves browser-specific input styling; do not recolour equations.
+const MATRIX_INK=['#e12d28','#1763c4','#187a2c'];
+function colorMatrixRow(trEl,row,r){
+  const noPlane=Math.hypot(row[0],row[1],row[2])<1e-8;
+  trEl.className='matrix-plane-row'+(noPlane?' matrix-no-plane':' matrix-plane-'+r);
+  const ink=noPlane?'#667585':MATRIX_INK[r];
+  trEl.querySelectorAll('input').forEach(field=>{
+    const c=field.classList.contains('invalid')?'#990000':ink;
+    field.style.setProperty('color',c,'important');
+    field.style.setProperty('-webkit-text-fill-color',c,'important');
+    field.style.setProperty('font-weight','900','important');
+  });
+}
 function matrixUI(i,rows){const table=$(`#mat${i}`);table.innerHTML='';rows.forEach((row,r)=>{const trEl=document.createElement('tr');colorMatrixRow(trEl,row,r);row.forEach((v,c)=>{const cell=document.createElement('td');cell.className='matrix-number'+(c===3?' matrix-rhs':'');if(i===0){const field=document.createElement('input');field.type='text';field.inputMode='decimal';field.autocomplete='off';field.spellcheck=false;field.value=fmtInput(v);field.className=c===3?'b':'';field.setAttribute('aria-label',`row ${r+1} column ${c+1}`);
  field.onfocus=()=>{field._before=snapshot();field._changed=false;field.select();};
  field.onkeydown=ev=>{if(ev.key==='Enter'){ev.preventDefault();field.blur();}};
  field.oninput=()=>{const value=parseCell(field.value);if(!Number.isFinite(value)){invalidInput(field);return;}
    field.classList.remove('invalid');if(value!==input[r][c]){if(!field._changed){history.push(field._before||snapshot());field._changed=true;}input[r][c]=value;}refresh(true);$('#undo').disabled=history.length===0;};
  field.onblur=()=>{const value=parseCell(field.value);if(!Number.isFinite(value)){field.value=fmtInput(input[r][c]);field.classList.remove('invalid');refresh(true);return;}field.value=fmtInput(value);};
- cell.appendChild(field);}else cell.textContent=fmt(v);trEl.appendChild(cell)});table.appendChild(trEl);});}
+ cell.appendChild(field);}else cell.textContent=fmt(v);trEl.appendChild(cell)});table.appendChild(trEl);colorMatrixRow(trEl,row,r);});}
 function describe(i){if(i===0)return t('plane');const s=result.steps[i],o=s.ops.map(x=>x==='zero'||x==='skip'?t('zero'):x);return (o.length?o.join('; '):t('none'));}
 function present(keepInputs=false){result=AVOGaussMath.rrefSteps(input);for(let i=0;i<4;i++){const rows=result.steps[i].matrix;$(`#heading${i}`).textContent=i===0?t('initial'):`${t('step')} ${i}`;if(!(keepInputs&&i===0))matrixUI(i,rows);else Array.from($(`#mat${i}`).rows).forEach((trEl,r)=>colorMatrixRow(trEl,rows[r],r));window.AVOEquationLayout.render($(`#eq${i}`),rows);charts[i].group.visible=true;if(i>0){$(`#mat${i}`).style.visibility='visible';$(`#eq${i}`).style.visibility='visible';$(`#desc${i}`).style.visibility='visible';}updateChart(charts[i],rows,result.solution);$(`#desc${i}`).textContent=describe(i);}
 const s=$('#summary');const answer=result.inconsistent?t('incompatible'):result.solution?`${t('unique')}: x=${fmt(result.solution[0])}, y=${fmt(result.solution[1])}, z=${fmt(result.solution[2])}`:`${t('infinite')}: (x,y,z)=(${result.base.map(fmt).join(', ')})${result.directions.map((v,i)=>` + t${i+1}·(${v.map(fmt).join(', ')})`).join('')}`;s.innerHTML=`<span class="summary-label">${t('summary')}:</span><span class="summary-value">${answer}</span> <span class="summary-rank">· ${t('rank')}: ${result.rank}</span>`;}
