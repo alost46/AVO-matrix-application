@@ -7,7 +7,7 @@
 .matpair .matrix tr{height:32px}
 .matpair .matrix tr>td{width:85px;min-width:85px;max-width:85px;height:32px;padding:1px;border:0;line-height:1;box-sizing:border-box;text-align:center;vertical-align:middle;font:800 14px Consolas,'Liberation Mono',ui-monospace,monospace;color:#153b58;white-space:nowrap}
 .matpair .matrix tr>td.matrix-rhs{width:91px;min-width:91px;max-width:91px;border-left:2px solid #7599ba;padding-left:4px}
-.matpair .matrix tr>td input{width:100%;min-width:0;max-width:100%;height:27px;box-sizing:border-box;padding:2px 0;color:#172c42;font:900 16px Consolas,'Liberation Mono',ui-monospace,monospace !important;text-align:center;border:1px solid #bccbd8;border-radius:3px}
+.matpair .matrix tr>td input{width:100%;min-width:0;max-width:100%;height:27px;box-sizing:border-box;padding:2px 0;color:#172c42;font:400 16px Consolas,'Liberation Mono',ui-monospace,monospace !important;text-align:center;border:1px solid #bccbd8;border-radius:3px}
 .matpair .matrix tr>td input:focus{outline:2px solid #2379bd}
 .matpair .matrix tr>td input.invalid{outline:3px solid #c5212a}
 .avoe-grid{flex:none;direction:ltr}
@@ -23,14 +23,14 @@
 /* 01ac: explicitly bold and legible values in editable source matrix.
    Overrides earlier shorthand font rules and does not affect formulas or views. */
 #cards .matpair .matrix tr > td input{
-  font-family:'Arial Black',Arial,system-ui,sans-serif !important;
+  font-family:Consolas,'Liberation Mono',ui-monospace,monospace !important;
   font-size:18px !important;
-  font-weight:900 !important;
+  font-weight:400 !important;
   font-style:normal !important;
   font-variant-numeric:tabular-nums !important;
-  letter-spacing:-.45px;
+  letter-spacing:0 !important;
   color:#10263b !important;
-  -webkit-text-stroke:.18px currentColor;
+  -webkit-text-stroke:0 transparent !important;
 }
 @container (max-width:405px){
   #cards .matpair .matrix tr > td input{font-size:17px !important}

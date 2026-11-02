@@ -244,7 +244,7 @@ function invalidInput(field){
 // into ONE CSS grid, so columns cannot shift from one row to the next.
 // 01am: Apply original-matrix row colours to the editable input glyphs too.
 // Explicit text fill resolves browser-specific input styling; do not recolour equations.
-const MATRIX_INK=['#e12d28','#1763c4','#598d00'];
+const MATRIX_INK=['#e12d28','#003bbd','#598d00'];
 function colorMatrixRow(trEl,row,r){
   const noPlane=Math.hypot(row[0],row[1],row[2])<1e-8;
   trEl.className='matrix-plane-row'+(noPlane?' matrix-no-plane':' matrix-plane-'+r);

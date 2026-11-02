@@ -178,7 +178,7 @@
    exactly as updateChart() assigns geometryPlane(rows[r], colors[r]).
    Rows without a valid plane use neutral grey. Input fields stay editable. */
 .matrix tr.matrix-plane-0{--matrix-plane-ink:#e12d28}
-.matrix tr.matrix-plane-1{--matrix-plane-ink:#1763c4}
+.matrix tr.matrix-plane-1{--matrix-plane-ink:#003bbd}
 .matrix tr.matrix-plane-2{--matrix-plane-ink:#598d00} /* readable lime ink for bright salad-green plane #8bdc25 */
 .matrix tr.matrix-no-plane{--matrix-plane-ink:#667585}
 .matrix tr.matrix-plane-row > td.matrix-number,
