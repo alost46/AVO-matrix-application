@@ -11,10 +11,10 @@ function setExpandIcon(btn,isExpanded){btn.innerHTML=isExpanded?COLLAPSE_ICON:EX
 let THREE,OrbitControls;
 try{THREE=await import('three');({OrbitControls}=await import('three/addons/controls/OrbitControls.js'));}catch(e){$('#message').textContent=t('missing');console.error(e);return;}
 function clone(a){return a.map(r=>r.slice());}
-function snapshot(){return {input:clone(input),lang,cameras:charts.map(c=>({p:c.camera.position.toArray(),target:c.controls.target.toArray(),zoom:c.camera.zoom,axisMode:c.axisMode,rotationMode:c.rotationMode,zAngle:c.zAngle||0}))};}
+function snapshot(){return {input:clone(input),lang,cameras:charts.map(c=>({p:c.camera.position.toArray(),target:c.controls.target.toArray(),zoom:c.camera.zoom,axisMode:c.axisMode,rotationMode:c.rotationMode,xAngle:c.xAngle,yAngle:c.yAngle,zAngle:c.zAngle}))};}
 function validState(s){return !!s&&Array.isArray(s.input)&&s.input.length===3&&s.input.every(r=>Array.isArray(r)&&r.length===4&&r.every(n=>Number.isFinite(n)&&Math.abs(n)<1e8))&&(!s.cameras||Array.isArray(s.cameras));}
 function push(){history.push(snapshot());if(history.length>50)history.shift();$('#undo').disabled=false;}
-function setState(s){input=clone(s.input);lang=tr[s.lang]?s.lang:'ru';refresh();if(s.cameras)charts.forEach((c,i)=>{const v=s.cameras[i];if(v&&Array.isArray(v.p)&&v.p.length===3&&v.p.every(Number.isFinite)&&Array.isArray(v.target)&&v.target.length===3){applyCameraState(c,v);if(Number.isFinite(v.zAngle))c.zAngle=v.zAngle;if(v.axisMode==='XY'||v.axisMode==='Z')setAxisMode(c,v.axisMode);if(typeof v.rotationMode==='boolean')setRotationMode(c,v.rotationMode);}});}
+function setState(s){input=clone(s.input);lang=tr[s.lang]?s.lang:'ru';refresh();if(s.cameras)charts.forEach((c,i)=>{const v=s.cameras[i];if(v&&Array.isArray(v.p)&&v.p.length===3&&v.p.every(Number.isFinite)&&Array.isArray(v.target)&&v.target.length===3){applyCameraState(c,v);if(v.axisMode==='XY'||v.axisMode==='Z')setAxisMode(c,v.axisMode);if(typeof v.rotationMode==='boolean')setRotationMode(c,v.rotationMode);}});}
 function geometryPlane(row,color){const [a,b,c,d]=row,normal=new THREE.Vector3(a,b,c);if(normal.length()<1e-8)return null;const center=normal.clone().multiplyScalar(d/normal.lengthSq()),n=normal.normalize();const helper=Math.abs(n.z)<.87?new THREE.Vector3(0,0,1):new THREE.Vector3(0,1,0);const u=new THREE.Vector3().crossVectors(n,helper).normalize(),v=new THREE.Vector3().crossVectors(n,u).normalize();const geo=new THREE.PlaneGeometry(9,9,12,12);const mat=new THREE.MeshBasicMaterial({color,transparent:true,opacity:.36,side:THREE.DoubleSide,depthWrite:false});const mesh=new THREE.Mesh(geo,mat);const basis=new THREE.Matrix4().makeBasis(u,v,n);mesh.quaternion.setFromRotationMatrix(basis);mesh.position.copy(center);const edges=new THREE.LineSegments(new THREE.EdgesGeometry(geo),new THREE.LineBasicMaterial({color,transparent:true,opacity:.95}));mesh.add(edges);return mesh;}
 const colors=[0xe12d28,0x1763c4,0x238d36];
 function makeAxisLabel(letter,point){
@@ -36,7 +36,11 @@ function makeSolutionMarker(){
   sprite.scale.set(.60,.60,1);sprite.renderOrder=1000;sprite.visible=false;
   return sprite;
 }
-function createChart(i,host){const scene=new THREE.Scene();scene.background=new THREE.Color(0xffffff);const camera=new THREE.PerspectiveCamera(43,1,.1,500);camera.position.set(11,-13,10);camera.up.set(0,0,1);const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false});renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));host.appendChild(renderer.domElement);const controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.dampingFactor=.08;
+function createChart(i,host){const scene=new THREE.Scene();scene.background=new THREE.Color(0xffffff);const camera=new THREE.PerspectiveCamera(43,1,.1,500);camera.position.set(11,-13,10);camera.up.set(0,0,1);const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false});renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));host.appendChild(renderer.domElement);const controls=new OrbitControls(camera,renderer.domElement);
+// Direct manipulation is used here intentionally. With inertia enabled, residual
+// azimuth after pointerup can be assigned to the NEXT XY/Z mode, making the
+// displayed X and Z angles disagree with the gesture that produced them.
+controls.enableDamping=false;
 const axes=new THREE.AxesHelper(6.4);scene.add(axes);
 // Extend the Y axis in both directions and draw it above the translucent planes.
 const yLineGeometry=new THREE.BufferGeometry().setFromPoints([
@@ -53,28 +57,64 @@ yRod.position.set(0,8.0,0);yRod.renderOrder=998;scene.add(yRod);
 scene.add(makeAxisLabel('X',[6.9,0,0]));scene.add(makeAxisLabel('Y',[0,16.4,0]));scene.add(makeAxisLabel('Z',[0,0,6.9]));
 const grid=new THREE.GridHelper(10,10,0x526a82,0xb8c8d8);grid.rotation.x=Math.PI/2;scene.add(grid);const group=new THREE.Group();scene.add(group);
 const dot=makeSolutionMarker();scene.add(dot);
-const chart={scene,camera,renderer,controls,group,dot,host,i,rotationMode:false,axisMode:'XY',zAngle:0,lastDragAzimuth:null};
+const pose=readCameraPose(camera,controls.target);
+const chart={scene,camera,renderer,controls,group,dot,host,i,
+  rotationMode:false,axisMode:'XY',xAngle:pose.az,yAngle:pose.el,zAngle:0,lastCameraPose:pose};
 charts.push(chart);
-// In Z drag mode, horizontal OrbitControls motion belongs to Z, not X.
-controls.addEventListener('start',()=>{chart.lastDragAzimuth=controls.getAzimuthalAngle();});
-controls.addEventListener('change',()=>{
-  if(chart.lastDragAzimuth!==null&&chart.axisMode==='Z'){
-    let d=controls.getAzimuthalAngle()-chart.lastDragAzimuth;
-    while(d>Math.PI)d-=2*Math.PI;
-    while(d< -Math.PI)d+=2*Math.PI;
-    chart.zAngle+=d*180/Math.PI;
-  }
-  if(chart.lastDragAzimuth!==null)chart.lastDragAzimuth=controls.getAzimuthalAngle();
-});
-controls.addEventListener('end',()=>{chart.lastDragAzimuth=null;});
 setRotationMode(chart,false);return chart;}
 
 function updateChart(ch,rows,solution){ch.group.clear();rows.forEach((r,i)=>{const obj=geometryPlane(r,colors[i]);if(obj)ch.group.add(obj);});ch.dot.visible=!!solution;if(solution){ch.dot.position.set(...solution);ch.dot.scale.set(1,1,1);}}
-// Use OrbitControls' built-in polar-angle limits, not custom touch handlers.
-// XY: the usual two-axis orbit controlled by horizontal and vertical drags.
-// Z: freeze polar inclination, so horizontal drag changes only azimuth
-// around the global Z axis (camera.up is +Z).
+// X is the horizontal XY-orbit component, Y the elevation, Z an independent
+// world-Z azimuthal turn. The rendered camera azimuth is X + Z. Unlike the old
+// implementation, these are AUTHORITATIVE editable values, not three values
+// repeatedly reconstructed from only two spherical coordinates.
+const RAD=Math.PI/180;
+function readCameraPose(camera,target){
+  const p=camera.position.clone().sub(target);
+  return {az:Math.atan2(p.y,p.x)/RAD,el:Math.atan2(p.z,Math.hypot(p.x,p.y))/RAD};
+}
+function signedDeltaDegrees(next,previous){
+  // Angles read from atan2 wrap at +/-180; drag increments must not jump by 360.
+  let d=next-previous;
+  while(d>180)d-=360;
+  while(d< -180)d+=360;
+  return d;
+}
+function trackCameraRotation(chart){
+  // OrbitControls may update its camera both during pointer events and in the
+  // animation loop. Sample the ACTUAL pose every frame, including after end.
+  // This avoids losing a final azimuth change on pointerup.
+  const pose=readCameraPose(chart.camera,chart.controls.target);
+  const prev=chart.lastCameraPose||pose;
+  if(chart.rotationMode){
+    const da=signedDeltaDegrees(pose.az,prev.az);
+    if(chart.axisMode==='Z')chart.zAngle+=da;
+    else {chart.xAngle+=da;chart.yAngle=pose.el;}
+  }
+  chart.lastCameraPose=pose;
+}
+function positionCameraFromAngles(chart){
+  const ctl=chart.controls, camera=chart.camera;
+  const distance=camera.position.distanceTo(ctl.target);
+  const az=(chart.xAngle+chart.zAngle)*RAD;
+  const el=chart.yAngle*RAD;
+  // Remove the frozen inclination before a deliberate numeric/ray edit.
+  ctl.minPolarAngle=0;ctl.maxPolarAngle=Math.PI;
+  camera.position.set(distance*Math.cos(el)*Math.cos(az),
+    distance*Math.cos(el)*Math.sin(az),distance*Math.sin(el)).add(ctl.target);
+  camera.up.set(0,0,1);
+  camera.lookAt(ctl.target);
+  ctl.update();
+  if(chart.axisMode==='Z'){
+    const polar=ctl.getPolarAngle();
+    ctl.minPolarAngle=polar;ctl.maxPolarAngle=polar;
+  }
+  chart.lastCameraPose=readCameraPose(camera,ctl.target);
+}
+// XY: horizontal drag edits X, vertical drag edits Y.
+// Z: freeze inclination; horizontal drag edits ONLY Z.
 function setAxisMode(chart,mode){
+  trackCameraRotation(chart);
   chart.axisMode=mode==='Z'?'Z':'XY';
   const ctl=chart.controls;
   // Clear the previous Z constraint before measuring the current polar angle.
@@ -92,6 +132,7 @@ function setAxisMode(chart,mode){
     btn.setAttribute('aria-pressed',String(chosen));
     btn.classList.toggle('active',chosen);
   });
+  chart.lastCameraPose=readCameraPose(chart.camera,ctl.target);
 }
 function applyCameraState(chart,v){
   // First release the Z constraint so a new copied/reset camera isn't
@@ -104,14 +145,26 @@ function applyCameraState(chart,v){
   if(Number.isFinite(v.zoom)&&v.zoom>0)chart.camera.zoom=v.zoom;
   chart.camera.updateProjectionMatrix();
   ctl.update();
+  const pose=readCameraPose(chart.camera,ctl.target);
+  chart.zAngle=Number.isFinite(v.zAngle)?v.zAngle:0;
+  // Accept old 01aj JSON (position + zAngle), while keeping the new explicit
+  // X/Y values in future saves.
+  chart.xAngle=Number.isFinite(v.xAngle)?v.xAngle:pose.az-chart.zAngle;
+  chart.yAngle=Number.isFinite(v.yAngle)?v.yAngle:pose.el;
+  if(Number.isFinite(v.xAngle)&&Number.isFinite(v.yAngle))positionCameraFromAngles(chart);
+  // The loaded camera is an intentional jump, not a user drag.
+  // Reset the previous pose BEFORE setAxisMode tracks pending input.
+  chart.lastCameraPose=readCameraPose(chart.camera,ctl.target);
   setAxisMode(chart,chart.axisMode);
+  chart.lastCameraPose=readCameraPose(chart.camera,ctl.target);
+  updateAngleFields(chart);
 }
 // Rotation is a deliberate opt-in.  With it off, touch gestures must scroll
 // the page even if the finger begins on a 3D canvas.  Use OrbitControls' own
 // enabled switch, not a custom pointer/touch handler.
 function setRotationMode(chart,enabled){
+  trackCameraRotation(chart);
   chart.rotationMode=!!enabled;
-  chart.lastDragAzimuth=null;
   chart.controls.enabled=chart.rotationMode;
   // OrbitControls itself assigns touch-action:none to its DOM element.
   // Both the canvas AND its plot ancestor must allow pan-y when locked.
@@ -132,50 +185,29 @@ function makeRayControls(i){
   return `<div class="ray-controls" role="group" aria-label="XYZ rotation">${['X','Y','Z'].map(axis=>`<div class="ray-control ray-${axis.toLowerCase()}"><span>${axis}</span><button class="ray-dial" type="button" data-ray="${axis}" data-chart="${i}" aria-label="${axis} rotation" title="${axis}"><i></i></button></div>`).join('')}</div>`;
 }
 function turnRay(chart,axis,degrees){
-  if(!degrees)return;
-  const ctl=chart.controls;
-  const wasZ=chart.axisMode==='Z';
-  if(wasZ){ctl.minPolarAngle=0;ctl.maxPolarAngle=Math.PI;}
-  const vec=axis==='X'?new THREE.Vector3(1,0,0):axis==='Y'?new THREE.Vector3(0,1,0):new THREE.Vector3(0,0,1);
-  const q=new THREE.Quaternion().setFromAxisAngle(vec,degrees*Math.PI/180);
-  chart.camera.position.sub(ctl.target).applyQuaternion(q).add(ctl.target);
-  chart.camera.up.set(0,0,1);
-  chart.camera.lookAt(ctl.target);
-  ctl.update();
-  if(wasZ)setAxisMode(chart,'Z');
-  updateAngleFields(chart);
+  if(!Number.isFinite(degrees)||!degrees)return;
+  // A ray edits its own angle, never the two other displayed numbers.
+  const key=axis==='X'?'xAngle':axis==='Y'?'yAngle':'zAngle';
+  setNumericAngle(chart,axis,chart[key]+degrees);
 }
 function angleValues(chart){
-  const p=chart.camera.position.clone().sub(chart.controls.target);
-  // X/Y are horizontal and vertical view angles. Z is independently editable
-  // as a Z-axis turn offset, matching the Z ray.
-  return [Math.atan2(p.y,p.x)*180/Math.PI-(chart.zAngle||0),Math.atan2(p.z,Math.hypot(p.x,p.y))*180/Math.PI,chart.zAngle||0];
+  return [chart.xAngle,chart.yAngle,chart.zAngle];
 }
 function updateAngleFields(chart){
   const vals=angleValues(chart);
   chart.host.closest('.panel')?.querySelectorAll('[data-angle]').forEach(el=>{
-    if(document.activeElement!==el)el.value=String(Math.round(vals[['X','Y','Z'].indexOf(el.dataset.angle)]*10)/10);
+    if(document.activeElement!==el)
+      el.value=String(Math.round(vals[['X','Y','Z'].indexOf(el.dataset.angle)]*10)/10);
   });
 }
 function setNumericAngle(chart,axis,requested){
   if(!Number.isFinite(requested))return;
   requested=Math.max(-3600,Math.min(3600,requested));
-  const values=angleValues(chart);
-  if(axis==='Z'){
-    const delta=requested-values[2];chart.zAngle=requested;turnRay(chart,'Z',delta);
-  }else{
-    const index=axis==='X'?0:1;
-    const dest=index===0?requested:Math.max(-89.5,Math.min(89.5,requested));
-    const a=((index===0?dest:values[0])+(chart.zAngle||0))*Math.PI/180;
-    const e=(index===1?dest:values[1])*Math.PI/180;
-    const distance=chart.camera.position.distanceTo(chart.controls.target);
-    const ctl=chart.controls;
-    const wasZ=chart.axisMode==='Z';
-    ctl.minPolarAngle=0;ctl.maxPolarAngle=Math.PI;
-    chart.camera.position.set(Math.cos(e)*Math.cos(a)*distance,Math.cos(e)*Math.sin(a)*distance,Math.sin(e)*distance).add(ctl.target);
-    chart.camera.up.set(0,0,1);chart.camera.lookAt(ctl.target);ctl.update();
-    if(wasZ)setAxisMode(chart,'Z');
-  }
+  if(axis==='X')chart.xAngle=requested;
+  else if(axis==='Y')chart.yAngle=Math.max(-89.5,Math.min(89.5,requested));
+  else if(axis==='Z')chart.zAngle=requested;
+  else return;
+  positionCameraFromAngles(chart);
   updateAngleFields(chart);
 }
 function wireRayControls(container){
@@ -184,7 +216,7 @@ function wireRayControls(container){
     const needle=dial.querySelector('i');
     const getAngle=ev=>{const r=dial.getBoundingClientRect();return Math.atan2(ev.clientY-(r.top+r.height/2),ev.clientX-(r.left+r.width/2))*180/Math.PI;};
     dial.addEventListener('pointerdown',ev=>{if(!charts[Number(dial.dataset.chart)].rotationMode)return;ev.preventDefault();dial.setPointerCapture(ev.pointerId);last=getAngle(ev);needle.style.transform=`translate(-50%, -100%) rotate(${last+90}deg)`;});
-    dial.addEventListener('pointermove',ev=>{if(last===null||!charts[Number(dial.dataset.chart)].rotationMode)return;const next=getAngle(ev);let delta=next-last;if(delta>180)delta-=360;if(delta< -180)delta+=360;last=next;const chart=charts[Number(dial.dataset.chart)];if(dial.dataset.ray==='Z')chart.zAngle=(chart.zAngle||0)+delta;turnRay(chart,dial.dataset.ray,delta);needle.style.transform=`translate(-50%, -100%) rotate(${next+90}deg)`;});
+    dial.addEventListener('pointermove',ev=>{if(last===null||!charts[Number(dial.dataset.chart)].rotationMode)return;const next=getAngle(ev);let delta=next-last;if(delta>180)delta-=360;if(delta< -180)delta+=360;last=next;const chart=charts[Number(dial.dataset.chart)];turnRay(chart,dial.dataset.ray,delta);needle.style.transform=`translate(-50%, -100%) rotate(${next+90}deg)`;});
     const stop=()=>{last=null;needle.style.transform='translate(-50%, -100%) rotate(0deg)';};
     dial.addEventListener('pointerup',stop);dial.addEventListener('pointercancel',stop);dial.addEventListener('lostpointercapture',stop);
   });
@@ -195,7 +227,7 @@ function wireRayControls(container){
 }
 function buildCards(){const container=$('#cards');container.innerHTML='';charts.forEach(c=>{c.controls.dispose();c.renderer.dispose()});charts=[];for(let i=0;i<4;i++){const div=document.createElement('article');div.className='panel';div.innerHTML=`<h2 id="heading${i}"></h2><div class="plot" id="plot${i}"><button class="expand" data-expand="${i}" type="button">${EXPAND_ICON}</button></div><div class="controls"><span class="angle-fields">${['X','Y','Z'].map(axis=>`<label>${axis} <input type="number" step="1" min="-3600" max="3600" data-angle="${axis}" data-chart="${i}" aria-label="${axis} angle">°</label>`).join('')}</span><button data-camera="${i}">↺ ${t('axis')}</button><button data-rotate="${i}" type="button" aria-pressed="false">${t('rotateOff')}</button><span class="axis-switch" role="group" aria-label="Rotation axis"><button data-axis-mode="XY" data-chart="${i}" type="button" aria-pressed="true">XY</button><button data-axis-mode="Z" data-chart="${i}" type="button" aria-pressed="false">Z</button></span>${makeRayControls(i)}</div><div class="matwrap"><div class="matpair"><table class="matrix" id="mat${i}"></table><div class="avoe-grid" id="eq${i}"></div></div></div><div class="description" id="desc${i}"></div>`;container.appendChild(div);if(i===0){const toolbar=document.querySelector('header .toolbar');if(toolbar)div.querySelector('h2').after(toolbar);}createChart(i,div.querySelector('.plot'));}
  container.querySelectorAll('[data-expand]').forEach(btn=>{setExpandIcon(btn,false);btn.onclick=()=>{const idx=+btn.dataset.expand;expanded=expanded===idx?-1:idx;container.querySelectorAll('.panel').forEach((el,n)=>el.classList.toggle('expanded',n===expanded));container.querySelectorAll('[data-expand]').forEach(other=>setExpandIcon(other,+other.dataset.expand===expanded));setTimeout(resize,10);};});
- container.querySelectorAll('[data-camera]').forEach(btn=>btn.onclick=()=>{const c=charts[+btn.dataset.camera];c.zAngle=0;applyCameraState(c,{p:[11,-13,10],target:[0,0,0],zoom:c.camera.zoom});});
+ container.querySelectorAll('[data-camera]').forEach(btn=>btn.onclick=()=>{const c=charts[+btn.dataset.camera];applyCameraState(c,{p:[11,-13,10],target:[0,0,0],zoom:c.camera.zoom,zAngle:0});});
  wireRayControls(container);
  charts.forEach(c=>setRotationMode(c,c.rotationMode));
  container.querySelectorAll('[data-rotate]').forEach(btn=>btn.onclick=()=>{const ch=charts[+btn.dataset.rotate];setRotationMode(ch,!ch.rotationMode);});container.querySelectorAll('[data-axis-mode]').forEach(btn=>btn.onclick=()=>{const ch=charts[+btn.dataset.chart];setAxisMode(ch,btn.dataset.axisMode);});}
@@ -222,11 +254,11 @@ function translate(){document.documentElement.lang=lang;document.documentElement
 function refresh(keepInputs=false){translate();present(keepInputs);try{localStorage.setItem('avo-gauss-jordan-01a',JSON.stringify(snapshot()));}catch(e){}}
 function resize(){charts.forEach(c=>{const w=c.host.clientWidth,h=c.host.clientHeight;if(w&&h){c.camera.aspect=w/h;c.camera.updateProjectionMatrix();c.renderer.setSize(w,h,false);}});}
 buildCards();refresh();resize();addEventListener('resize',resize);
-function animate(){requestAnimationFrame(animate);charts.forEach(c=>{c.controls.update();c.renderer.render(c.scene,c.camera);const p=c.camera.position.clone().sub(c.controls.target);const a=[Math.atan2(p.y,p.x)*180/Math.PI,Math.atan2(p.z,Math.hypot(p.x,p.y))*180/Math.PI];updateAngleFields(c);});}animate();
+function animate(){requestAnimationFrame(animate);charts.forEach(c=>{c.controls.update();trackCameraRotation(c);c.renderer.render(c.scene,c.camera);updateAngleFields(c);});}animate();
 $('#restart').onclick=()=>{push();input=clone(DEFAULT);refresh();};
 $('#reset').onclick=()=>{push();for(let r=0;r<3;r++)for(let c=0;c<3;c++)input[r][c]=r===c?1:0;refresh();};
 $('#undo').disabled=true;$('#undo').onclick=()=>{if(!history.length)return;const previous=history.pop();setState(previous);$('#undo').disabled=!history.length;};
-$('#views').onclick=()=>{push();const source=charts[0];const v={p:source.camera.position.toArray(),target:source.controls.target.toArray(),zoom:source.camera.zoom};charts.slice(1).forEach(c=>{applyCameraState(c,v);c.zAngle=source.zAngle;updateAngleFields(c);});};
+$('#views').onclick=()=>{push();const source=charts[0];const v={p:source.camera.position.toArray(),target:source.controls.target.toArray(),zoom:source.camera.zoom,xAngle:source.xAngle,yAngle:source.yAngle,zAngle:source.zAngle};charts.slice(1).forEach(c=>applyCameraState(c,v));};
 $('#save').onclick=()=>{const a=document.createElement('a');const blob=new Blob([JSON.stringify({schema:'avo-gauss-jordan-01a',...snapshot()},null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);a.href=url;a.download='AVO_Gauss_Jordan_state.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),2000);};
 $('#load').onclick=()=>$('#file').click();$('#file').onchange=async e=>{const file=e.target.files[0];if(!file)return;try{const data=JSON.parse(await file.text());if(!validState(data))throw Error('invalid');push();setState(data);$('#message').textContent=t('restore');}catch(err){$('#message').textContent=t('invalid');}e.target.value='';};
 $('#help').onclick=()=>$('#helpDialog').showModal();$('#closeHelp').onclick=$('#okHelp').onclick=()=>$('#helpDialog').close();document.querySelectorAll('[data-lang]').forEach(b=>b.onclick=()=>{lang=b.dataset.lang;refresh();});
