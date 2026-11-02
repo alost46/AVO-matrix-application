@@ -168,3 +168,6 @@
 .controls .angle-fields input[type=number]{box-sizing:border-box;width:55px;min-width:55px;padding:4px 2px;font-size:15px;font-weight:800;text-align:center;border:1px solid #9db7c9;border-radius:4px;background:#fff;color:#17324d}
 .matrix tr > td.matrix-number{font-weight:900!important;font-size:17px!important;color:#10283f!important}
 @media(max-width:620px){.controls .ray-controls{width:auto;justify-content:flex-start}.controls .angle-fields input[type=number]{width:53px;min-width:53px}}
+/* 01aj: ray dials are unavailable until Rotate is enabled. */
+.controls .ray-dial:disabled{opacity:.43;cursor:default;touch-action:pan-y}
+.controls .ray-dial:disabled i{opacity:.6}
