@@ -3,7 +3,7 @@
 <head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="color-scheme" content="light">
-<title>Произведение матриц · Web 01d</title>
+<title>Произведение матриц · Web 01e</title>
 <link rel="stylesheet" href="../avo-core/matrix-product-01c/core.css">
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}</script>
 <link rel="icon" type="image/png" sizes="32x32" href="https://alost46.github.io/AVO-matrix-application/favicon-32.png">
@@ -33,7 +33,7 @@
    home.className='avo-home-link';
    topActions.prepend(home);
    const edition=document.querySelector('.tag');
-   if(edition){edition.removeAttribute('data-i18n');edition.textContent='Web 01d';}
+   if(edition){edition.removeAttribute('data-i18n');edition.textContent='Web 01e';}
  }
 </script>
 <script type="module">
@@ -41,6 +41,28 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 try {
  window.AVOInstance=AVOCore.start({...AVOMatrixProduct,THREE,OrbitControls});
+ // Navigation language synchronization, independent of the shared AVO core.
+ const names={ru:'На главную',en:'Home',he:'לדף הראשי'};
+ const homeLink=document.getElementById('avo-home');
+ function syncHomeLanguage(code,applyToApp){
+   if(!Object.prototype.hasOwnProperty.call(names,code))return;
+   if(applyToApp)window.AVOInstance.setLanguage(code);
+   if(homeLink){
+     homeLink.textContent='⌂ '+names[code];
+     homeLink.setAttribute('aria-label',names[code]);
+     homeLink.href='../?lang='+encodeURIComponent(code);
+   }
+   try{localStorage.setItem('avo-site-language',code);localStorage.setItem('avo-home-lang',code);}catch(_e){}
+ }
+ const supplied=new URLSearchParams(location.search).get('lang');
+ let initial=Object.prototype.hasOwnProperty.call(names,supplied)?supplied:null;
+ if(!initial){try{let v=localStorage.getItem('avo-site-language')||localStorage.getItem('avo-home-lang');if(Object.prototype.hasOwnProperty.call(names,v))initial=v;}catch(_e){}}
+ if(!initial)initial=document.documentElement.lang||'ru';
+ syncHomeLanguage(initial,true);
+ document.querySelectorAll('[data-lang]').forEach(btn=>{
+   btn.addEventListener('click',()=>syncHomeLanguage(btn.dataset.lang,false));
+ });
+
 } catch(err) {
  window.AVOStartupError=true;
  console.error('AVO Core start failed:',err);
