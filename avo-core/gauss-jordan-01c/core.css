@@ -28,7 +28,7 @@
 /* 01f overrides */
 .panel h2{font-size:22px !important;font-weight:800 !important;}
 
-.matrix input.invalid{outline:3px solid #bb1d1d;background:#fff0f0;color:#990000}
+.matrix input.invalid{outline:3px solid #111111;background:#fff7dd;color:#111111}
 
 /* 01n: matrix left, larger bold equations with wider separation on the right. */
 .matwrap{overflow-x:auto; padding:10px 8px}
@@ -179,23 +179,23 @@
    Rows without a valid plane use neutral grey. Input fields stay editable. */
 .matrix tr.matrix-plane-0{--matrix-plane-ink:#e12d28}
 .matrix tr.matrix-plane-1{--matrix-plane-ink:#1763c4}
-.matrix tr.matrix-plane-2{--matrix-plane-ink:#187a2c} /* higher contrast shade of plane green #238d36 */
+.matrix tr.matrix-plane-2{--matrix-plane-ink:#598d00} /* readable lime ink for bright salad-green plane #8bdc25 */
 .matrix tr.matrix-no-plane{--matrix-plane-ink:#667585}
 .matrix tr.matrix-plane-row > td.matrix-number,
 .matrix tr.matrix-plane-row > td.matrix-number input{
   color:var(--matrix-plane-ink) !important;
   font-weight:900 !important;
 }
-/* Validation remains red even when a row belongs to another plane. */
-.matrix tr.matrix-plane-row > td.matrix-number input.invalid{color:#990000 !important}
+/* Invalid values use black text and a black outline on a pale amber background. */
+.matrix tr.matrix-plane-row > td.matrix-number input.invalid{color:#111111 !important}
 
 /* 01am: editable input glyphs use their plane colour in Chromium, Safari and WebKit.
    The JavaScript also sets this directly, so cached historical input rules cannot
-   override it; validation keeps its distinct red warning. */
+   override it; validation keeps its distinct black warning. */
 .matrix tr.matrix-plane-row > td.matrix-number input:not(.invalid){
   -webkit-text-fill-color:var(--matrix-plane-ink) !important;
   font-weight:900 !important;
 }
 .matrix tr.matrix-plane-row > td.matrix-number input.invalid{
-  -webkit-text-fill-color:#990000 !important;
+  -webkit-text-fill-color:#111111 !important;
 }

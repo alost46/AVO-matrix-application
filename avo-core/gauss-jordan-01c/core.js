@@ -16,7 +16,7 @@ function validState(s){return !!s&&Array.isArray(s.input)&&s.input.length===3&&s
 function push(){history.push(snapshot());if(history.length>50)history.shift();$('#undo').disabled=false;}
 function setState(s){input=clone(s.input);lang=tr[s.lang]?s.lang:'ru';refresh();if(s.cameras)charts.forEach((c,i)=>{const v=s.cameras[i];if(v&&Array.isArray(v.p)&&v.p.length===3&&v.p.every(Number.isFinite)&&Array.isArray(v.target)&&v.target.length===3){applyCameraState(c,v);if(v.axisMode==='XY'||v.axisMode==='Z')setAxisMode(c,v.axisMode);if(typeof v.rotationMode==='boolean')setRotationMode(c,v.rotationMode);}});}
 function geometryPlane(row,color){const [a,b,c,d]=row,normal=new THREE.Vector3(a,b,c);if(normal.length()<1e-8)return null;const center=normal.clone().multiplyScalar(d/normal.lengthSq()),n=normal.normalize();const helper=Math.abs(n.z)<.87?new THREE.Vector3(0,0,1):new THREE.Vector3(0,1,0);const u=new THREE.Vector3().crossVectors(n,helper).normalize(),v=new THREE.Vector3().crossVectors(n,u).normalize();const geo=new THREE.PlaneGeometry(9,9,12,12);const mat=new THREE.MeshBasicMaterial({color,transparent:true,opacity:.36,side:THREE.DoubleSide,depthWrite:false});const mesh=new THREE.Mesh(geo,mat);const basis=new THREE.Matrix4().makeBasis(u,v,n);mesh.quaternion.setFromRotationMatrix(basis);mesh.position.copy(center);const edges=new THREE.LineSegments(new THREE.EdgesGeometry(geo),new THREE.LineBasicMaterial({color,transparent:true,opacity:.95}));mesh.add(edges);return mesh;}
-const colors=[0xe12d28,0x1763c4,0x238d36];
+const colors=[0xe12d28,0x1763c4,0x8bdc25];
 function makeAxisLabel(letter,point){
   const canvas=document.createElement('canvas');canvas.width=128;canvas.height=128;
   const ctx=canvas.getContext('2d');ctx.clearRect(0,0,128,128);
@@ -234,8 +234,8 @@ function buildCards(){const container=$('#cards');container.innerHTML='';charts.
 function parseCell(text){const raw=text.trim().replace(/\s+/g,'').replace(',', '.');if(!raw || !/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/.test(raw))return NaN;const n=Number(raw);return Number.isFinite(n)&&Math.abs(n)<=1e8?n:NaN;}
 function invalidInput(field){
   field.classList.add('invalid');
-  field.style.setProperty('color','#990000','important');
-  field.style.setProperty('-webkit-text-fill-color','#990000','important');
+  field.style.setProperty('color','#111111','important');
+  field.style.setProperty('-webkit-text-fill-color','#111111','important');
  $('#summary').textContent=lang==='ru'?'Ошибка ввода: исправьте выделенную ячейку матрицы. Результат пока не вычисляется.':lang==='he'?'שגיאת קלט: תקנו את התא המסומן. התוצאה אינה מחושבת כעת.':'Invalid input: correct the highlighted matrix cell. Result is temporarily unavailable.';
  charts.forEach(ch=>{ch.dot.visible=false;ch.group.visible=false;});
  for(let i=1;i<4;i++){$(`#mat${i}`).style.visibility='hidden';$(`#eq${i}`).style.visibility='hidden';$(`#desc${i}`).style.visibility='hidden';}
@@ -244,13 +244,13 @@ function invalidInput(field){
 // into ONE CSS grid, so columns cannot shift from one row to the next.
 // 01am: Apply original-matrix row colours to the editable input glyphs too.
 // Explicit text fill resolves browser-specific input styling; do not recolour equations.
-const MATRIX_INK=['#e12d28','#1763c4','#187a2c'];
+const MATRIX_INK=['#e12d28','#1763c4','#598d00'];
 function colorMatrixRow(trEl,row,r){
   const noPlane=Math.hypot(row[0],row[1],row[2])<1e-8;
   trEl.className='matrix-plane-row'+(noPlane?' matrix-no-plane':' matrix-plane-'+r);
   const ink=noPlane?'#667585':MATRIX_INK[r];
   trEl.querySelectorAll('input').forEach(field=>{
-    const c=field.classList.contains('invalid')?'#990000':ink;
+    const c=field.classList.contains('invalid')?'#111111':ink;
     field.style.setProperty('color',c,'important');
     field.style.setProperty('-webkit-text-fill-color',c,'important');
     field.style.setProperty('font-weight','900','important');
