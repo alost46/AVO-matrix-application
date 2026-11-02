@@ -3,7 +3,7 @@
 <head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="color-scheme" content="light">
-<title>Делители нуля матрицы · Web 02j</title>
+<title>Делители нуля матрицы · Web 02k</title>
 <link rel="stylesheet" href="../avo-core/zero-divisors-02i/core.css">
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}</script>
 <link rel="icon" type="image/png" sizes="32x32" href="https://alost46.github.io/AVO-matrix-application/favicon-32.png">
@@ -23,15 +23,15 @@
 <script>
 
  // Presentation and navigation only. Shared graphics and algorithms remain unchanged.
- AVOZeroDivisors.version='02j · Core 1.0';
- for(const [code,label] of Object.entries({ru:'Веб-версия 02j',en:'Web version 02j',he:'גרסת רשת 02j'})){
+ AVOZeroDivisors.version='02k · Core 1.0';
+ for(const [code,label] of Object.entries({ru:'Веб-версия 02k',en:'Web version 02k',he:'גרסת רשת 02k'})){
    AVOZeroDivisors.messages[code].edition=label;
  }
  document.body.insertAdjacentHTML('afterbegin', AVOCoreUI(AVOZeroDivisors));
  // The shared UI template contains fallback labels from Matrix Powers.
  // Replace their visible text before the asynchronous 3D modules start.
  for (const [key, value] of Object.entries({
-   appTitle:'Делители нуля матрицы', edition:'Веб-версия 02j',
+   appTitle:'Делители нуля матрицы', edition:'Веб-версия 02k',
    objectA:'Исходная A', transformB:'Правый делитель Rₖ',
    resultBA:'Левый делитель Lₖ', matrixB:'Матрица Rₖ',
    matrixBA:'Матрица Lₖ', descrB:'Ненулевая Rₖ удовлетворяет ARₖ = 0.',
@@ -40,6 +40,37 @@
    const el=document.querySelector('[data-i18n="'+key+'"]');
    if(el)el.textContent=value;
  }
+
+ // Standalone navigation: no dependency on other scripts or shared Core.
+ const avoLangCodes=['ru','en','he'];
+ function avoLang(value){return avoLangCodes.includes(value)?value:null;}
+ function avoStoreLanguage(value){
+  value=avoLang(value);if(!value)return;
+  try{localStorage.setItem('avo-site-language',value);localStorage.setItem('avo-home-lang',value);}catch(_){ }
+  const link=document.getElementById('avo-home-link');
+  if(link){
+   const label={ru:'На главную',en:'Home',he:'לדף הראשי'}[value];
+   link.textContent='⌂ '+label;
+   link.setAttribute('aria-label',label);
+   link.href='../?lang='+encodeURIComponent(value);
+  }
+ }
+ let avoEntryLanguage=null;
+ try{
+  const urlLang=avoLang(new URLSearchParams(location.search).get('lang'));
+  const savedLang=avoLang(localStorage.getItem('avo-site-language'))||avoLang(localStorage.getItem('avo-home-lang'));
+  avoEntryLanguage=urlLang||savedLang;
+ }catch(_){ }
+ const avoTopActions=document.querySelector('.shell header .top-actions');
+ const avoHome=document.createElement('a');
+ avoHome.id='avo-home-link';avoHome.className='avo-home-link';avoHome.href='../';
+ avoHome.textContent='⌂ На главную';avoHome.setAttribute('aria-label','На главную');
+ avoTopActions?.prepend(avoHome);
+ avoStoreLanguage(avoEntryLanguage||document.documentElement.lang||'ru');
+ for(const button of document.querySelectorAll('.shell header .top-actions [data-lang]')){
+  button.addEventListener('click',()=>avoStoreLanguage(button.dataset.lang));
+ }
+
  document.querySelector('#plot-b .overlay').textContent='Rₖ: правый делитель нуля';
  document.querySelector('#plot-ba .overlay').textContent='Lₖ: левый делитель нуля';
 
@@ -67,14 +98,11 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 try {
  window.AVOInstance=AVOCore.start({...AVOZeroDivisors,THREE,OrbitControls});
-  if(window.AVOHubNavigation.preferred)window.AVOInstance.setLanguage(window.AVOHubNavigation.preferred);
-  window.AVOHubNavigation.update(document.documentElement.lang);
-  for(const btn of document.querySelectorAll('.shell header .top-actions [data-lang]')){
-   btn.addEventListener('click',()=>window.AVOHubNavigation.update(btn.dataset.lang));
-  }
+  // Core may restore a previous language; the home-page selection wins.
+  if(avoEntryLanguage)window.AVOInstance.setLanguage(avoEntryLanguage);
+  avoStoreLanguage(avoEntryLanguage||document.documentElement.lang);
   document.getElementById('avo-home-link')?.addEventListener('click',()=>{
-   window.AVOHubNavigation.update(document.documentElement.lang);
-   try{localStorage.setItem(AVOZeroDivisors.stateKey,JSON.stringify(window.AVOInstance.getState()));}catch(_){}
+   avoStoreLanguage(document.documentElement.lang);
   });
 
 } catch(err) {
