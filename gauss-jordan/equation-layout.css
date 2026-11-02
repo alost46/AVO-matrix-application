@@ -23,14 +23,14 @@
 /* 01ac: explicitly bold and legible values in editable source matrix.
    Overrides earlier shorthand font rules and does not affect formulas or views. */
 #cards .matpair .matrix tr > td input{
-  font-family:Consolas,'Liberation Mono',ui-monospace,monospace !important;
+  font-family:Arial,'Segoe UI',system-ui,sans-serif !important;
   font-size:18px !important;
   font-weight:800 !important;
   font-style:normal !important;
   font-variant-numeric:tabular-nums !important;
   letter-spacing:0 !important;
   color:#10263b !important;
-  -webkit-text-stroke:0 transparent !important;
+  -webkit-text-stroke:.15px currentColor !important;
 }
 @container (max-width:405px){
   #cards .matpair .matrix tr > td input{font-size:17px !important}
