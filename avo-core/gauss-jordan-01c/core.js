@@ -253,7 +253,8 @@ function colorMatrixRow(trEl,row,r){
     const c=field.classList.contains('invalid')?'#ffffff':ink;
     field.style.setProperty('color',c,'important');
     field.style.setProperty('-webkit-text-fill-color',c,'important');
-    field.style.setProperty('font-weight','800','important');
+    // The input inherits the same font as the step-result matrix cells.
+    field.style.removeProperty('font-weight');
   });
 }
 function matrixUI(i,rows){const table=$(`#mat${i}`);table.innerHTML='';rows.forEach((row,r)=>{const trEl=document.createElement('tr');colorMatrixRow(trEl,row,r);row.forEach((v,c)=>{const cell=document.createElement('td');cell.className='matrix-number'+(c===3?' matrix-rhs':'');if(i===0){const field=document.createElement('input');field.type='text';field.inputMode='decimal';field.autocomplete='off';field.spellcheck=false;field.value=fmtInput(v);field.className=c===3?'b':'';field.setAttribute('aria-label',`row ${r+1} column ${c+1}`);
