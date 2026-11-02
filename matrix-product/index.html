@@ -3,7 +3,7 @@
 <head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="color-scheme" content="light">
-<title>Произведение матриц · AVO Core 1.0</title>
+<title>Произведение матриц · Web 01d</title>
 <link rel="stylesheet" href="../avo-core/matrix-product-01c/core.css">
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}</script>
 <link rel="icon" type="image/png" sizes="32x32" href="https://alost46.github.io/AVO-matrix-application/favicon-32.png">
@@ -11,6 +11,11 @@
 <link rel="manifest" href="./manifest.webmanifest">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="AVO Matrices">
 <meta name="theme-color" content="#f4f8fc">
+<style>
+.avo-home-link{display:inline-flex;align-items:center;justify-content:center;min-height:35px;padding:7px 11px;border:1px solid #aebfd1;border-radius:7px;background:white;color:#204969;text-decoration:none;font:700 15px system-ui,Arial,sans-serif;white-space:nowrap}
+.avo-home-link:hover{background:#e7f4fd}
+.avo-home-link:focus-visible{outline:2px solid #2379bd;outline-offset:2px}
+</style>
 </head>
 <body>
 <script src="../avo-core/matrix-product-01c/messages.js"></script>
@@ -19,6 +24,17 @@
 <script src="./model.js"></script>
 <script>
  document.body.insertAdjacentHTML('afterbegin', AVOCoreUI(AVOMatrixProduct));
+ const topActions=document.querySelector('.top-actions');
+ if(topActions){
+   const home=document.createElement('a');
+   home.id='avo-home';
+   home.href='../?lang=ru';
+   home.textContent='⌂ На главную';
+   home.className='avo-home-link';
+   topActions.prepend(home);
+   const edition=document.querySelector('.tag');
+   if(edition){edition.removeAttribute('data-i18n');edition.textContent='Web 01d';}
+ }
 </script>
 <script type="module">
 import * as THREE from 'three';
