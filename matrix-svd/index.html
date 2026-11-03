@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="color-scheme" content="light">
-<title>Сингулярное разложение матрицы · Web 01k</title>
+<title>Сингулярное разложение матрицы · Web 01l</title>
 <style>
 :root{
   --bg:#eef3f7;--panel:#ffffff;--line:#cad7e2;--text:#203245;--muted:#5d7389;--accent:#27598d;
@@ -84,7 +84,7 @@ h1{font-size:25px;font-weight:900;color:#173f68}
 .matrix-toolbar .formula{font-size:21px;font-weight:900}
 .matrix-card h2,.info-card h2{font-size:21px;font-weight:900}
 .matrix-grid input{font:900 20px 'Arial Black','Segoe UI Black',system-ui,sans-serif;font-variant-numeric:tabular-nums;color:#122f49;border:2px solid #bbccda}
-.matrix-grid input.col-x{color:#dd243e}.matrix-grid input.col-y{color:#957046}.matrix-grid input.col-z{color:#5d9800}
+.matrix-grid input.col-x,.matrix-grid input.col-y,.matrix-grid input.col-z{color:#111111}
 .small-note{font-size:15px;font-weight:800;color:#355573;line-height:1.5}
 .svd-box h3{font-size:22px;font-weight:900;color:#244c73}
 .matrix-display{border-spacing:5px}
@@ -155,7 +155,7 @@ h1{font-size:25px;font-weight:900;color:#173f68}
       <img src="https://alost46.github.io/AVO-matrix-application/avo-logo.png" alt="AVO" width="27" height="35">
       <h1 data-i18n="appTitle">Сингулярное разложение матрицы</h1>
     </div>
-    <span class="tag" data-i18n="edition">Веб-версия 01k</span>
+    <span class="tag" data-i18n="edition">Веб-версия 01l</span>
     <div class="top-actions">
       <a id="home-link" class="avo-home-link" href="../?lang=ru">⌂ <span data-i18n="home">На главную</span></a>
       <button class="language-button active" data-lang="ru" aria-label="Русский"><svg class="flag-icon" viewBox="0 0 60 40"><rect width="60" height="40" fill="#fff"/><rect y="13.333" width="60" height="13.334" fill="#1746a2"/><rect y="26.667" width="60" height="13.333" fill="#d52b1e"/></svg></button>
@@ -292,7 +292,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 const I18N={
   ru:{
-    appTitle:'Сингулярное разложение матрицы',edition:'Веб-версия 01k',home:'На главную',lead:'Первые четыре картинки показывают, как единичная сфера преобразуется по шагам SVD: I → Vᵀ → ΣVᵀ → UΣVᵀ = A.',
+    appTitle:'Сингулярное разложение матрицы',edition:'Веб-версия 01l',home:'На главную',lead:'Первые четыре картинки показывают, как единичная сфера преобразуется по шагам SVD: I → Vᵀ → ΣVᵀ → UΣVᵀ = A.',
     syncViews:'Синхронный обзор двух графиков',sameScale:'Одинаковый масштаб: 1 единица на обоих графиках',modeStages:'Этапы разложения',modeDirections:'Соответствие направлений',modeStagesInfo:'Четыре последовательных преобразования: I → Vᵀ → ΣVᵀ → A.',modeDirectionsInfo:'Одно и то же преобразование A: каждый входной вектор vᵢ переходит в σᵢuᵢ. Цвета соответствуют друг другу.',inputDirection:'Вход: правые сингулярные векторы v₁, v₂, v₃',outputDirection:'Выход: A vᵢ = σᵢuᵢ',inputDirectionDesc:'Единичная сфера и три входных направления v₁, v₂, v₃.',outputDirectionDesc:'Образы этих же направлений: Av₁ = σ₁u₁, Av₂ = σ₂u₂, Av₃ = σ₃u₃.',
     undo:'Отменить',redo:'Повторить',resetA:'Сброс A',startOver:'Начать заново',saveJson:'Сохранить JSON',loadJson:'Загрузить JSON',formulaLabel:'Формула:',matrixA:'Матрица A',inputHint:'Редактируйте элементы матрицы A. SVD пересчитывается автоматически.',summaryTitle:'Краткая информация',summaryHint:'Показываем геометрию SVD: вращение входа, растяжение по сингулярным осям и финальное вращение.',
     matrixNoteU:'Столбцы U — левые сингулярные векторы u₁, u₂, u₃.',matrixNoteS:'Диагональ Σ: сингулярные значения σ₁, σ₂, σ₃.',matrixNoteV:'Строки Vᵀ — правые сингулярные векторы v₁, v₂, v₃, записанные транспонированными.',
@@ -314,7 +314,7 @@ const I18N={
       <p><strong>Управление.</strong> Можно изменять матрицу A, сохранять состояние в JSON, восстанавливать его, делать Undo/Redo, сбрасывать A к единичной матрице и возвращаться к начальному примеру.</p>`
   },
   en:{
-    appTitle:'Singular Value Decomposition',edition:'Web version 01k',home:'Home',lead:'The four pictures show how the unit sphere changes step by step under SVD: I → Vᵀ → ΣVᵀ → UΣVᵀ = A.',
+    appTitle:'Singular Value Decomposition',edition:'Web version 01l',home:'Home',lead:'The four pictures show how the unit sphere changes step by step under SVD: I → Vᵀ → ΣVᵀ → UΣVᵀ = A.',
     syncViews:'Synchronize both views',sameScale:'Same scale: one unit in both charts',modeStages:'Decomposition stages',modeDirections:'Direction mapping',modeStagesInfo:'Four consecutive transformations: I → Vᵀ → ΣVᵀ → A.',modeDirectionsInfo:'The same transformation A: each input vᵢ maps to σᵢuᵢ. Colors indicate corresponding vectors.',inputDirection:'Input: right singular vectors v₁, v₂, v₃',outputDirection:'Output: A vᵢ = σᵢuᵢ',inputDirectionDesc:'Unit sphere and three input directions v₁, v₂, v₃.',outputDirectionDesc:'Images of those same directions: Av₁ = σ₁u₁, Av₂ = σ₂u₂, Av₃ = σ₃u₃.',
     undo:'Undo',redo:'Redo',resetA:'Reset A',startOver:'Start over',saveJson:'Save JSON',loadJson:'Load JSON',formulaLabel:'Formula:',matrixA:'Matrix A',inputHint:'Edit the entries of matrix A. The SVD is recalculated automatically.',summaryTitle:'Summary',summaryHint:'We show the geometry of SVD: input rotation, stretching along singular axes, and the final rotation.',
     matrixNoteU:'Columns of U are the left singular vectors u₁, u₂, u₃.',matrixNoteS:'The diagonal of Σ contains singular values σ₁, σ₂, σ₃.',matrixNoteV:'Rows of Vᵀ are the transposed right singular vectors v₁, v₂, v₃.',
@@ -336,7 +336,7 @@ const I18N={
       <p><strong>Controls.</strong> You can edit matrix A, save/load JSON, use Undo/Redo, reset A to identity, and return to the initial sample.</p>`
   },
   he:{
-    appTitle:'פירוק לערכים סינגולריים',edition:'גרסת ווב 01k',home:'לדף הראשי',lead:'ארבע התמונות מראות כיצד הכדור היחידה משתנה שלב אחר שלב תחת SVD: I → Vᵀ → ΣVᵀ → UΣVᵀ = A.',
+    appTitle:'פירוק לערכים סינגולריים',edition:'גרסת ווב 01l',home:'לדף הראשי',lead:'ארבע התמונות מראות כיצד הכדור היחידה משתנה שלב אחר שלב תחת SVD: I → Vᵀ → ΣVᵀ → UΣVᵀ = A.',
     syncViews:'סנכרון המבט בשני הגרפים',sameScale:'קנה מידה זהה: יחידה אחת בשני הגרפים',modeStages:'שלבי הפירוק',modeDirections:'התאמת כיוונים',modeStagesInfo:'ארבע טרנספורמציות עוקבות: I → Vᵀ → ΣVᵀ → A.',modeDirectionsInfo:'אותה טרנספורמציה A: כל vᵢ עובר ל־σᵢuᵢ. הצבעים תואמים.',inputDirection:'קלט: וקטורים סינגולריים ימניים v₁, v₂, v₃',outputDirection:'פלט: A vᵢ = σᵢuᵢ',inputDirectionDesc:'כדור היחידה ושלושת כיווני הקלט v₁, v₂, v₃.',outputDirectionDesc:'התמונות של אותם כיוונים: Av₁ = σ₁u₁, Av₂ = σ₂u₂, Av₃ = σ₃u₃.',
     undo:'בטל',redo:'חזור',resetA:'אפס A',startOver:'התחל מחדש',saveJson:'שמור JSON',loadJson:'טען JSON',formulaLabel:'נוסחה:',matrixA:'מטריצה A',inputHint:'אפשר לערוך את איברי המטריצה A. הפירוק מתעדכן אוטומטית.',summaryTitle:'מידע קצר',summaryHint:'אנו מציגים את הגאומטריה של SVD: סיבוב הקלט, מתיחה לאורך הצירים הסינגולריים, והסיבוב הסופי.',
     matrixNoteU:'עמודות U הן הווקטורים הסינגולריים השמאליים u₁, u₂, u₃.',matrixNoteS:'באלכסון Σ נמצאים הערכים הסינגולריים σ₁, σ₂, σ₃.',matrixNoteV:'שורות Vᵀ הן הטרנספוזיציות של הווקטורים הסינגולריים הימניים v₁, v₂, v₃.',
@@ -887,7 +887,7 @@ function setLanguage(lang,save=true){state.lang=lang; document.documentElement.l
   if(save) saveAuto();
 }
 
-function saveJSON(){const blob=new Blob([JSON.stringify({version:'01k',app:'AVO_SVD',state:{A:state.A,lang:state.lang,rotating:state.rotating,angles:state.angles,axisModes:state.axisModes}},null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='AVO_SVD_01k_state.json'; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),500); updateStatus(t('saved'));}
+function saveJSON(){const blob=new Blob([JSON.stringify({version:'01l',app:'AVO_SVD',state:{A:state.A,lang:state.lang,rotating:state.rotating,angles:state.angles,axisModes:state.axisModes}},null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='AVO_SVD_01l_state.json'; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),500); updateStatus(t('saved'));}
 function loadJSON(file){const reader=new FileReader(); reader.onload=()=>{try{const obj=JSON.parse(reader.result); if(!obj.state||!obj.state.A) throw new Error('bad'); pushUndo(); state.A=cloneMatrix(obj.state.A); if(obj.state.lang) state.lang=obj.state.lang; if(obj.state.rotating) state.rotating=obj.state.rotating.slice();if(Array.isArray(obj.state.angles))state.angles=obj.state.angles;if(Array.isArray(obj.state.axisModes))state.axisModes=obj.state.axisModes;applyViews(); setLanguage(state.lang,false); syncToggleButtons(); recalcAll(); saveAuto(); updateStatus(t('loaded'));}catch(e){updateStatus(t('invalidJson'));}}; reader.readAsText(file);}
 function resetA(){pushUndo(); state.A=identity3(); state.rotating=[false,false,false,false]; state.axisModes=['free','free','free','free']; applyViews(); syncToggleButtons(); recalcAll(); saveAuto(); updateStatus(t('resetDone'));}
 function startOver(){pushUndo(); state.A=cloneMatrix(initialMatrix); state.rotating=[false,false,false,false]; state.axisModes=['free','free','free','free']; state.angles=[[0,0,0],[0,0,0],[0,0,0],[0,0,0]]; applyViews(); syncToggleButtons(); recalcAll(); saveAuto(); updateStatus(t('startDone'));}
