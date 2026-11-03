@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="color-scheme" content="light">
-<title>Сингулярное разложение матрицы · Web 01i</title>
+<title>Сингулярное разложение матрицы · Web 01k</title>
 <style>
 :root{
   --bg:#eef3f7;--panel:#ffffff;--line:#cad7e2;--text:#203245;--muted:#5d7389;--accent:#27598d;
@@ -155,7 +155,7 @@ h1{font-size:25px;font-weight:900;color:#173f68}
       <img src="https://alost46.github.io/AVO-matrix-application/avo-logo.png" alt="AVO" width="27" height="35">
       <h1 data-i18n="appTitle">Сингулярное разложение матрицы</h1>
     </div>
-    <span class="tag" data-i18n="edition">Веб-версия 01i</span>
+    <span class="tag" data-i18n="edition">Веб-версия 01k</span>
     <div class="top-actions">
       <a id="home-link" class="avo-home-link" href="../?lang=ru">⌂ <span data-i18n="home">На главную</span></a>
       <button class="language-button active" data-lang="ru" aria-label="Русский"><svg class="flag-icon" viewBox="0 0 60 40"><rect width="60" height="40" fill="#fff"/><rect y="13.333" width="60" height="13.334" fill="#1746a2"/><rect y="26.667" width="60" height="13.333" fill="#d52b1e"/></svg></button>
@@ -292,7 +292,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 const I18N={
   ru:{
-    appTitle:'Сингулярное разложение матрицы',edition:'Веб-версия 01i',home:'На главную',lead:'Первые четыре картинки показывают, как единичная сфера преобразуется по шагам SVD: I → Vᵀ → ΣVᵀ → UΣVᵀ = A.',
+    appTitle:'Сингулярное разложение матрицы',edition:'Веб-версия 01k',home:'На главную',lead:'Первые четыре картинки показывают, как единичная сфера преобразуется по шагам SVD: I → Vᵀ → ΣVᵀ → UΣVᵀ = A.',
     syncViews:'Синхронный обзор двух графиков',sameScale:'Одинаковый масштаб: 1 единица на обоих графиках',modeStages:'Этапы разложения',modeDirections:'Соответствие направлений',modeStagesInfo:'Четыре последовательных преобразования: I → Vᵀ → ΣVᵀ → A.',modeDirectionsInfo:'Одно и то же преобразование A: каждый входной вектор vᵢ переходит в σᵢuᵢ. Цвета соответствуют друг другу.',inputDirection:'Вход: правые сингулярные векторы v₁, v₂, v₃',outputDirection:'Выход: A vᵢ = σᵢuᵢ',inputDirectionDesc:'Единичная сфера и три входных направления v₁, v₂, v₃.',outputDirectionDesc:'Образы этих же направлений: Av₁ = σ₁u₁, Av₂ = σ₂u₂, Av₃ = σ₃u₃.',
     undo:'Отменить',redo:'Повторить',resetA:'Сброс A',startOver:'Начать заново',saveJson:'Сохранить JSON',loadJson:'Загрузить JSON',formulaLabel:'Формула:',matrixA:'Матрица A',inputHint:'Редактируйте элементы матрицы A. SVD пересчитывается автоматически.',summaryTitle:'Краткая информация',summaryHint:'Показываем геометрию SVD: вращение входа, растяжение по сингулярным осям и финальное вращение.',
     matrixNoteU:'Столбцы U — левые сингулярные векторы u₁, u₂, u₃.',matrixNoteS:'Диагональ Σ: сингулярные значения σ₁, σ₂, σ₃.',matrixNoteV:'Строки Vᵀ — правые сингулярные векторы v₁, v₂, v₃, записанные транспонированными.',
@@ -314,7 +314,7 @@ const I18N={
       <p><strong>Управление.</strong> Можно изменять матрицу A, сохранять состояние в JSON, восстанавливать его, делать Undo/Redo, сбрасывать A к единичной матрице и возвращаться к начальному примеру.</p>`
   },
   en:{
-    appTitle:'Singular Value Decomposition',edition:'Web version 01i',home:'Home',lead:'The four pictures show how the unit sphere changes step by step under SVD: I → Vᵀ → ΣVᵀ → UΣVᵀ = A.',
+    appTitle:'Singular Value Decomposition',edition:'Web version 01k',home:'Home',lead:'The four pictures show how the unit sphere changes step by step under SVD: I → Vᵀ → ΣVᵀ → UΣVᵀ = A.',
     syncViews:'Synchronize both views',sameScale:'Same scale: one unit in both charts',modeStages:'Decomposition stages',modeDirections:'Direction mapping',modeStagesInfo:'Four consecutive transformations: I → Vᵀ → ΣVᵀ → A.',modeDirectionsInfo:'The same transformation A: each input vᵢ maps to σᵢuᵢ. Colors indicate corresponding vectors.',inputDirection:'Input: right singular vectors v₁, v₂, v₃',outputDirection:'Output: A vᵢ = σᵢuᵢ',inputDirectionDesc:'Unit sphere and three input directions v₁, v₂, v₃.',outputDirectionDesc:'Images of those same directions: Av₁ = σ₁u₁, Av₂ = σ₂u₂, Av₃ = σ₃u₃.',
     undo:'Undo',redo:'Redo',resetA:'Reset A',startOver:'Start over',saveJson:'Save JSON',loadJson:'Load JSON',formulaLabel:'Formula:',matrixA:'Matrix A',inputHint:'Edit the entries of matrix A. The SVD is recalculated automatically.',summaryTitle:'Summary',summaryHint:'We show the geometry of SVD: input rotation, stretching along singular axes, and the final rotation.',
     matrixNoteU:'Columns of U are the left singular vectors u₁, u₂, u₃.',matrixNoteS:'The diagonal of Σ contains singular values σ₁, σ₂, σ₃.',matrixNoteV:'Rows of Vᵀ are the transposed right singular vectors v₁, v₂, v₃.',
@@ -336,7 +336,7 @@ const I18N={
       <p><strong>Controls.</strong> You can edit matrix A, save/load JSON, use Undo/Redo, reset A to identity, and return to the initial sample.</p>`
   },
   he:{
-    appTitle:'פירוק לערכים סינגולריים',edition:'גרסת ווב 01i',home:'לדף הראשי',lead:'ארבע התמונות מראות כיצד הכדור היחידה משתנה שלב אחר שלב תחת SVD: I → Vᵀ → ΣVᵀ → UΣVᵀ = A.',
+    appTitle:'פירוק לערכים סינגולריים',edition:'גרסת ווב 01k',home:'לדף הראשי',lead:'ארבע התמונות מראות כיצד הכדור היחידה משתנה שלב אחר שלב תחת SVD: I → Vᵀ → ΣVᵀ → UΣVᵀ = A.',
     syncViews:'סנכרון המבט בשני הגרפים',sameScale:'קנה מידה זהה: יחידה אחת בשני הגרפים',modeStages:'שלבי הפירוק',modeDirections:'התאמת כיוונים',modeStagesInfo:'ארבע טרנספורמציות עוקבות: I → Vᵀ → ΣVᵀ → A.',modeDirectionsInfo:'אותה טרנספורמציה A: כל vᵢ עובר ל־σᵢuᵢ. הצבעים תואמים.',inputDirection:'קלט: וקטורים סינגולריים ימניים v₁, v₂, v₃',outputDirection:'פלט: A vᵢ = σᵢuᵢ',inputDirectionDesc:'כדור היחידה ושלושת כיווני הקלט v₁, v₂, v₃.',outputDirectionDesc:'התמונות של אותם כיוונים: Av₁ = σ₁u₁, Av₂ = σ₂u₂, Av₃ = σ₃u₃.',
     undo:'בטל',redo:'חזור',resetA:'אפס A',startOver:'התחל מחדש',saveJson:'שמור JSON',loadJson:'טען JSON',formulaLabel:'נוסחה:',matrixA:'מטריצה A',inputHint:'אפשר לערוך את איברי המטריצה A. הפירוק מתעדכן אוטומטית.',summaryTitle:'מידע קצר',summaryHint:'אנו מציגים את הגאומטריה של SVD: סיבוב הקלט, מתיחה לאורך הצירים הסינגולריים, והסיבוב הסופי.',
     matrixNoteU:'עמודות U הן הווקטורים הסינגולריים השמאליים u₁, u₂, u₃.',matrixNoteS:'באלכסון Σ נמצאים הערכים הסינגולריים σ₁, σ₂, σ₃.',matrixNoteV:'שורות Vᵀ הן הטרנספוזיציות של הווקטורים הסינגולריים הימניים v₁, v₂, v₃.',
@@ -538,7 +538,11 @@ function createChart(index){
   camera.position.set(5.9,-6.3,4.7);
   const basePosition=camera.position.clone();
   const controls=new OrbitControls(camera, renderer.domElement);
-  controls.enableDamping=true; controls.dampingFactor=0.08; controls.target.set(0,0,0); controls.enabled=state.rotating[index];
+  controls.enableDamping=true; controls.dampingFactor=0.08; controls.target.set(0,0,0);
+  // Keep OrbitControls active for the desktop mouse wheel. Mobile touch
+  // gestures are enabled ONLY when the corresponding Rotate button is on.
+  controls.enabled=true; controls.enableZoom=true; controls.enablePan=false;
+  controls.enableRotate=state.rotating[index] && state.axisModes[index]==='free';
   let settingView=false;
   const baseDist=basePosition.length();
   function setAngles(angles){
@@ -566,22 +570,63 @@ function createChart(index){
   });
   let drag=null;
   const canvas=renderer.domElement;
+  // Constrained-axis touch gestures use our axis rotation and pinch handlers.
+  // Free mode uses OrbitControls touch rotation and dolly, but only when
+  // the user's Rotate switch is on. No touch gesture modifies a chart when off.
+  const axisTouches=new Map();
+  let lastPinchDistance=null;
+  const constrained=()=>state.rotating[index] && state.axisModes[index]!=='free';
   canvas.addEventListener('pointerdown',ev=>{
-    if(!state.rotating[index]||state.axisModes[index]==='free')return;
-    if(ev.pointerType==='touch' && !ev.isPrimary)return;
+    if(!constrained())return;
     ev.stopImmediatePropagation(); ev.preventDefault();
-    drag={pointerId:ev.pointerId,x:ev.clientX,y:ev.clientY}; canvas.setPointerCapture(ev.pointerId);
+    if(ev.pointerType==='touch'){
+      axisTouches.set(ev.pointerId,{x:ev.clientX,y:ev.clientY});
+      if(axisTouches.size>=2){
+        drag=null;
+        const p=[...axisTouches.values()];
+        lastPinchDistance=Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y);
+      }
+    }
+    if(axisTouches.size<2 && !drag){
+      drag={pointerId:ev.pointerId,x:ev.clientX,y:ev.clientY};
+    }
+    canvas.setPointerCapture(ev.pointerId);
   },true);
   canvas.addEventListener('pointermove',ev=>{
+    if(axisTouches.has(ev.pointerId))axisTouches.set(ev.pointerId,{x:ev.clientX,y:ev.clientY});
+    if(axisTouches.size>=2){
+      ev.stopImmediatePropagation();ev.preventDefault();
+      const p=[...axisTouches.values()];
+      const d=Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y);
+      if(lastPinchDistance>1 && d>1){
+        const factor=THREE.MathUtils.clamp(lastPinchDistance/d,0.7,1.3);
+        const offset=camera.position.clone().sub(controls.target);
+        const current=offset.length();
+        const next=THREE.MathUtils.clamp(current*factor,controls.minDistance||0.1,controls.maxDistance||100);
+        camera.position.copy(controls.target).addScaledVector(offset,next/current);
+        controls.update();syncComparisonCamera(index);
+      }
+      lastPinchDistance=d;
+      return;
+    }
     if(!drag||drag.pointerId!==ev.pointerId)return;
     ev.stopImmediatePropagation();ev.preventDefault();
     const k='xyz'.indexOf(state.axisModes[index]);
     if(k<0)return;
     state.angles[index][k] += (ev.clientX-drag.x - (ev.clientY-drag.y))*0.6;
     state.angles[index][k]=((state.angles[index][k]+180)%360+360)%360-180;
-    drag.x=ev.clientX;drag.y=ev.clientY;setAngles(state.angles[index]);syncAngleUI(index);syncComparisonCamera(index);
+    drag.x=ev.clientX;drag.y=ev.clientY;
+    setAngles(state.angles[index]);syncAngleUI(index);syncComparisonCamera(index);
   },true);
-  function endDrag(ev){if(!drag||drag.pointerId!==ev.pointerId)return;ev.stopImmediatePropagation();drag=null;saveAuto();}
+  function endDrag(ev){
+    const tracked=axisTouches.has(ev.pointerId);
+    axisTouches.delete(ev.pointerId);
+    if(tracked || (drag&&drag.pointerId===ev.pointerId))ev.stopImmediatePropagation();
+    if(drag && drag.pointerId===ev.pointerId)drag=null;
+    if(axisTouches.size<2)lastPinchDistance=null;
+    if(axisTouches.size===1)drag=null; // require a fresh gesture after pinch
+    if(tracked || drag===null)saveAuto();
+  }
   canvas.addEventListener('pointerup',endDrag,true);
   canvas.addEventListener('pointercancel',endDrag,true);
   scene.add(new THREE.AmbientLight(0xffffff,0.95));
@@ -803,10 +848,31 @@ function redo(){if(!redoStack.length)return; undoStack.push(snapshot()); const s
 function updateUndoButtons(){document.getElementById('undo-btn').disabled=!undoStack.length;document.getElementById('redo-btn').disabled=!redoStack.length;}
 
 function saveAuto(){localStorage.setItem('avo-svd-01f-state', JSON.stringify({state:{A:state.A,lang:state.lang,rotating:state.rotating,angles:state.angles,axisModes:state.axisModes}}));}
-function loadAuto(){try{const raw=localStorage.getItem('avo-svd-01f-state'); if(!raw)return; const obj=JSON.parse(raw); if(obj&&obj.state&&obj.state.A) {state.A=cloneMatrix(obj.state.A); if(!query.has('lang'))state.lang=obj.state.lang||state.lang; state.rotating=Array.isArray(obj.state.rotating) ? obj.state.rotating.slice(0,4) : [false,false,false,false]; if(Array.isArray(obj.state.angles)&&obj.state.angles.length===4)state.angles=obj.state.angles; if(Array.isArray(obj.state.axisModes)&&obj.state.axisModes.length===4)state.axisModes=obj.state.axisModes;}}catch(e){}}
+function loadAuto(){try{const raw=localStorage.getItem('avo-svd-01f-state'); if(!raw)return; const obj=JSON.parse(raw); if(obj&&obj.state&&obj.state.A) {state.A=cloneMatrix(obj.state.A); if(!query.has('lang'))state.lang=obj.state.lang||state.lang; state.rotating=[false,false,false,false]; if(Array.isArray(obj.state.angles)&&obj.state.angles.length===4)state.angles=obj.state.angles; if(Array.isArray(obj.state.axisModes)&&obj.state.axisModes.length===4)state.axisModes=obj.state.axisModes;}}catch(e){}}
 
 function updateStatus(msg){document.getElementById('status-line').textContent=msg;}
-function syncToggleButtons(){document.querySelectorAll('.view-toggle').forEach(btn=>{const i=Number(btn.dataset.chart); btn.classList.toggle('active', state.rotating[i]); btn.setAttribute('aria-pressed',String(state.rotating[i]));}); charts.forEach((ch,i)=>{ch.controls.enabled=state.rotating[i]; ch.renderer.domElement.style.cursor=state.rotating[i]?'grab':'default';});}
+function syncToggleButtons(){
+  document.querySelectorAll('.view-toggle').forEach(btn=>{
+    const i=Number(btn.dataset.chart);
+    btn.classList.toggle('active',state.rotating[i]);
+    btn.setAttribute('aria-pressed',String(state.rotating[i]));
+  });
+  charts.forEach((ch,i)=>{
+    const on=!!state.rotating[i], free=state.axisModes[i]==='free';
+    // Do not disable OrbitControls itself: that would also disable mouse wheel.
+    ch.controls.enabled=true;
+    ch.controls.enableZoom=true;
+    ch.controls.enablePan=false;
+    ch.controls.enableRotate=on && free;
+    // An unmapped touch action (-1) disables OrbitControls touch actions without disabling wheel.
+    // Constrained X/Y/Z mode uses its own guarded handlers for finger gestures.
+    ch.controls.touches.ONE=(on && free)?THREE.TOUCH.ROTATE:-1;
+    ch.controls.touches.TWO=(on && free)?THREE.TOUCH.DOLLY_PAN:-1;
+    // When off, the browser may scroll the page with a single finger.
+    ch.renderer.domElement.style.touchAction=on?'none':'pan-y';
+    ch.renderer.domElement.style.cursor=on?'grab':'default';
+  });
+}
 
 function setLanguage(lang,save=true){state.lang=lang; document.documentElement.lang=lang; document.body.classList.toggle('hebrew-text',lang==='he');
   document.querySelectorAll('[data-i18n]').forEach(el=>{const key=el.dataset.i18n; if(key==='matrixNoteU' || key==='matrixNoteS' || key==='matrixNoteV' || key==='helpTitle' || key==='close' || key==='home' || key==='edition' || key==='appTitle' || key==='lead' || key==='undo' || key==='redo' || key==='resetA' || key==='startOver' || key==='saveJson' || key==='loadJson' || key==='formulaLabel' || key==='matrixA' || key==='inputHint' || key==='summaryTitle' || key==='summaryHint' || key==='reconstruction' || key==='stage0' || key==='stage1' || key==='stage2' || key==='stage3' || key==='toggleView' || key==='commonView' || key==='axisMode' || key==='syncViews' || key==='sameScale') el.textContent=t(key);});
@@ -821,7 +887,7 @@ function setLanguage(lang,save=true){state.lang=lang; document.documentElement.l
   if(save) saveAuto();
 }
 
-function saveJSON(){const blob=new Blob([JSON.stringify({version:'01i',app:'AVO_SVD',state:{A:state.A,lang:state.lang,rotating:state.rotating,angles:state.angles,axisModes:state.axisModes}},null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='AVO_SVD_01i_state.json'; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),500); updateStatus(t('saved'));}
+function saveJSON(){const blob=new Blob([JSON.stringify({version:'01k',app:'AVO_SVD',state:{A:state.A,lang:state.lang,rotating:state.rotating,angles:state.angles,axisModes:state.axisModes}},null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='AVO_SVD_01k_state.json'; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),500); updateStatus(t('saved'));}
 function loadJSON(file){const reader=new FileReader(); reader.onload=()=>{try{const obj=JSON.parse(reader.result); if(!obj.state||!obj.state.A) throw new Error('bad'); pushUndo(); state.A=cloneMatrix(obj.state.A); if(obj.state.lang) state.lang=obj.state.lang; if(obj.state.rotating) state.rotating=obj.state.rotating.slice();if(Array.isArray(obj.state.angles))state.angles=obj.state.angles;if(Array.isArray(obj.state.axisModes))state.axisModes=obj.state.axisModes;applyViews(); setLanguage(state.lang,false); syncToggleButtons(); recalcAll(); saveAuto(); updateStatus(t('loaded'));}catch(e){updateStatus(t('invalidJson'));}}; reader.readAsText(file);}
 function resetA(){pushUndo(); state.A=identity3(); state.rotating=[false,false,false,false]; state.axisModes=['free','free','free','free']; applyViews(); syncToggleButtons(); recalcAll(); saveAuto(); updateStatus(t('resetDone'));}
 function startOver(){pushUndo(); state.A=cloneMatrix(initialMatrix); state.rotating=[false,false,false,false]; state.axisModes=['free','free','free','free']; state.angles=[[0,0,0],[0,0,0],[0,0,0],[0,0,0]]; applyViews(); syncToggleButtons(); recalcAll(); saveAuto(); updateStatus(t('startDone'));}
