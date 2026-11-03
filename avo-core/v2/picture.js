@@ -1,0 +1,113 @@
+/* AVO Core v2 · repeated self-contained picture (data + plot + view controls). */
+import {View3D} from './view.js';
+import {buildRays} from './rays.js';
+const el=(tag,cls,text)=>{const x=document.createElement(tag);if(cls)x.className=cls;if(text!==undefined)x.textContent=text;return x;};
+const fmt=n=>!Number.isFinite(n)?'∞':Math.abs(n)<1e-9?'0':String(Number(n.toFixed(4)));
+export class Picture {
+  constructor(app,config){
+    this.app=app;this.config=config;this.id=config.id;this.root=el('section','picture');this.root.dataset.picture=this.id;
+    const header=el('div','picture-header');this.heading=el('h2');header.append(this.heading);
+    const tools=el('div','panel-tools');this.viewButton=el('button');this.viewButton.addEventListener('click',()=>this.switchView());tools.append(this.viewButton);
+    if(config.editable){this.editButton=el('button');this.editButton.addEventListener('click',()=>this.switchEdit());tools.append(this.editButton);}
+    this.fullButton=el('button','small');this.fullButton.addEventListener('click',()=>this.toggleFull());tools.append(this.fullButton);
+    this.resetViewButton=el('button','small');this.resetViewButton.addEventListener('click',()=>this.view.resetView());tools.append(this.resetViewButton);
+    if(config.matrixId){this.resetMatrixButton=el('button','small');this.resetMatrixButton.addEventListener('click',()=>app.resetMatrix(config.matrixId));tools.append(this.resetMatrixButton);}
+    header.append(tools);
+    this.dataZone=el('section','matrix-zone');this.dataTitle=el('div','data-title');this.dataZone.append(this.dataTitle);
+    this.matrixRow=el('div','matrix-row');this.dataZone.append(this.matrixRow);
+    this.matrixTable=el('table','matrix-table');this.matrixTable.setAttribute('aria-label','Matrix');this.matrixRow.append(this.matrixTable);
+    if(config.orderSelect){
+      this.orderWrapper=el('div');this.orderLabel=el('label');this.orderSelect=el('select','order-select');
+      for(const v of ['BA','AB']){const o=el('option',null,v);o.value=v;this.orderSelect.append(o);}
+      this.orderSelect.addEventListener('change',()=>app.setOrder(this.orderSelect.value));this.orderWrapper.append(this.orderLabel,this.orderSelect);this.matrixRow.append(this.orderWrapper);
+    }
+    this.metrics=el('div','metrics');this.formula=el('div','formula');this.dataZone.append(this.metrics,this.formula);
+    this.viewOpts=el('div','view-opts');const axisRow=el('div','angle-row');
+    this.axisLabel=el('span','tip');axisRow.append(this.axisLabel);
+    this.axisButtons={};const axisTools=el('div','axis-tools');
+    for(const axis of ['free','x','y','z']){
+      const b=el('button','small axis-btn',axis==='free'?'◎':axis.toUpperCase());b.addEventListener('click',()=>{this.view.axis=axis;this.renderControls();this.app.autosave();});axisTools.append(b);this.axisButtons[axis]=b;
+    }
+    axisRow.append(axisTools);this.viewOpts.append(axisRow);
+    const raysArea=el('div','rays');this.setRays=buildRays(raysArea,(index,value)=>this.view.changeAngles(index,value));this.viewOpts.append(raysArea);
+    this.editTools=el('div','edit-tools');this.editLabel=el('span','tip');this.editTools.append(this.editLabel);
+    this.editButtons={};for(const axis of ['xy','z']){
+      const b=el('button','small',axis==='xy'?'XY':'Z');b.addEventListener('click',()=>{this.view.editAxis=axis;this.renderControls();this.app.autosave();});this.editTools.append(b);this.editButtons[axis]=b;
+    }
+    this.plotWrap=el('div','plot-wrap');this.plotCaption=el('span','plot-caption');this.plotWrap.append(this.plotCaption);
+    this.endInfo=el('div','end-info');
+    this.root.append(header,this.dataZone,this.editTools,this.viewOpts,this.plotWrap,this.endInfo);
+    this.view=new View3D(this.plotWrap,()=>this.viewChanged(),(binding,pos)=>this.handleMove(binding,pos),()=>this.app.finishGesture());
+    this.view.resize();this.buildMatrix();this.renderLanguage();this.renderControls();
+  }
+  get matrixName(){return this.config.matrixId||this.config.outputMatrixId||'result';}
+  get numericMatrix(){
+    const id=this.config.matrixId;
+    return id?this.app.matrixFactory.getNumericMatrix(id):this.result?.matrix;
+  }
+  buildMatrix(){
+    this.cells=[];this.matrixTable.replaceChildren();
+    const matrix=this.numericMatrix||[[0,0,0],[0,0,0],[0,0,0]];
+    for(let r=0;r<matrix.length;r++){
+      const tr=el('tr');this.cells[r]=[];
+      for(let c=0;c<matrix[r].length;c++){
+        const td=el('td');if(this.config.matrixId){
+          const input=el('input',`col-${c}`);input.type='text';input.inputMode='decimal';input.spellcheck=false;
+          input.setAttribute('aria-label',`${this.config.matrixId} ${r+1},${c+1}`);
+          input.addEventListener('focus',()=>this.app.beginGesture());
+          input.addEventListener('input',()=>{let raw=input.value.trim().replace(',','.');if(['','-','.','-.'].includes(raw))return;const number=Number(raw);
+            if(Number.isFinite(number))this.app.setCell(this.config.matrixId,r,c,number);});
+          input.addEventListener('blur',()=>{this.app.finishGesture();this.renderMatrix();});
+          input.addEventListener('keydown',e=>{if(e.key==='Enter')input.blur();});
+          td.append(input);this.cells[r][c]=input;
+        }else{const span=el('span','read');td.append(span);this.cells[r][c]=span;}
+        tr.append(td);
+      }
+      this.matrixTable.append(tr);
+    }
+  }
+  renderMatrix(){const matrix=this.numericMatrix;if(!matrix)return;
+    if(!this.cells.length||matrix.length!==this.cells.length){this.buildMatrix();}
+    for(let r=0;r<matrix.length;r++)for(let c=0;c<matrix[r].length;c++){
+      const input=this.cells[r]?.[c];if(!input)continue;
+      if(input.tagName==='INPUT'){if(document.activeElement!==input)input.value=fmt(matrix[r][c]);}
+      else input.textContent=fmt(matrix[r][c]);
+    }
+  }
+  viewChanged(){this.setRays(this.view.angles);this.app.cameraChanged(this);}
+  handleMove(binding,pos){return this.app.moveHandle(binding,pos);}
+  switchView(){this.view.setMode(this.view.mode==='off'?'view':'off');this.renderControls();this.app.autosave();}
+  switchEdit(){this.view.setMode(this.view.mode==='edit'?'off':'edit');this.renderControls();this.app.autosave();}
+  toggleFull(){const full=this.root.classList.toggle('picture-full');this.fullButton.setAttribute('aria-pressed',String(full));requestAnimationFrame(()=>this.view.resize());}
+  renderControls(){
+    const tr=this.app.t.bind(this.app);this.viewButton.textContent=tr('view');this.viewButton.classList.toggle('active',this.view.mode!=='off');this.viewButton.setAttribute('aria-pressed',String(this.view.mode!=='off'));
+    if(this.editButton){this.editButton.textContent=tr('edit');this.editButton.classList.toggle('active',this.view.mode==='edit');this.editButton.setAttribute('aria-pressed',String(this.view.mode==='edit'));}
+    this.editTools.hidden=this.view.mode!=='edit'||!this.config.editable;
+    for(const [name,button] of Object.entries(this.editButtons))button.classList.toggle('active',name===this.view.editAxis);
+    for(const [name,button] of Object.entries(this.axisButtons))button.classList.toggle('active',name===this.view.axis);
+    this.plotCaption.textContent=tr(this.view.mode==='edit'?'statusEdit':this.view.mode==='view'?'statusView':'statusOff');
+    this.setRays(this.view.angles);
+  }
+  renderLanguage(){
+    const t=this.app.t.bind(this.app),m=this.app.msg.bind(this.app);
+    this.heading.textContent=m(this.config.titleKey);this.dataTitle.textContent=`${t('matrix')} ${this.config.matrixId||this.result?.label||this.config.displayName||this.id}`;
+    this.axisLabel.textContent=t('selectAxis');this.editLabel.textContent=t('selectDrag');
+    this.fullButton.textContent=t('full');this.resetViewButton.textContent=t('resetView');
+    if(this.resetMatrixButton)this.resetMatrixButton.textContent=`${this.app.lang==='ru'?'Сброс':this.app.lang==='he'?'אפס':'Reset'} ${this.config.matrixId}`;
+    if(this.orderLabel)this.orderLabel.textContent=t('order')+': ';
+    this.renderControls();
+  }
+  updateResult(result){
+    this.result=result||{};
+    this.view.setGeometry(this.result.geometry||{});
+    if(this.orderSelect)this.orderSelect.value=this.app.order;
+    this.renderMatrix();this.renderLanguage();
+    this.metrics.replaceChildren();
+    for(const metric of this.result.metrics||[]){const p=el('div','metric');p.textContent=`${this.app.t(metric.key)||metric.key}: ${metric.value}`;this.metrics.append(p);}
+    this.formula.textContent=this.result.formula?(this.result.formulaLabel?this.app.t(this.result.formulaLabel)+': ':'')+this.result.formula:'';
+    this.endInfo.textContent=this.app.msg(this.config.descriptionKey)||'';
+  }
+  state(){return this.view.state();}
+  applyState(state){this.view.applyState(state);this.renderControls();}
+  dispose(){this.view.dispose();this.root.remove();}
+}
