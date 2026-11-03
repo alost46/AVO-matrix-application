@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#132d4b">
 <meta name="description" content="AVO Matrix Applications: interactive linear algebra: 3D matrix transformations, multiplication, zero divisors, Gauss-Jordan elimination and linear systems.">
-<title>AVO Matrix Applications · Home 09</title>
+<title>AVO Matrix Applications · Home 09e</title>
 <link rel="icon" type="image/png" href="favicon-32.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <style>
@@ -140,7 +140,26 @@ document.addEventListener('keydown',e=>{
  }
 });
 
-function setLanguage(lang){if(!translations[lang])lang='ru';updateHomeHelp(lang);document.documentElement.lang=lang;document.documentElement.dir=lang==='he'?'rtl':'ltr';for(const el of document.querySelectorAll('[data-i18n]'))el.textContent=translations[lang][el.dataset.i18n];for(const btn of document.querySelectorAll('[data-lang]'))btn.setAttribute('aria-pressed',String(btn.dataset.lang===lang));try{localStorage.setItem('avo-home-lang',lang)}catch(e){}}
-for(const btn of document.querySelectorAll('[data-lang]'))btn.addEventListener('click',()=>setLanguage(btn.dataset.lang));let preferred='ru';try{preferred=localStorage.getItem('avo-home-lang')||(/^he/i.test(navigator.language)?'he':/^en/i.test(navigator.language)?'en':'ru')}catch(e){}setLanguage(preferred);
+// The original eight relative application paths are preserved verbatim.
+// Only the language query parameter is updated.
+function setLanguage(lang){
+  if(!translations[lang])lang='ru';
+  updateHomeHelp(lang);
+  document.documentElement.lang=lang;
+  document.documentElement.dir=lang==='he'?'rtl':'ltr';
+  for(const el of document.querySelectorAll('[data-i18n]'))el.textContent=translations[lang][el.dataset.i18n];
+  for(const btn of document.querySelectorAll('[data-lang]'))btn.setAttribute('aria-pressed',String(btn.dataset.lang===lang));
+  for(const link of document.querySelectorAll('a.launch')){
+    const url=new URL(link.getAttribute('href'),document.baseURI);
+    url.searchParams.set('lang',lang);
+    link.href=url.href;
+  }
+  try{localStorage.setItem('avo-home-lang',lang)}catch(e){}
+}
+for(const btn of document.querySelectorAll('[data-lang]'))btn.addEventListener('click',()=>setLanguage(btn.dataset.lang));
+const requestedLanguage=new URLSearchParams(window.location.search).get('lang');
+let preferred='ru';
+try{preferred=localStorage.getItem('avo-home-lang')||(/^he/i.test(navigator.language)?'he':/^en/i.test(navigator.language)?'en':'ru')}catch(e){}
+setLanguage(translations[requestedLanguage]?requestedLanguage:preferred);
 </script>
 </body></html>
