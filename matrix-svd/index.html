@@ -1,1 +1,879 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<title>Сингулярное разложение матрицы · Web 01i</title>
+<style>
+:root{
+  --bg:#eef3f7;--panel:#ffffff;--line:#cad7e2;--text:#203245;--muted:#5d7389;--accent:#27598d;
+  --x:#cf3e55;--y:#a88862;--z:#8ef300;--purple:#6A5CFF;
+  font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif;color:var(--text);background:var(--bg)
+}
+*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text)}
+button,input{font:inherit} button{cursor:pointer;touch-action:manipulation}
+.shell{max-width:1700px;margin:auto;padding:14px}
+header{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.header-brand{display:flex;align-items:center;gap:10px;min-width:0}
+.header-brand img{display:block;border-radius:4px}
+h1{font-size:24px;margin:0;line-height:1.2}
+.tag{background:#dfeaf5;color:#325572;border-radius:999px;padding:5px 11px;font-weight:700;font-size:12px}
+.top-actions{margin-left:auto;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.language-button{font-size:20px;padding:4px 7px;border:1px solid #c8d6e2;border-radius:9px;background:white;line-height:1.2}
+.language-button.active{outline:2px solid var(--accent)}
+.flag-icon{width:28px;height:19px;display:block}
+.avo-home-link{display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;text-decoration:none;background:#fff;color:#235a87;border:1px solid #b9ccda;border-radius:8px;padding:8px 11px;font-size:14px;font-weight:750;line-height:1.2;min-height:36px}
+.avo-home-link:hover{background:#e7f4fd}
+.help-btn{border:2px solid #517496;background:#fff;color:#254e74;font-size:18px;font-weight:900;width:36px;height:36px;border-radius:50%}
+.lead{font-size:13px;color:#4f667c;line-height:1.5;margin:0 0 12px}
+.toolbar,.matrix-toolbar,.svd-summary{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:12px}
+.toolbar,.matrix-toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.toolbar button,.matrix-toolbar button,.panel .bar button,.help-actions button{border:1px solid #bacad7;background:#f6fbff;color:#244d75;padding:8px 11px;border-radius:8px;font-size:13px;font-weight:700}
+.toolbar button:disabled{opacity:.45;cursor:default}
+.toolbar output{font-size:12px;color:#587086;line-height:1.4;flex:1 1 180px}
+.matrix-toolbar .label{font-weight:800;color:#244d76}
+.matrix-toolbar .formula{font-size:18px;font-weight:800;color:#1f4c7b}
+.matrix-area{display:grid;grid-template-columns:minmax(260px,370px) minmax(0,1fr);gap:12px;align-items:start;margin-bottom:12px}
+.matrix-card,.info-card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px}
+.matrix-card h2,.info-card h2{font-size:17px;margin:0 0 10px;color:#244d75}
+.matrix-grid{display:grid;grid-template-columns:repeat(3,minmax(70px,1fr));gap:8px}
+.matrix-grid input{width:100%;padding:9px 7px;border:1px solid #bfd0dd;border-radius:8px;text-align:center;font-size:17px;font-weight:750;background:#fff}
+.matrix-grid input.col-x{color:var(--x)} .matrix-grid input.col-y{color:var(--y)} .matrix-grid input.col-z{color:var(--z)}
+.matrix-grid input:focus{outline:3px solid #88b6de;outline-offset:1px}
+.small-note{font-size:12px;color:var(--muted);line-height:1.45;margin-top:8px}
+.svd-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;align-items:start}
+.svd-box h3{margin:0 0 8px;font-size:15px;color:#244d76}
+.matrix-display{border-collapse:separate;border-spacing:4px;margin:0 auto 8px}
+.matrix-display td{min-width:48px;padding:6px 8px;border-radius:8px;background:#f7fbff;border:1px solid #d6e1ea;text-align:right;font-variant-numeric:tabular-nums;font-family:ui-monospace,Consolas,monospace;font-size:14px}
+.matrix-display td.col-x{color:var(--x);font-weight:700}.matrix-display td.col-y{color:var(--y);font-weight:700}.matrix-display td.col-z{color:var(--z);font-weight:700}
+.metrics{font-size:13px;line-height:1.6;color:#32506b}
+.metrics strong{color:#1e456a}
+.layout{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;align-items:start}
+.panel{background:#fff;border:1px solid var(--line);border-radius:13px;overflow:hidden;box-shadow:0 2px 10px #00000008;min-width:0}
+.panel .bar{background:#f8fbfe;border-bottom:1px solid #e0e7ee;padding:9px 10px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-height:62px}
+.panel .bar strong{font-size:15px;margin-right:auto;color:#23496f}
+.panel .bar .view-toggle.active{background:#285789;color:#fff}
+.plot{height:clamp(255px,27vw,420px);position:relative;background:#fff;overflow:hidden}
+.plot canvas{display:block;width:100%;height:100%;touch-action:none}
+.axis-layer{position:absolute;inset:0;pointer-events:none;font-weight:900;color:#111;z-index:2}
+.axis-label{position:absolute;transform:translate(-50%,-50%);font-size:13px;background:#ffffffd8;border:1px solid #d4dde5;border-radius:999px;padding:1px 6px}
+.axis-label.x{color:var(--x)} .axis-label.y{color:var(--y)} .axis-label.z{color:var(--z)}
+.overlay{position:absolute;top:8px;left:8px;right:8px;font-size:11px;line-height:1.4;background:#fffffff2;border:1px solid #d7e2ea;border-radius:7px;padding:6px 8px;pointer-events:none;font-weight:650;z-index:3;color:#26455f}
+.description{font-size:12px;line-height:1.5;padding:9px 10px;border-top:1px solid #e2ebf1;color:#345372;min-height:70px}
+.hidden{display:none!important}
+.dialog-backdrop{position:fixed;inset:0;background:#10203580;display:flex;align-items:center;justify-content:center;padding:14px;z-index:50}
+.dialog{width:min(860px,100%);max-height:min(88vh,100%);overflow:auto;background:#fff;border-radius:14px;border:1px solid #d4dee8;padding:16px 18px;box-shadow:0 18px 44px #00000028}
+.dialog h2{margin:0 0 10px;color:#244c74}
+.dialog p,.dialog li{font-size:14px;line-height:1.55;color:#314f69}
+.help-actions{display:flex;justify-content:flex-end;margin-top:12px}
+.hebrew-text{direction:rtl;text-align:right}
+.hebrew-text .matrix-display,.hebrew-text .metrics,.hebrew-text .description,.hebrew-text .small-note,.hebrew-text .lead,.hebrew-text .dialog{direction:rtl;text-align:right}
+@media(max-width:1180px){.layout{grid-template-columns:repeat(2,minmax(0,1fr))}.svd-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:820px){.matrix-area{grid-template-columns:1fr}.layout{grid-template-columns:1fr}.svd-summary{grid-template-columns:1fr}.shell{padding:12px 10px 24px}.panel .bar{min-height:auto}.plot{height:340px}}
+/* 01b: Gauss–Jordan-weight typography and higher contrast across four panels. */
+:root{--text:#152f49;--muted:#3d5872;--line:#aebfd0}
+body{font-size:17px;font-weight:750}
+h1{font-size:25px;font-weight:900;color:#173f68}
+.lead{font-size:16px;font-weight:750;color:#2d4e6c;line-height:1.55}
+.tag{font-size:14px;font-weight:850}
+.avo-home-link{font-size:16px;font-weight:850}
+.toolbar button,.matrix-toolbar button,.panel .bar button,.help-actions button{font-size:16px;font-weight:800;border-color:#a9bdcf;padding:9px 12px}
+.toolbar output{font-size:15px;font-weight:850;color:#294a67}
+.matrix-toolbar .label{font-size:18px;font-weight:900}
+.matrix-toolbar .formula{font-size:21px;font-weight:900}
+.matrix-card h2,.info-card h2{font-size:21px;font-weight:900}
+.matrix-grid input{font:900 20px 'Arial Black','Segoe UI Black',system-ui,sans-serif;font-variant-numeric:tabular-nums;color:#122f49;border:2px solid #bbccda}
+.matrix-grid input.col-x{color:#dd243e}.matrix-grid input.col-y{color:#957046}.matrix-grid input.col-z{color:#5d9800}
+.small-note{font-size:15px;font-weight:800;color:#355573;line-height:1.5}
+.svd-box h3{font-size:22px;font-weight:900;color:#244c73}
+.matrix-display{border-spacing:5px}
+.matrix-display td{font:900 20px Consolas,'Liberation Mono',ui-monospace,monospace;min-width:58px;padding:9px 9px;background:#f6faff;border:1px solid #adc3d7}
+.matrix-display td.col-x{color:#d62242;font-weight:900}
+.matrix-display td.col-y{color:#936335;font-weight:900}
+.matrix-display td.col-z{color:#599400;font-weight:900}
+.metrics,.metrics strong{font-size:17px;line-height:1.65;font-weight:850;color:#254866}
+.panel .bar strong{font-size:19px;font-weight:900;color:#1d466b}
+.panel .bar .view-toggle{background:#f6fbff;color:#244d75;border:1px solid #adc1d2}
+.panel .bar .view-toggle.active{background:#285789;color:#fff;border-color:#285789}
+.view-tools{padding:8px 10px;border-bottom:1px solid #dce7ef;background:#f7fbff}
+.axis-buttons{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:7px}
+.axis-buttons button{border:1px solid #a9bfce;border-radius:7px;background:white;min-width:38px;padding:5px 9px;font-weight:900;color:#294c69}
+.axis-buttons button.active{background:#225584;color:white}
+.axis-buttons .mode-label{font-size:12px;font-weight:800;color:#31536d}
+.angle-row{display:grid;grid-template-columns:20px minmax(0,1fr) 65px;gap:7px;align-items:center;margin:3px 0;font-size:14px;font-weight:900}
+.angle-row input[type=range]{width:100%;min-width:0;accent-color:#28649a;cursor:ew-resize;touch-action:pan-y}
+.angle-row input[type=number]{width:65px;border:1px solid #aebfce;background:#fff;border-radius:6px;padding:4px;font:900 18px Consolas,'Liberation Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums;text-align:center;color:#193c5f}
+.angle-row.axis-x{color:#d62242}.angle-row.axis-y{color:#8053bb}.angle-row.axis-z{color:#579500}
+@media(max-width:820px){.angle-row{grid-template-columns:24px minmax(0,1fr) 75px;font-size:17px}.angle-row input[type=number]{width:75px;font-size:19px}.axis-buttons button{font-size:18px;min-width:43px}}
+.plot{height:clamp(292px,27vw,450px)}
+.axis-label{white-space:nowrap;font-size:17px;font-weight:900;padding:2px 6px;border:1px solid #9eb4c7;color:#173e66;filter:drop-shadow(0 1px 1px #ffffff)}
+.axis-label.x{color:#d62242}.axis-label.y{color:#936335}.axis-label.z{color:#599400}
+.coord-label{position:absolute;transform:translate(-50%,-50%);white-space:nowrap;font:900 16px Consolas,'Liberation Mono',ui-monospace,monospace;padding:1px 6px;border-radius:999px;border:1px solid #a9bdd0;background:#fffffff0;pointer-events:none;filter:drop-shadow(0 1px 1px #ffffff)}
+.coord-label.x{color:#d62242}.coord-label.y{color:#936335}.coord-label.z{color:#599400}
+.overlay{font-size:15px;font-weight:850;line-height:1.45;color:#1d4161;border-color:#bbcada;background:#fffffff5}
+.description{font-size:16px;font-weight:850;line-height:1.55;color:#264765;min-height:95px}
+.metrics,.matrix-grid input,.matrix-display td,#summary-metrics,.angle-row input[type=number]{font-variant-numeric:tabular-nums}
+.dialog h2{font-size:23px;font-weight:900}
+.dialog p,.dialog li{font-size:17px;font-weight:800}
+@media(max-width:820px){
+ body{font-size:18px}
+ .plot{height:360px}
+ .matrix-display td{font-size:21px;min-width:60px}
+ .metrics{font-size:17px}
+ .panel .bar strong{font-size:20px}
+ .description{font-size:17px;min-height:auto}
+ .overlay{font-size:16px}
+ .small-note{font-size:16px}
+}
 
+/* Two complementary SVD geometries; original four-stage view remains intact. */
+.mode-picker{display:flex;flex-wrap:wrap;align-items:center;gap:9px;margin:0 0 12px;padding:9px 12px;background:#fff;border:1px solid var(--line);border-radius:12px}
+.mode-picker button{font-size:16px;font-weight:850;padding:9px 14px;border:2px solid #aac0d3;border-radius:9px;background:#f5f9fd;color:#1b476d}
+.mode-picker button.active{background:#225584;color:white;border-color:#225584}
+.mode-note{font-size:15px;font-weight:800;color:#244b70;line-height:1.4;margin:0 0 12px}
+.layout.comparison{grid-template-columns:repeat(2,minmax(0,1fr))}
+.layout.comparison .panel[data-panel="1"],.layout.comparison .panel[data-panel="2"]{display:none}
+.layout.comparison .plot{height:clamp(350px,38vw,550px)}
+@media(max-width:820px){.layout.comparison{grid-template-columns:1fr}.layout.comparison .plot{height:390px}.mode-picker button{flex:1 1 170px}}
+/* Direction-mode view controls and live singular-vector correspondences. */
+.direction-tools{background:white;border:1px solid var(--line);border-radius:12px;padding:12px;margin:0 0 12px;display:flex;flex-wrap:wrap;align-items:center;gap:12px 22px}
+.sync-control{display:flex;align-items:center;gap:9px;font-size:17px;font-weight:850;color:#17466f;cursor:pointer}
+.sync-control input{width:21px;height:21px;accent-color:#225584}
+.scale-note{font-size:14px;font-weight:800;color:#375b77}
+.direction-mappings{display:flex;gap:10px;flex:1 1 100%;flex-wrap:wrap}
+.mapping-item{border:1px solid #b9cddd;border-radius:9px;padding:8px 12px;background:#f7fbff;font:900 18px Arial,'Arial Black',sans-serif;white-space:nowrap;flex:1 1 170px;text-align:center}
+.mapping-item:nth-child(1){color:#d62242}.mapping-item:nth-child(2){color:#7937b5}.mapping-item:nth-child(3){color:#4b8800}
+@media(max-width:820px){.direction-mappings{gap:6px}.mapping-item{font-size:17px;flex:1 1 110px;padding:7px}}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}</script>
+</head>
+<body>
+<main class="shell">
+  <header>
+    <div class="header-brand">
+      <img src="https://alost46.github.io/AVO-matrix-application/avo-logo.png" alt="AVO" width="27" height="35">
+      <h1 data-i18n="appTitle">Сингулярное разложение матрицы</h1>
+    </div>
+    <span class="tag" data-i18n="edition">Веб-версия 01i</span>
+    <div class="top-actions">
+      <a id="home-link" class="avo-home-link" href="../?lang=ru">⌂ <span data-i18n="home">На главную</span></a>
+      <button class="language-button active" data-lang="ru" aria-label="Русский"><svg class="flag-icon" viewBox="0 0 60 40"><rect width="60" height="40" fill="#fff"/><rect y="13.333" width="60" height="13.334" fill="#1746a2"/><rect y="26.667" width="60" height="13.333" fill="#d52b1e"/></svg></button>
+      <button class="language-button" data-lang="en" aria-label="English"><svg class="flag-icon" viewBox="0 0 60 40"><rect width="60" height="40" fill="#012169"/><path d="M0 0L60 40M60 0L0 40" stroke="#fff" stroke-width="12"/><path d="M0 0L60 40M60 0L0 40" stroke="#c8102e" stroke-width="4.5"/><path d="M30 0V40M0 20H60" stroke="#fff" stroke-width="14"/><path d="M30 0V40M0 20H60" stroke="#c8102e" stroke-width="7"/></svg></button>
+      <button class="language-button" data-lang="he" aria-label="עברית"><svg class="flag-icon" viewBox="0 0 60 40"><rect width="60" height="40" fill="#fff"/><rect y="5" width="60" height="5" fill="#0038b8"/><rect y="30" width="60" height="5" fill="#0038b8"/><path d="M30 11l-8.3 14.4h16.6L30 11zm0 18l8.3-14.4H21.7L30 29z" fill="none" stroke="#0038b8" stroke-width="2"/></svg></button>
+      <button id="help-btn" class="help-btn" type="button">?</button>
+    </div>
+  </header>
+
+  <p class="lead" data-i18n="lead">Первые четыре картинки показывают, как единичная сфера преобразуется по шагам SVD: I → Vᵀ → ΣVᵀ → UΣVᵀ = A.</p>
+
+  <section class="toolbar">
+    <button id="undo-btn" type="button" data-i18n="undo">Отменить</button>
+    <button id="redo-btn" type="button" data-i18n="redo">Повторить</button>
+    <button id="common-view-btn" type="button" data-i18n="commonView">Общий обзор</button>
+    <button id="reset-btn" type="button" data-i18n="resetA">Сброс A</button>
+    <button id="start-over-btn" type="button" data-i18n="startOver">Начать заново</button>
+    <button id="save-btn" type="button" data-i18n="saveJson">Сохранить JSON</button>
+    <button id="load-btn" type="button" data-i18n="loadJson">Загрузить JSON</button>
+    <input id="load-file" type="file" accept="application/json,.json" class="hidden">
+    <output id="status-line"></output>
+  </section>
+
+  <section class="matrix-toolbar">
+    <span class="label" data-i18n="formulaLabel">Формула:</span>
+    <span class="formula">A = U Σ V<sup>T</sup></span>
+  </section>
+
+  <section class="matrix-area">
+    <div class="matrix-card">
+      <h2 data-i18n="matrixA">Матрица A</h2>
+      <div id="matrix-input" class="matrix-grid"></div>
+      <div class="small-note" data-i18n="inputHint">Редактируйте элементы матрицы A. SVD пересчитывается автоматически.</div>
+    </div>
+    <div class="info-card">
+      <h2 data-i18n="summaryTitle">Краткая информация</h2>
+      <div class="metrics" id="summary-metrics"></div>
+      <div class="small-note" data-i18n="summaryHint">Показываем геометрию SVD: вращение входа, растяжение по сингулярным осям и финальное вращение.</div>
+    </div>
+  </section>
+
+  <section class="svd-summary">
+    <div class="svd-box">
+      <h3>U</h3>
+      <table id="matrix-U" class="matrix-display"></table>
+      <div class="metrics" id="metrics-U"></div><div class="small-note" data-i18n="matrixNoteU"></div>
+    </div>
+    <div class="svd-box">
+      <h3>Σ</h3>
+      <table id="matrix-S" class="matrix-display"></table>
+      <div class="metrics" id="metrics-S"></div><div class="small-note" data-i18n="matrixNoteS"></div>
+    </div>
+    <div class="svd-box">
+      <h3>V<sup>T</sup></h3>
+      <table id="matrix-Vt" class="matrix-display"></table>
+      <div class="metrics" id="metrics-V"></div><div class="small-note" data-i18n="matrixNoteV"></div>
+    </div>
+    <div class="svd-box">
+      <h3 data-i18n="reconstruction">Проверка</h3>
+      <table id="matrix-R" class="matrix-display"></table>
+      <div class="metrics" id="metrics-R"></div>
+    </div>
+  </section>
+
+  <nav class="mode-picker" aria-label="SVD visualization mode">
+    <button type="button" class="mode-button active" data-mode="stages" aria-pressed="true" data-i18n="modeStages">Этапы разложения</button>
+    <button type="button" class="mode-button" data-mode="directions" aria-pressed="false" data-i18n="modeDirections">Соответствие направлений</button>
+  </nav>
+  <p class="mode-note" id="mode-explanation"></p>
+  <section id="direction-tools" class="direction-tools hidden" aria-label="Direction comparison controls">
+    <label class="sync-control"><input type="checkbox" id="sync-views" checked><span data-i18n="syncViews">Синхронный обзор двух графиков</span></label>
+    <span class="scale-note" data-i18n="sameScale">Одинаковый масштаб: 1 единица на обоих графиках</span>
+    <div class="direction-mappings" id="direction-mappings" aria-live="polite"></div>
+  </section>
+  <section class="layout" id="svd-layout">
+    <article class="panel" data-panel="0">
+      <div class="bar"><strong data-i18n="stage0">1. Исходная сфера</strong><button class="view-toggle" data-chart="0" data-i18n="toggleView">Вращать</button></div>
+      <div class="view-tools" data-view="0">
+        <div class="axis-buttons"><span class="mode-label" data-i18n="axisMode">Ось вращения:</span><button type="button" class="axis-choice" data-axis="free" data-chart="0">◎</button><button type="button" class="axis-choice" data-axis="x" data-chart="0">X</button><button type="button" class="axis-choice" data-axis="y" data-chart="0">Y</button><button type="button" class="axis-choice" data-axis="z" data-chart="0">Z</button></div>
+        <div class="angle-row axis-x"><label for="angle-0-x">X</label><input type="range" id="angle-0-x" data-angle="x" data-chart="0" min="-180" max="180" step="1" value="0"><input aria-label="X degrees" type="number" class="angle-number" data-angle="x" data-chart="0" min="-3600" max="3600" step="1" value="0"></div>
+        <div class="angle-row axis-y"><label for="angle-0-y">Y</label><input type="range" id="angle-0-y" data-angle="y" data-chart="0" min="-180" max="180" step="1" value="0"><input aria-label="Y degrees" type="number" class="angle-number" data-angle="y" data-chart="0" min="-3600" max="3600" step="1" value="0"></div>
+        <div class="angle-row axis-z"><label for="angle-0-z">Z</label><input type="range" id="angle-0-z" data-angle="z" data-chart="0" min="-180" max="180" step="1" value="0"><input aria-label="Z degrees" type="number" class="angle-number" data-angle="z" data-chart="0" min="-3600" max="3600" step="1" value="0"></div>
+      </div>
+      <div class="plot" id="plot-0"><div class="axis-layer"></div><div class="overlay" id="overlay-0"></div></div>
+      <div class="description" id="desc-0"></div>
+    </article>
+    <article class="panel" data-panel="1">
+      <div class="bar"><strong data-i18n="stage1">2. После Vᵀ</strong><button class="view-toggle" data-chart="1" data-i18n="toggleView">Вращать</button></div>
+      <div class="view-tools" data-view="1">
+        <div class="axis-buttons"><span class="mode-label" data-i18n="axisMode">Ось вращения:</span><button type="button" class="axis-choice" data-axis="free" data-chart="1">◎</button><button type="button" class="axis-choice" data-axis="x" data-chart="1">X</button><button type="button" class="axis-choice" data-axis="y" data-chart="1">Y</button><button type="button" class="axis-choice" data-axis="z" data-chart="1">Z</button></div>
+        <div class="angle-row axis-x"><label for="angle-1-x">X</label><input type="range" id="angle-1-x" data-angle="x" data-chart="1" min="-180" max="180" step="1" value="0"><input aria-label="X degrees" type="number" class="angle-number" data-angle="x" data-chart="1" min="-3600" max="3600" step="1" value="0"></div>
+        <div class="angle-row axis-y"><label for="angle-1-y">Y</label><input type="range" id="angle-1-y" data-angle="y" data-chart="1" min="-180" max="180" step="1" value="0"><input aria-label="Y degrees" type="number" class="angle-number" data-angle="y" data-chart="1" min="-3600" max="3600" step="1" value="0"></div>
+        <div class="angle-row axis-z"><label for="angle-1-z">Z</label><input type="range" id="angle-1-z" data-angle="z" data-chart="1" min="-180" max="180" step="1" value="0"><input aria-label="Z degrees" type="number" class="angle-number" data-angle="z" data-chart="1" min="-3600" max="3600" step="1" value="0"></div>
+      </div>
+      <div class="plot" id="plot-1"><div class="axis-layer"></div><div class="overlay" id="overlay-1"></div></div>
+      <div class="description" id="desc-1"></div>
+    </article>
+    <article class="panel" data-panel="2">
+      <div class="bar"><strong data-i18n="stage2">3. После ΣVᵀ</strong><button class="view-toggle" data-chart="2" data-i18n="toggleView">Вращать</button></div>
+      <div class="view-tools" data-view="2">
+        <div class="axis-buttons"><span class="mode-label" data-i18n="axisMode">Ось вращения:</span><button type="button" class="axis-choice" data-axis="free" data-chart="2">◎</button><button type="button" class="axis-choice" data-axis="x" data-chart="2">X</button><button type="button" class="axis-choice" data-axis="y" data-chart="2">Y</button><button type="button" class="axis-choice" data-axis="z" data-chart="2">Z</button></div>
+        <div class="angle-row axis-x"><label for="angle-2-x">X</label><input type="range" id="angle-2-x" data-angle="x" data-chart="2" min="-180" max="180" step="1" value="0"><input aria-label="X degrees" type="number" class="angle-number" data-angle="x" data-chart="2" min="-3600" max="3600" step="1" value="0"></div>
+        <div class="angle-row axis-y"><label for="angle-2-y">Y</label><input type="range" id="angle-2-y" data-angle="y" data-chart="2" min="-180" max="180" step="1" value="0"><input aria-label="Y degrees" type="number" class="angle-number" data-angle="y" data-chart="2" min="-3600" max="3600" step="1" value="0"></div>
+        <div class="angle-row axis-z"><label for="angle-2-z">Z</label><input type="range" id="angle-2-z" data-angle="z" data-chart="2" min="-180" max="180" step="1" value="0"><input aria-label="Z degrees" type="number" class="angle-number" data-angle="z" data-chart="2" min="-3600" max="3600" step="1" value="0"></div>
+      </div>
+      <div class="plot" id="plot-2"><div class="axis-layer"></div><div class="overlay" id="overlay-2"></div></div>
+      <div class="description" id="desc-2"></div>
+    </article>
+    <article class="panel" data-panel="3">
+      <div class="bar"><strong data-i18n="stage3">4. После UΣVᵀ = A</strong><button class="view-toggle" data-chart="3" data-i18n="toggleView">Вращать</button></div>
+      <div class="view-tools" data-view="3">
+        <div class="axis-buttons"><span class="mode-label" data-i18n="axisMode">Ось вращения:</span><button type="button" class="axis-choice" data-axis="free" data-chart="3">◎</button><button type="button" class="axis-choice" data-axis="x" data-chart="3">X</button><button type="button" class="axis-choice" data-axis="y" data-chart="3">Y</button><button type="button" class="axis-choice" data-axis="z" data-chart="3">Z</button></div>
+        <div class="angle-row axis-x"><label for="angle-3-x">X</label><input type="range" id="angle-3-x" data-angle="x" data-chart="3" min="-180" max="180" step="1" value="0"><input aria-label="X degrees" type="number" class="angle-number" data-angle="x" data-chart="3" min="-3600" max="3600" step="1" value="0"></div>
+        <div class="angle-row axis-y"><label for="angle-3-y">Y</label><input type="range" id="angle-3-y" data-angle="y" data-chart="3" min="-180" max="180" step="1" value="0"><input aria-label="Y degrees" type="number" class="angle-number" data-angle="y" data-chart="3" min="-3600" max="3600" step="1" value="0"></div>
+        <div class="angle-row axis-z"><label for="angle-3-z">Z</label><input type="range" id="angle-3-z" data-angle="z" data-chart="3" min="-180" max="180" step="1" value="0"><input aria-label="Z degrees" type="number" class="angle-number" data-angle="z" data-chart="3" min="-3600" max="3600" step="1" value="0"></div>
+      </div>
+      <div class="plot" id="plot-3"><div class="axis-layer"></div><div class="overlay" id="overlay-3"></div></div>
+      <div class="description" id="desc-3"></div>
+    </article>
+  </section>
+</main>
+
+<div id="help-modal" class="dialog-backdrop hidden" role="dialog" aria-modal="true">
+  <div class="dialog">
+    <h2 data-i18n="helpTitle">Справка</h2>
+    <div id="help-content"></div>
+    <div class="help-actions"><button id="help-close" type="button" data-i18n="close">Закрыть</button></div>
+  </div>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+const I18N={
+  ru:{
+    appTitle:'Сингулярное разложение матрицы',edition:'Веб-версия 01i',home:'На главную',lead:'Первые четыре картинки показывают, как единичная сфера преобразуется по шагам SVD: I → Vᵀ → ΣVᵀ → UΣVᵀ = A.',
+    syncViews:'Синхронный обзор двух графиков',sameScale:'Одинаковый масштаб: 1 единица на обоих графиках',modeStages:'Этапы разложения',modeDirections:'Соответствие направлений',modeStagesInfo:'Четыре последовательных преобразования: I → Vᵀ → ΣVᵀ → A.',modeDirectionsInfo:'Одно и то же преобразование A: каждый входной вектор vᵢ переходит в σᵢuᵢ. Цвета соответствуют друг другу.',inputDirection:'Вход: правые сингулярные векторы v₁, v₂, v₃',outputDirection:'Выход: A vᵢ = σᵢuᵢ',inputDirectionDesc:'Единичная сфера и три входных направления v₁, v₂, v₃.',outputDirectionDesc:'Образы этих же направлений: Av₁ = σ₁u₁, Av₂ = σ₂u₂, Av₃ = σ₃u₃.',
+    undo:'Отменить',redo:'Повторить',resetA:'Сброс A',startOver:'Начать заново',saveJson:'Сохранить JSON',loadJson:'Загрузить JSON',formulaLabel:'Формула:',matrixA:'Матрица A',inputHint:'Редактируйте элементы матрицы A. SVD пересчитывается автоматически.',summaryTitle:'Краткая информация',summaryHint:'Показываем геометрию SVD: вращение входа, растяжение по сингулярным осям и финальное вращение.',
+    matrixNoteU:'Столбцы U — левые сингулярные векторы u₁, u₂, u₃.',matrixNoteS:'Диагональ Σ: сингулярные значения σ₁, σ₂, σ₃.',matrixNoteV:'Строки Vᵀ — правые сингулярные векторы v₁, v₂, v₃, записанные транспонированными.',
+    reconstruction:'Проверка',stage0:'1. Исходная сфера',stage1:'2. После Vᵀ',stage2:'3. После ΣVᵀ',stage3:'4. После UΣVᵀ = A',toggleView:'Вращать',commonView:'Общий обзор',axisMode:'Ось вращения:',helpTitle:'Справка',close:'Закрыть',
+    singularValues:'Сингулярные значения',rank:'Ранг',detA:'Определитель A',condition:'Число обусловленности',reconstructionError:'Ошибка восстановления',orthogonal:'ортогональная матрица',diagonal:'диагональная матрица',
+    desc0:'Единичная сфера и правые сингулярные векторы v₁, v₂, v₃.',
+    desc1:'Vᵀ переводит правые сингулярные векторы в координатные оси: Vᵀv₁ = e₁, Vᵀv₂ = e₂, Vᵀv₃ = e₃.',
+    desc2:'Σ растягивает или сжимает вдоль осей. Полуоси эллипсоида: σ₁e₁, σ₂e₂, σ₃e₃.',
+    desc3:'U выполняет финальное ортогональное преобразование. Полуоси итогового эллипсоида: σ₁u₁, σ₂u₂, σ₃u₃.',
+    overlay0:'Преобразование: I',overlay1:'Преобразование: Vᵀ',overlay2:'Преобразование: ΣVᵀ',overlay3:'Преобразование: UΣVᵀ = A',
+    loaded:'Состояние загружено.',saved:'JSON сохранён.',resetDone:'Матрица A сброшена к единичной.',startDone:'Начальное состояние восстановлено.',invalidJson:'Не удалось прочитать JSON.',
+    helpHtml:`<p><strong>Идея приложения.</strong> Для любой вещественной матрицы 3×3 строится сингулярное разложение <strong>A = UΣV<sup>T</sup></strong>.</p>
+      <ol>
+      <li><strong>V<sup>T</sup></strong> — ортогональное преобразование входа. Оно поворачивает/отражает сферу без изменения её формы.</li>
+      <li><strong>Σ</strong> — диагональная матрица с неотрицательными сингулярными значениями σ₁ ≥ σ₂ ≥ σ₃. Она растягивает сферу в эллипсоид.</li>
+      <li><strong>U</strong> — финальное ортогональное преобразование результата.</li>
+      </ol>
+      <p><strong>Что видно на картинках.</strong> Толстые цветные стрелки показывают сингулярные направления на четырёх этапах: vᵢ → eᵢ → σᵢeᵢ → σᵢuᵢ. Цвета: красный, фиолетовый, салатовый. Вращение выполняется мышью или пальцем; колесо мыши или pinch меняет масштаб.</p>
+      <p><strong>Управление.</strong> Можно изменять матрицу A, сохранять состояние в JSON, восстанавливать его, делать Undo/Redo, сбрасывать A к единичной матрице и возвращаться к начальному примеру.</p>`
+  },
+  en:{
+    appTitle:'Singular Value Decomposition',edition:'Web version 01i',home:'Home',lead:'The four pictures show how the unit sphere changes step by step under SVD: I → Vᵀ → ΣVᵀ → UΣVᵀ = A.',
+    syncViews:'Synchronize both views',sameScale:'Same scale: one unit in both charts',modeStages:'Decomposition stages',modeDirections:'Direction mapping',modeStagesInfo:'Four consecutive transformations: I → Vᵀ → ΣVᵀ → A.',modeDirectionsInfo:'The same transformation A: each input vᵢ maps to σᵢuᵢ. Colors indicate corresponding vectors.',inputDirection:'Input: right singular vectors v₁, v₂, v₃',outputDirection:'Output: A vᵢ = σᵢuᵢ',inputDirectionDesc:'Unit sphere and three input directions v₁, v₂, v₃.',outputDirectionDesc:'Images of those same directions: Av₁ = σ₁u₁, Av₂ = σ₂u₂, Av₃ = σ₃u₃.',
+    undo:'Undo',redo:'Redo',resetA:'Reset A',startOver:'Start over',saveJson:'Save JSON',loadJson:'Load JSON',formulaLabel:'Formula:',matrixA:'Matrix A',inputHint:'Edit the entries of matrix A. The SVD is recalculated automatically.',summaryTitle:'Summary',summaryHint:'We show the geometry of SVD: input rotation, stretching along singular axes, and the final rotation.',
+    matrixNoteU:'Columns of U are the left singular vectors u₁, u₂, u₃.',matrixNoteS:'The diagonal of Σ contains singular values σ₁, σ₂, σ₃.',matrixNoteV:'Rows of Vᵀ are the transposed right singular vectors v₁, v₂, v₃.',
+    reconstruction:'Check',stage0:'1. Unit sphere',stage1:'2. After Vᵀ',stage2:'3. After ΣVᵀ',stage3:'4. After UΣVᵀ = A',toggleView:'Rotate',commonView:'Common view',axisMode:'Rotation axis:',helpTitle:'Help',close:'Close',
+    singularValues:'Singular values',rank:'Rank',detA:'det(A)',condition:'Condition number',reconstructionError:'Reconstruction error',orthogonal:'orthogonal matrix',diagonal:'diagonal matrix',
+    desc0:'The unit sphere and the right singular vectors v₁, v₂, v₃.',
+    desc1:'Vᵀ maps the right singular vectors onto the axes: Vᵀv₁ = e₁, Vᵀv₂ = e₂, Vᵀv₃ = e₃.',
+    desc2:'Σ stretches or compresses along the axes. The ellipsoid semiaxes are σ₁e₁, σ₂e₂, σ₃e₃.',
+    desc3:'U performs the final orthogonal transformation. Final ellipsoid semiaxes: σ₁u₁, σ₂u₂, σ₃u₃.',
+    overlay0:'Transformation: I',overlay1:'Transformation: Vᵀ',overlay2:'Transformation: ΣVᵀ',overlay3:'Transformation: UΣVᵀ = A',
+    loaded:'State loaded.',saved:'JSON saved.',resetDone:'Matrix A reset to identity.',startDone:'Initial state restored.',invalidJson:'Could not read JSON.',
+    helpHtml:`<p><strong>App idea.</strong> For any real 3×3 matrix, the program builds the singular value decomposition <strong>A = UΣV<sup>T</sup></strong>.</p>
+      <ol>
+      <li><strong>V<sup>T</sup></strong> is an orthogonal input transformation. It rotates/reflects the sphere without changing its shape.</li>
+      <li><strong>Σ</strong> is a diagonal matrix with nonnegative singular values σ₁ ≥ σ₂ ≥ σ₃. It stretches the sphere into an ellipsoid.</li>
+      <li><strong>U</strong> is the final orthogonal transformation of the result.</li>
+      </ol>
+      <p><strong>What the pictures show.</strong> Bold colored arrows trace the singular directions: vᵢ → eᵢ → σᵢeᵢ → σᵢuᵢ. Colors: red, violet, lime green. Rotate with mouse or finger; wheel or pinch zooms.</p>
+      <p><strong>Controls.</strong> You can edit matrix A, save/load JSON, use Undo/Redo, reset A to identity, and return to the initial sample.</p>`
+  },
+  he:{
+    appTitle:'פירוק לערכים סינגולריים',edition:'גרסת ווב 01i',home:'לדף הראשי',lead:'ארבע התמונות מראות כיצד הכדור היחידה משתנה שלב אחר שלב תחת SVD: I → Vᵀ → ΣVᵀ → UΣVᵀ = A.',
+    syncViews:'סנכרון המבט בשני הגרפים',sameScale:'קנה מידה זהה: יחידה אחת בשני הגרפים',modeStages:'שלבי הפירוק',modeDirections:'התאמת כיוונים',modeStagesInfo:'ארבע טרנספורמציות עוקבות: I → Vᵀ → ΣVᵀ → A.',modeDirectionsInfo:'אותה טרנספורמציה A: כל vᵢ עובר ל־σᵢuᵢ. הצבעים תואמים.',inputDirection:'קלט: וקטורים סינגולריים ימניים v₁, v₂, v₃',outputDirection:'פלט: A vᵢ = σᵢuᵢ',inputDirectionDesc:'כדור היחידה ושלושת כיווני הקלט v₁, v₂, v₃.',outputDirectionDesc:'התמונות של אותם כיוונים: Av₁ = σ₁u₁, Av₂ = σ₂u₂, Av₃ = σ₃u₃.',
+    undo:'בטל',redo:'חזור',resetA:'אפס A',startOver:'התחל מחדש',saveJson:'שמור JSON',loadJson:'טען JSON',formulaLabel:'נוסחה:',matrixA:'מטריצה A',inputHint:'אפשר לערוך את איברי המטריצה A. הפירוק מתעדכן אוטומטית.',summaryTitle:'מידע קצר',summaryHint:'אנו מציגים את הגאומטריה של SVD: סיבוב הקלט, מתיחה לאורך הצירים הסינגולריים, והסיבוב הסופי.',
+    matrixNoteU:'עמודות U הן הווקטורים הסינגולריים השמאליים u₁, u₂, u₃.',matrixNoteS:'באלכסון Σ נמצאים הערכים הסינגולריים σ₁, σ₂, σ₃.',matrixNoteV:'שורות Vᵀ הן הטרנספוזיציות של הווקטורים הסינגולריים הימניים v₁, v₂, v₃.',
+    reconstruction:'בדיקה',stage0:'1. כדור יחידה',stage1:'2. אחרי Vᵀ',stage2:'3. אחרי ΣVᵀ',stage3:'4. אחרי UΣVᵀ = A',toggleView:'סיבוב',commonView:'מבט משותף',axisMode:'ציר סיבוב:',helpTitle:'עזרה',close:'סגור',
+    singularValues:'ערכים סינגולריים',rank:'דרגה',detA:'det(A)',condition:'מספר התניה',reconstructionError:'שגיאת שחזור',orthogonal:'מטריצה אורתוגונלית',diagonal:'מטריצה אלכסונית',
+    desc0:'כדור היחידה והווקטורים הסינגולריים הימניים v₁, v₂, v₃.',
+    desc1:'Vᵀ מעבירה את הווקטורים הסינגולריים הימניים לצירים: Vᵀv₁ = e₁, Vᵀv₂ = e₂, Vᵀv₃ = e₃.',
+    desc2:'Σ מותחת או מכווצת לאורך הצירים. חצאי הצירים: σ₁e₁, σ₂e₂, σ₃e₃.',
+    desc3:'U מבצעת את הטרנספורמציה האורתוגונלית הסופית. חצאי הצירים של האליפסואיד הסופי: σ₁u₁, σ₂u₂, σ₃u₃.',
+    overlay0:'טרנספורמציה: I',overlay1:'טרנספורמציה: Vᵀ',overlay2:'טרנספורמציה: ΣVᵀ',overlay3:'טרנספורמציה: UΣVᵀ = A',
+    loaded:'המצב נטען.',saved:'JSON נשמר.',resetDone:'המטריצה A אופסה למטריצת היחידה.',startDone:'המצב ההתחלתי שוחזר.',invalidJson:'לא ניתן לקרוא את קובץ ה‑JSON.',
+    helpHtml:`<p><strong>רעיון היישום.</strong> לכל מטריצה ממשית 3×3 נבנה הפירוק הסינגולרי <strong>A = UΣV<sup>T</sup></strong>.</p>
+      <ol>
+      <li><strong>V<sup>T</sup></strong> היא טרנספורמציה אורתוגונלית של הקלט. היא מסובבת/משקפת את הכדור בלי לשנות את צורתו.</li>
+      <li><strong>Σ</strong> היא מטריצה אלכסונית עם ערכים סינגולריים לא־שליליים σ₁ ≥ σ₂ ≥ σ₃. היא מותחת את הכדור לאליפסואיד.</li>
+      <li><strong>U</strong> היא הטרנספורמציה האורתוגונלית הסופית של התוצאה.</li>
+      </ol>
+      <p><strong>מה רואים בתמונות.</strong> החצים הצבעוניים העבים מציגים את הכיוונים הסינגולריים: vᵢ → eᵢ → σᵢeᵢ → σᵢuᵢ. הצבעים: אדום, סגול וירוק בהיר. מסובבים עם עכבר או אצבע; גלגלת או pinch משנים זום.</p>
+      <p><strong>בקרה.</strong> אפשר לערוך את המטריצה A, לשמור ולטעון JSON, לבצע Undo/Redo, לאפס את A למטריצת היחידה ולחזור לדוגמה ההתחלתית.</p>`
+  }
+};
+
+const COLORS=['col-x','col-y','col-z'];
+const axisColors=[0xea2645,0xb98947,0x7cd800];
+const query=new URLSearchParams(location.search);
+const initialMatrix=[[1,1,0],[0,2,1],[1,0,1]];
+let state={lang:query.get('lang')||'ru',A:cloneMatrix(initialMatrix),views:[null,null,null,null],rotating:[false,false,false,false]};
+let undoStack=[],redoStack=[];
+let charts=[];
+state.angles=[[0,0,0],[0,0,0],[0,0,0],[0,0,0]];
+state.axisModes=['free','free','free','free'];
+let programmaticUpdate=false;
+let matrixInputs=[];
+
+function t(key){return (I18N[state.lang]&&I18N[state.lang][key])||I18N.ru[key]||key;}
+function cloneMatrix(A){return A.map(r=>r.slice());}
+function identity3(){return [[1,0,0],[0,1,0],[0,0,1]];}
+function zero3(){return [[0,0,0],[0,0,0],[0,0,0]];}
+function transpose(A){return [[A[0][0],A[1][0],A[2][0]],[A[0][1],A[1][1],A[2][1]],[A[0][2],A[1][2],A[2][2]]];}
+function matMul(A,B){const C=zero3();for(let i=0;i<3;i++)for(let j=0;j<3;j++)for(let k=0;k<3;k++)C[i][j]+=A[i][k]*B[k][j];return C;}
+function matVec(A,v){return [A[0][0]*v[0]+A[0][1]*v[1]+A[0][2]*v[2],A[1][0]*v[0]+A[1][1]*v[1]+A[1][2]*v[2],A[2][0]*v[0]+A[2][1]*v[1]+A[2][2]*v[2]];}
+function diagMatrix(s){return [[s[0],0,0],[0,s[1],0],[0,0,s[2]]];}
+function determinant(A){return A[0][0]*(A[1][1]*A[2][2]-A[1][2]*A[2][1])-A[0][1]*(A[1][0]*A[2][2]-A[1][2]*A[2][0])+A[0][2]*(A[1][0]*A[2][1]-A[1][1]*A[2][0]);}
+function frobDiff(A,B){let s=0;for(let i=0;i<3;i++)for(let j=0;j<3;j++){const d=A[i][j]-B[i][j];s+=d*d;}return Math.sqrt(s);}
+function dot(a,b){return a[0]*b[0]+a[1]*b[1]+a[2]*b[2];}
+function norm(a){return Math.hypot(a[0],a[1],a[2]);}
+function sub(a,b){return [a[0]-b[0],a[1]-b[1],a[2]-b[2]];}
+function add(a,b){return [a[0]+b[0],a[1]+b[1],a[2]+b[2]];}
+function scale(v,s){return [v[0]*s,v[1]*s,v[2]*s];}
+function normalize(v){const n=norm(v);return n<1e-12?[0,0,0]:[v[0]/n,v[1]/n,v[2]/n];}
+function cross(a,b){return [a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];}
+function column(A,j){return [A[0][j],A[1][j],A[2][j]];}
+function setColumn(A,j,v){A[0][j]=v[0];A[1][j]=v[1];A[2][j]=v[2];}
+function fromColumns(cols){return [[cols[0][0],cols[1][0],cols[2][0]],[cols[0][1],cols[1][1],cols[2][1]],[cols[0][2],cols[1][2],cols[2][2]]];}
+function rankFromSigmas(sig){return sig.filter(s=>s>1e-8).length;}
+function formatNumber(v,d=3){if(!Number.isFinite(v))return String(v);if(Math.abs(v)<1e-12)v=0;const r=Math.round(v);if(Math.abs(v-r)<1e-10)return String(r);return v.toFixed(d).replace(/\.0+$/,'').replace(/(\.[0-9]*?)0+$/,'$1');}
+
+function jacobiEigenSymmetric(A){
+  let a=cloneMatrix(A); let V=identity3();
+  for(let iter=0;iter<40;iter++){
+    let p=0,q=1,max=Math.abs(a[0][1]);
+    const pairs=[[0,1],[0,2],[1,2]];
+    for(const [i,j] of pairs){const val=Math.abs(a[i][j]); if(val>max){max=val;p=i;q=j;}}
+    if(max<1e-12) break;
+    const app=a[p][p], aqq=a[q][q], apq=a[p][q];
+    const phi=0.5*Math.atan2(2*apq, aqq-app);
+    const c=Math.cos(phi), s=Math.sin(phi);
+    for(let k=0;k<3;k++){
+      const aik=a[p][k], aqk=a[q][k];
+      a[p][k]=c*aik - s*aqk;
+      a[q][k]=s*aik + c*aqk;
+    }
+    for(let k=0;k<3;k++){
+      const akp=a[k][p], akq=a[k][q];
+      a[k][p]=c*akp - s*akq;
+      a[k][q]=s*akp + c*akq;
+    }
+    a[p][q]=a[q][p]=0;
+    for(let k=0;k<3;k++){
+      const vip=V[k][p], viq=V[k][q];
+      V[k][p]=c*vip - s*viq;
+      V[k][q]=s*vip + c*viq;
+    }
+  }
+  let items=[0,1,2].map(i=>({value:a[i][i],vec:column(V,i)}));
+  items.sort((m,n)=>Math.abs(n.value)-Math.abs(m.value));
+  const values=items.map(it=>it.value);
+  const cols=items.map(it=>normalize(it.vec));
+  return {values, vectors:fromColumns(cols)};
+}
+
+function completeOrthonormal(cols){
+  const basis=[[1,0,0],[0,1,0],[0,0,1]];
+  const out=[];
+  for(let i=0;i<3;i++){
+    let v=cols[i]?cols[i].slice():null;
+    if(v){
+      for(const u of out) v=sub(v, scale(u, dot(v,u)));
+      if(norm(v)>1e-10){out.push(normalize(v)); continue;}
+    }
+    let found=null;
+    for(const e of basis){
+      let w=e.slice();
+      for(const u of out) w=sub(w, scale(u, dot(w,u)));
+      if(norm(w)>1e-10){found=normalize(w); break;}
+    }
+    if(!found && out.length===2) found=normalize(cross(out[0],out[1]));
+    if(!found) found=basis[i].slice();
+    out.push(found);
+  }
+  if(out.length===2) out.push(normalize(cross(out[0],out[1])));
+  return fromColumns(out);
+}
+
+function computeSVD(A){
+  const At=transpose(A), AtA=matMul(At,A);
+  const {values,vectors:V}=jacobiEigenSymmetric(AtA);
+  const sig=values.map(v=>Math.sqrt(Math.max(0,v)));
+  const Vcols=[column(V,0),column(V,1),column(V,2)];
+  const Ucols=[];
+  for(let i=0;i<3;i++){
+    if(sig[i]>1e-10){
+      const Av=matVec(A,Vcols[i]);
+      Ucols[i]=scale(Av,1/sig[i]);
+    }else Ucols[i]=null;
+  }
+  const U=completeOrthonormal(Ucols);
+  const S=diagMatrix(sig);
+  const Vt=transpose(V);
+  const recon=matMul(matMul(U,S),Vt);
+  return {U,S,V,Vt,sigmas:sig,recon,error:frobDiff(A,recon)};
+}
+
+function matrixToThree4(M){
+  return new THREE.Matrix4().set(
+    M[0][0],M[0][1],M[0][2],0,
+    M[1][0],M[1][1],M[1][2],0,
+    M[2][0],M[2][1],M[2][2],0,
+    0,0,0,1
+  );
+}
+
+function createInputGrid(){
+  const root=document.getElementById('matrix-input'); root.innerHTML=''; matrixInputs=[];
+  for(let r=0;r<3;r++) for(let c=0;c<3;c++){
+    const input=document.createElement('input');
+    input.className=COLORS[c]; input.value=formatNumber(state.A[r][c]); input.inputMode='decimal';
+    input.addEventListener('focus',()=>pushUndo());
+    input.addEventListener('change',()=>applyInput(r,c,input));
+    input.addEventListener('blur',()=>applyInput(r,c,input));
+    root.appendChild(input); matrixInputs.push(input);
+  }
+}
+function applyInput(r,c,input){
+  let raw=input.value.trim().replace(',', '.');
+  if(raw===''||raw==='-'||raw==='.'||raw==='-.'){input.value=formatNumber(state.A[r][c]); return;}
+  let v=Number(raw); if(!Number.isFinite(v)){input.value=formatNumber(state.A[r][c]); return;}
+  state.A[r][c]=v; input.value=formatNumber(v); saveAuto(); recalcAll();
+}
+function syncInputs(){matrixInputs.forEach((inp,i)=>{const r=Math.floor(i/3),c=i%3; inp.value=formatNumber(state.A[r][c]);});}
+
+function buildMatrixTable(el,matrix,colorizeCols=false){
+  el.innerHTML='';
+  for(let r=0;r<3;r++){
+    const tr=document.createElement('tr');
+    for(let c=0;c<3;c++){
+      const td=document.createElement('td');
+      if(colorizeCols) td.classList.add(COLORS[c]);
+      td.textContent=formatNumber(matrix[r][c]);
+      tr.appendChild(td);
+    }
+    el.appendChild(tr);
+  }
+}
+
+function panelMatrixLabel(index,svd){
+  if(index===0) return 'I';
+  if(index===1) return 'Vᵀ';
+  if(index===2) return 'ΣVᵀ';
+  return 'UΣVᵀ';
+}
+function stageMatrix(index,svd){
+  if(index===0) return identity3();
+  if(index===1) return svd.Vt;
+  if(index===2) return matMul(svd.S,svd.Vt);
+  return matMul(matMul(svd.U,svd.S),svd.Vt);
+}
+
+function createChart(index){
+  const root=document.getElementById(`plot-${index}`);
+  const overlay=document.getElementById(`overlay-${index}`);
+  const axisLayer=root.querySelector('.axis-layer');
+  const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false});
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  renderer.setSize(root.clientWidth, root.clientHeight);
+  root.prepend(renderer.domElement);
+  const scene=new THREE.Scene(); scene.background=new THREE.Color(0xffffff);
+  const camera=new THREE.PerspectiveCamera(36, root.clientWidth/root.clientHeight, 0.1, 100);
+  camera.position.set(5.9,-6.3,4.7);
+  const basePosition=camera.position.clone();
+  const controls=new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping=true; controls.dampingFactor=0.08; controls.target.set(0,0,0); controls.enabled=state.rotating[index];
+  let settingView=false;
+  const baseDist=basePosition.length();
+  function setAngles(angles){
+    settingView=true;
+    const distance=camera.position.length()||baseDist;
+    const euler=new THREE.Euler(...angles.map(v=>THREE.MathUtils.degToRad(v)),'XYZ');
+    const q=new THREE.Quaternion().setFromEuler(euler);
+    camera.position.copy(basePosition.clone().normalize().multiplyScalar(distance).applyQuaternion(q));
+    camera.up.set(0,1,0);camera.lookAt(controls.target);
+    controls.update();settingView=false;
+  }
+  function getAnglesFromCamera(){
+    const from=basePosition.clone().normalize(), to=camera.position.clone().normalize();
+    const q=new THREE.Quaternion().setFromUnitVectors(from,to);
+    const e=new THREE.Euler().setFromQuaternion(q,'XYZ');
+    return [e.x,e.y,e.z].map(v=>THREE.MathUtils.radToDeg(v));
+  }
+  controls.addEventListener('change',()=>{
+    if(settingView || syncingCameras)return;
+    if(state.axisModes[index]==='free' && state.rotating[index]){
+      state.angles[index]=getAnglesFromCamera();
+      if(charts[index]) syncAngleUI(index);
+    }
+    syncComparisonCamera(index);
+  });
+  let drag=null;
+  const canvas=renderer.domElement;
+  canvas.addEventListener('pointerdown',ev=>{
+    if(!state.rotating[index]||state.axisModes[index]==='free')return;
+    if(ev.pointerType==='touch' && !ev.isPrimary)return;
+    ev.stopImmediatePropagation(); ev.preventDefault();
+    drag={pointerId:ev.pointerId,x:ev.clientX,y:ev.clientY}; canvas.setPointerCapture(ev.pointerId);
+  },true);
+  canvas.addEventListener('pointermove',ev=>{
+    if(!drag||drag.pointerId!==ev.pointerId)return;
+    ev.stopImmediatePropagation();ev.preventDefault();
+    const k='xyz'.indexOf(state.axisModes[index]);
+    if(k<0)return;
+    state.angles[index][k] += (ev.clientX-drag.x - (ev.clientY-drag.y))*0.6;
+    state.angles[index][k]=((state.angles[index][k]+180)%360+360)%360-180;
+    drag.x=ev.clientX;drag.y=ev.clientY;setAngles(state.angles[index]);syncAngleUI(index);syncComparisonCamera(index);
+  },true);
+  function endDrag(ev){if(!drag||drag.pointerId!==ev.pointerId)return;ev.stopImmediatePropagation();drag=null;saveAuto();}
+  canvas.addEventListener('pointerup',endDrag,true);
+  canvas.addEventListener('pointercancel',endDrag,true);
+  scene.add(new THREE.AmbientLight(0xffffff,0.95));
+  const light=new THREE.DirectionalLight(0xffffff,0.65); light.position.set(4,-5,9); scene.add(light);
+  const originAxes=new THREE.Group();
+  const axisEnds=[];
+  const len=2.3;
+  [[1,0,0],[0,1,0],[0,0,1]].forEach((v,i)=>{
+    const mat=new THREE.LineBasicMaterial({color:axisColors[i],transparent:true,opacity:0.78});
+    const pts=[new THREE.Vector3(0,0,0),new THREE.Vector3(v[0]*len,v[1]*len,v[2]*len)];
+    const line=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),mat); scene.add(line);
+    axisEnds.push(new THREE.Vector3(v[0]*len,v[1]*len,v[2]*len));
+  });
+  const sphereGroup=new THREE.Group(); scene.add(sphereGroup);
+  const wire=new THREE.LineSegments(new THREE.WireframeGeometry(new THREE.SphereGeometry(1,16,12)), new THREE.LineBasicMaterial({color:0x254f71,transparent:true,opacity:0.9}));
+  sphereGroup.add(wire);
+  const rings=new THREE.Group();
+  const ringMat=new THREE.LineBasicMaterial({color:0x779ab8,transparent:true,opacity:0.55});
+  for(let k=-2;k<=2;k++){
+    const z=k*0.35; const r=Math.sqrt(Math.max(0,1-z*z)); const pts=[];
+    for(let i=0;i<=64;i++){const a=i/64*Math.PI*2; pts.push(new THREE.Vector3(r*Math.cos(a),r*Math.sin(a),z));}
+    rings.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),ringMat));
+  }
+  sphereGroup.add(rings);
+  // Thick, visible transformed basis vectors. Use solid mesh arrows rather
+  // than WebGL lineWidth (which is clamped to 1px on most browsers).
+  const basisGroup=new THREE.Group(); scene.add(basisGroup);
+  const basisArrows=[], basisLabels=[], coordLabels=[];
+  const stageNames=[['v₁','v₂','v₃'],['e₁','e₂','e₃'],['σ₁e₁','σ₂e₂','σ₃e₃'],['σ₁u₁','σ₂u₂','σ₃u₃']];
+  const axisNames=['X','Y','Z'];
+  const singularColors=[0xea2645,0x8642c8,0x74cb00];
+  const arrowGeometry={shaft:new THREE.CylinderGeometry(1,1,1,12),head:new THREE.ConeGeometry(1,1,18),dot:new THREE.SphereGeometry(1,16,12)};
+  const darkMat=new THREE.MeshBasicMaterial({color:0x1c3650,depthTest:false,depthWrite:false});
+  function arrowPart(geometry,color,renderOrder){
+    const mesh=new THREE.Mesh(geometry,new THREE.MeshBasicMaterial({color,depthTest:false,depthWrite:false}));
+    mesh.renderOrder=renderOrder; basisGroup.add(mesh); return mesh;
+  }
+  for(let i=0;i<3;i++){
+    const shaftEdge=arrowPart(arrowGeometry.shaft,0x1c3650,18);
+    const headEdge=arrowPart(arrowGeometry.head,0x1c3650,18);
+    const shaft=arrowPart(arrowGeometry.shaft,singularColors[i],19);
+    const head=arrowPart(arrowGeometry.head,singularColors[i],19);
+    basisArrows.push({shaftEdge,headEdge,shaft,head});
+    const span=document.createElement('div'); span.className=`axis-label ${['x','y','z'][i]}`; span.textContent=stageNames[index][i]; span.style.color=["#d62242","#7937b5","#4b8800"][i]; axisLayer.appendChild(span); basisLabels.push(span);
+    const coord=document.createElement('div'); coord.className=`coord-label ${['x','y','z'][i]}`; coord.textContent=axisNames[i]; axisLayer.appendChild(coord); coordLabels.push(coord);
+  }
+  function updateSolidArrow(arrow,target){
+    const magnitude=target.length();
+    const visible=magnitude>0.0001;
+    for(const o of Object.values(arrow)) o.visible=visible;
+    if(!visible)return;
+    const headLen=Math.min(0.29,Math.max(0.075,magnitude*0.25));
+    const shaftLen=Math.max(0.0001,magnitude-headLen);
+    const direction=target.clone().normalize();
+    const quat=new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0),direction);
+    const mid=direction.clone().multiplyScalar(shaftLen*0.5);
+    const tipMid=direction.clone().multiplyScalar(shaftLen+headLen*0.5);
+    const shaftRadius=Math.min(0.042,Math.max(0.016,magnitude*0.055));
+    const headRadius=Math.min(0.108,Math.max(0.038,magnitude*0.13));
+    for(const o of [arrow.shaftEdge,arrow.shaft]){o.position.copy(mid);o.quaternion.copy(quat);}
+    arrow.shaftEdge.scale.set(shaftRadius*1.26,shaftLen,shaftRadius*1.26);
+    arrow.shaft.scale.set(shaftRadius,shaftLen,shaftRadius);
+    for(const o of [arrow.headEdge,arrow.head]){o.position.copy(tipMid);o.quaternion.copy(quat);}
+    arrow.headEdge.scale.set(headRadius*1.21,headLen*1.04,headRadius*1.21);
+    arrow.head.scale.set(headRadius,headLen,headRadius);
+  }
+  const grid=new THREE.GridHelper(6,12,0xb4c8d9,0xd3e0eb); grid.rotation.x=Math.PI/2; grid.position.z=-0.0001; scene.add(grid);
+
+  function resize(){const w=root.clientWidth,h=root.clientHeight; camera.aspect=w/h; camera.updateProjectionMatrix(); renderer.setSize(w,h);}
+  window.addEventListener('resize',resize);
+  function singularStageVectors(svd){
+    const unit=[[1,0,0],[0,1,0],[0,0,1]];
+    if(index===0) return unit.map((_,i)=>column(svd.V,i));
+    if(index===1) return unit;
+    if(index===2) return unit.map((e,i)=>scale(e,svd.sigmas[i]));
+    return unit.map((_,i)=>scale(column(svd.U,i),svd.sigmas[i]));
+  }
+  function updateFromState(svd){
+    const M=stageMatrix(index,svd);
+    sphereGroup.matrixAutoUpdate=false; sphereGroup.matrix.copy(matrixToThree4(M));
+    basisArrows.forEach((arrow,i)=>{
+      const v=singularStageVectors(svd)[i];
+      updateSolidArrow(arrow,new THREE.Vector3(v[0],v[1],v[2]));
+    });
+    overlay.innerHTML=`<div><strong>${t('overlay'+index)}</strong></div><div>${panelMatrixLabel(index,svd)}</div>`;
+  }
+  function positionLabels(svd){
+    const vecs=singularStageVectors(svd);
+    basisLabels.forEach((lab,i)=>{
+      const p=new THREE.Vector3(vecs[i][0],vecs[i][1],vecs[i][2]); p.project(camera);
+      const x=(p.x*0.5+0.5)*root.clientWidth, y=(-p.y*0.5+0.5)*root.clientHeight;
+      let labelY=y, labelX=x;
+      if(displayMode==='directions' && (index===0 || index===3)){
+        // Keep the vector tip legible below the formula overlay.
+        const overlayBottom=overlay.offsetTop+overlay.offsetHeight+12;
+        labelY=Math.max(overlayBottom+12,Math.min(root.clientHeight-18,labelY));
+        labelX=Math.max(35,Math.min(root.clientWidth-35,labelX));
+      }
+      lab.style.left=labelX+'px'; lab.style.top=labelY+'px'; lab.style.display=norm(vecs[i])<0.0001?'none':'';
+    });
+    coordLabels.forEach((lab,i)=>{
+      const p=axisEnds[i].clone().multiplyScalar(1.06); p.project(camera);
+      const x=(p.x*0.5+0.5)*root.clientWidth, y=(-p.y*0.5+0.5)*root.clientHeight;
+      const visible=p.z>-1 && p.z<1;
+      lab.style.left=x+'px'; lab.style.top=y+'px'; lab.style.display=visible?'':'none';
+    });
+  }
+  function animate(){requestAnimationFrame(animate); controls.update(); renderer.render(scene,camera); if(currentSVD) positionLabels(currentSVD);} animate();
+  return {index,root,renderer,scene,camera,controls,updateFromState,resize,setAngles,getAnglesFromCamera};
+}
+
+function getSummaryMetrics(svd){
+  const sig=svd.sigmas; const rank=rankFromSigmas(sig); const cond=sig[2]>1e-10 ? sig[0]/sig[2] : Infinity;
+  const det=determinant(state.A);
+  return `<div><strong>${t('singularValues')}:</strong> ${sig.map(v=>formatNumber(v)).join(', ')}</div>
+          <div><strong>${t('rank')}:</strong> ${rank}</div>
+          <div><strong>${t('detA')}:</strong> ${formatNumber(det)}</div>
+          <div><strong>${t('condition')}:</strong> ${Number.isFinite(cond)?formatNumber(cond):'∞'}</div>
+          <div><strong>${t('reconstructionError')}:</strong> ${formatNumber(svd.error,6)}</div>`;
+}
+
+let displayMode='stages';
+let syncingCameras=false;
+let comparisonSynchronized=true;
+function syncComparisonCamera(source){
+  if(displayMode!=='directions' || !comparisonSynchronized || syncingCameras || !charts[source] || (source!==0 && source!==3))return;
+  const dest=source===0?3:0;
+  const from=charts[source], to=charts[dest];
+  syncingCameras=true;
+  try{
+    to.camera.position.copy(from.camera.position);
+    to.camera.quaternion.copy(from.camera.quaternion);
+    to.camera.up.copy(from.camera.up);
+    to.controls.target.copy(from.controls.target);
+    to.controls.update();
+    state.angles[dest]=state.angles[source].slice();
+    syncAngleUI(dest);
+  }finally{syncingCameras=false;}
+}
+function updateDirectionMappings(){
+  if(!currentSVD)return;
+  const e=document.getElementById('direction-mappings');
+  e.innerHTML=currentSVD.sigmas.map((v,i)=>`<div class="mapping-item">v${['₁','₂','₃'][i]} → ${formatNumber(v)} u${['₁','₂','₃'][i]}</div>`).join('');
+}
+
+function syncDisplayMode(){
+  const compare=displayMode==='directions';
+  const layout=document.getElementById('svd-layout');
+  layout.classList.toggle('comparison',compare);
+  document.getElementById('direction-tools').classList.toggle('hidden',!compare);
+  document.querySelectorAll('.mode-button').forEach(b=>{
+    const selected=b.dataset.mode===displayMode;
+    b.classList.toggle('active',selected);b.setAttribute('aria-pressed',String(selected));
+  });
+  document.getElementById('mode-explanation').textContent=t(compare?'modeDirectionsInfo':'modeStagesInfo');
+  for(const i of [0,3]){
+    const title=document.querySelector(`[data-panel="${i}"] .bar strong`);
+    title.textContent=compare?t(i===0?'inputDirection':'outputDirection'):t('stage'+i);
+    document.getElementById('desc-'+i).textContent=compare?t(i===0?'inputDirectionDesc':'outputDirectionDesc'):t('desc'+i);
+  }
+  if(compare && comparisonSynchronized)syncComparisonCamera(0);
+  // The same chart instances, cameras, gestures, matrix and axes survive switching.
+  requestAnimationFrame(()=>{charts.forEach(ch=>{if(ch.root.clientWidth>0 && ch.root.clientHeight>0)ch.resize();});});
+}
+function switchDisplayMode(next){
+  if(next!==displayMode){displayMode=next;syncDisplayMode();}
+}
+let currentSVD=null;
+function recalcAll(){
+  currentSVD=computeSVD(state.A);
+  updateDirectionMappings();
+  syncInputs();
+  buildMatrixTable(document.getElementById('matrix-U'), currentSVD.U, true);
+  buildMatrixTable(document.getElementById('matrix-S'), currentSVD.S, false);
+  buildMatrixTable(document.getElementById('matrix-Vt'), currentSVD.Vt, true);
+  buildMatrixTable(document.getElementById('matrix-R'), currentSVD.recon, true);
+  document.getElementById('summary-metrics').innerHTML=getSummaryMetrics(currentSVD);
+  document.getElementById('metrics-U').innerHTML=`<div><strong>U:</strong> ${t('orthogonal')}</div>`;
+  document.getElementById('metrics-S').innerHTML=`<div><strong>Σ:</strong> ${t('diagonal')}</div><div>σ₁ ≥ σ₂ ≥ σ₃</div>`;
+  document.getElementById('metrics-V').innerHTML=`<div><strong>Vᵀ:</strong> ${t('orthogonal')}</div>`;
+  document.getElementById('metrics-R').innerHTML=`<div><strong>${t('reconstructionError')}:</strong> ${formatNumber(currentSVD.error,6)}</div>`;
+  ['desc0','desc1','desc2','desc3'].forEach((k,i)=>document.getElementById(`desc-${i}`).textContent=t(k));
+  charts.forEach(ch=>ch.updateFromState(currentSVD));
+  syncDisplayMode();
+  updateStatus('');
+}
+
+
+function syncAngleUI(i){
+  if(!charts[i])return;
+  for(const [k,axis] of ['x','y','z'].entries()){
+    const value=Number(state.angles[i][k].toFixed(1));
+    const tool=document.querySelector(`.view-tools[data-view="${i}"]`);
+    tool.querySelector(`input[type="range"][data-angle="${axis}"]`).value=Math.max(-180,Math.min(180,value));
+    const number=tool.querySelector(`input[type="number"][data-angle="${axis}"]`);
+    if(document.activeElement!==number)number.value=value;
+  }
+}
+function syncAxisButtons(){
+ document.querySelectorAll('.axis-choice').forEach(btn=>{
+   const active=state.axisModes[Number(btn.dataset.chart)]===btn.dataset.axis;
+   btn.classList.toggle('active',active);btn.setAttribute('aria-pressed',String(active));
+ });
+}
+function applyViews(){
+ charts.forEach((ch,i)=>{ch.setAngles(state.angles[i]);syncAngleUI(i);});syncAxisButtons();
+}
+function setViewAngle(i,k,value){
+ if(!Number.isFinite(value))return;
+ state.angles[i][k]=Math.max(-3600,Math.min(3600,value));
+ charts[i].setAngles(state.angles[i]);syncAngleUI(i);syncComparisonCamera(i);saveAuto();
+}
+
+function snapshot(){return JSON.parse(JSON.stringify({A:state.A,lang:state.lang,rotating:state.rotating,angles:state.angles,axisModes:state.axisModes}));}
+function applySnapshot(snap){state.A=cloneMatrix(snap.A); state.lang=snap.lang; state.rotating=(snap.rotating||[false,false,false,false]).slice();state.angles=(snap.angles||state.angles).map(a=>a.slice());state.axisModes=(snap.axisModes||state.axisModes).slice();applyViews(); setLanguage(state.lang,false); syncToggleButtons(); recalcAll(); saveAuto();}
+function pushUndo(){if(programmaticUpdate)return; undoStack.push(snapshot()); if(undoStack.length>120) undoStack.shift(); redoStack.length=0; updateUndoButtons();}
+function undo(){if(!undoStack.length)return; redoStack.push(snapshot()); const snap=undoStack.pop(); applySnapshot(snap); updateUndoButtons();}
+function redo(){if(!redoStack.length)return; undoStack.push(snapshot()); const snap=redoStack.pop(); applySnapshot(snap); updateUndoButtons();}
+function updateUndoButtons(){document.getElementById('undo-btn').disabled=!undoStack.length;document.getElementById('redo-btn').disabled=!redoStack.length;}
+
+function saveAuto(){localStorage.setItem('avo-svd-01f-state', JSON.stringify({state:{A:state.A,lang:state.lang,rotating:state.rotating,angles:state.angles,axisModes:state.axisModes}}));}
+function loadAuto(){try{const raw=localStorage.getItem('avo-svd-01f-state'); if(!raw)return; const obj=JSON.parse(raw); if(obj&&obj.state&&obj.state.A) {state.A=cloneMatrix(obj.state.A); if(!query.has('lang'))state.lang=obj.state.lang||state.lang; state.rotating=Array.isArray(obj.state.rotating) ? obj.state.rotating.slice(0,4) : [false,false,false,false]; if(Array.isArray(obj.state.angles)&&obj.state.angles.length===4)state.angles=obj.state.angles; if(Array.isArray(obj.state.axisModes)&&obj.state.axisModes.length===4)state.axisModes=obj.state.axisModes;}}catch(e){}}
+
+function updateStatus(msg){document.getElementById('status-line').textContent=msg;}
+function syncToggleButtons(){document.querySelectorAll('.view-toggle').forEach(btn=>{const i=Number(btn.dataset.chart); btn.classList.toggle('active', state.rotating[i]); btn.setAttribute('aria-pressed',String(state.rotating[i]));}); charts.forEach((ch,i)=>{ch.controls.enabled=state.rotating[i]; ch.renderer.domElement.style.cursor=state.rotating[i]?'grab':'default';});}
+
+function setLanguage(lang,save=true){state.lang=lang; document.documentElement.lang=lang; document.body.classList.toggle('hebrew-text',lang==='he');
+  document.querySelectorAll('[data-i18n]').forEach(el=>{const key=el.dataset.i18n; if(key==='matrixNoteU' || key==='matrixNoteS' || key==='matrixNoteV' || key==='helpTitle' || key==='close' || key==='home' || key==='edition' || key==='appTitle' || key==='lead' || key==='undo' || key==='redo' || key==='resetA' || key==='startOver' || key==='saveJson' || key==='loadJson' || key==='formulaLabel' || key==='matrixA' || key==='inputHint' || key==='summaryTitle' || key==='summaryHint' || key==='reconstruction' || key==='stage0' || key==='stage1' || key==='stage2' || key==='stage3' || key==='toggleView' || key==='commonView' || key==='axisMode' || key==='syncViews' || key==='sameScale') el.textContent=t(key);});
+  document.getElementById('help-content').innerHTML=t('helpHtml')+({ru:'<p><strong>Обзор.</strong> Кнопка «Общий обзор» выравнивает камеры всех графиков по первому. X/Y/Z выбирают ось вращения, но не включают его автоматически. ◎ задаёт свободный режим. Кнопка «Вращать» включает или выключает вращение, а ползунки и числа задают углы в градусах для каждого графика отдельно.</p>',en:'<p><strong>View controls.</strong> Common view aligns all cameras with the first chart. X/Y/Z select a rotation axis but do not turn rotation on automatically. ◎ sets free orbit mode. The Rotate button enables or disables interaction, and sliders plus number fields set angles in degrees independently for each chart.</p>',he:'<p><strong>בקרת מבט.</strong> מבט משותף מתאים את כל המצלמות לגרף הראשון. X/Y/Z בוחרים ציר סיבוב אך אינם מפעילים את הסיבוב אוטומטית. ◎ מגדיר מצב סיבוב חופשי. הכפתור סיבוב מפעיל או מכבה את הסיבוב, והמחוונים ושדות המספרים מגדירים זוויות לכל גרף בנפרד.</p>'})[lang];
+  ['desc0','desc1','desc2','desc3'].forEach((k,i)=>{const el=document.getElementById(`desc-${i}`); if(el)el.textContent=t(k);});
+  document.getElementById('help-content').innerHTML += '<p><strong>'+t('modeStages')+' / '+t('modeDirections')+'.</strong> '+t('modeDirectionsInfo')+'</p>';
+  document.getElementById('home-link').href=`../?lang=${lang}`;
+  document.querySelectorAll('.language-button').forEach(b=>b.classList.toggle('active',b.dataset.lang===lang));
+  if(currentSVD){charts.forEach(ch=>ch.updateFromState(currentSVD)); document.getElementById('summary-metrics').innerHTML=getSummaryMetrics(currentSVD); document.getElementById('metrics-U').innerHTML=`<div><strong>U:</strong> ${t('orthogonal')}</div>`; document.getElementById('metrics-S').innerHTML=`<div><strong>Σ:</strong> ${t('diagonal')}</div><div>σ₁ ≥ σ₂ ≥ σ₃</div>`; document.getElementById('metrics-V').innerHTML=`<div><strong>Vᵀ:</strong> ${t('orthogonal')}</div>`; document.getElementById('metrics-R').innerHTML=`<div><strong>${t('reconstructionError')}:</strong> ${formatNumber(currentSVD.error,6)}</div>`;}
+  ['matrixNoteU','matrixNoteS','matrixNoteV'].forEach(k=>{const el=document.querySelector(`[data-i18n="${k}"]`);if(el)el.textContent=t(k);});
+  if(charts.length===4)syncDisplayMode();
+  if(save) saveAuto();
+}
+
+function saveJSON(){const blob=new Blob([JSON.stringify({version:'01i',app:'AVO_SVD',state:{A:state.A,lang:state.lang,rotating:state.rotating,angles:state.angles,axisModes:state.axisModes}},null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='AVO_SVD_01i_state.json'; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),500); updateStatus(t('saved'));}
+function loadJSON(file){const reader=new FileReader(); reader.onload=()=>{try{const obj=JSON.parse(reader.result); if(!obj.state||!obj.state.A) throw new Error('bad'); pushUndo(); state.A=cloneMatrix(obj.state.A); if(obj.state.lang) state.lang=obj.state.lang; if(obj.state.rotating) state.rotating=obj.state.rotating.slice();if(Array.isArray(obj.state.angles))state.angles=obj.state.angles;if(Array.isArray(obj.state.axisModes))state.axisModes=obj.state.axisModes;applyViews(); setLanguage(state.lang,false); syncToggleButtons(); recalcAll(); saveAuto(); updateStatus(t('loaded'));}catch(e){updateStatus(t('invalidJson'));}}; reader.readAsText(file);}
+function resetA(){pushUndo(); state.A=identity3(); state.rotating=[false,false,false,false]; state.axisModes=['free','free','free','free']; applyViews(); syncToggleButtons(); recalcAll(); saveAuto(); updateStatus(t('resetDone'));}
+function startOver(){pushUndo(); state.A=cloneMatrix(initialMatrix); state.rotating=[false,false,false,false]; state.axisModes=['free','free','free','free']; state.angles=[[0,0,0],[0,0,0],[0,0,0],[0,0,0]]; applyViews(); syncToggleButtons(); recalcAll(); saveAuto(); updateStatus(t('startDone'));}
+
+function init(){
+  loadAuto();
+  createInputGrid();
+  charts=[0,1,2,3].map(createChart);
+  document.querySelectorAll('.language-button').forEach(btn=>btn.addEventListener('click',()=>{pushUndo(); setLanguage(btn.dataset.lang); recalcAll();}));
+  document.querySelectorAll('.mode-button').forEach(b=>b.addEventListener('click',()=>switchDisplayMode(b.dataset.mode)));
+  document.getElementById('sync-views').addEventListener('change',e=>{
+    comparisonSynchronized=e.target.checked;
+    if(comparisonSynchronized)syncComparisonCamera(0);
+  });
+  document.getElementById('undo-btn').addEventListener('click',undo);
+  document.getElementById('redo-btn').addEventListener('click',redo);
+  document.getElementById('reset-btn').addEventListener('click',resetA);
+  document.getElementById('start-over-btn').addEventListener('click',startOver);
+  document.getElementById('save-btn').addEventListener('click',saveJSON);
+  document.getElementById('load-btn').addEventListener('click',()=>document.getElementById('load-file').click());
+  document.getElementById('load-file').addEventListener('change',e=>{if(e.target.files[0]) loadJSON(e.target.files[0]); e.target.value='';});
+  document.getElementById('help-btn').addEventListener('click',()=>document.getElementById('help-modal').classList.remove('hidden'));
+  document.getElementById('help-close').addEventListener('click',()=>document.getElementById('help-modal').classList.add('hidden'));
+  document.getElementById('help-modal').addEventListener('click',e=>{if(e.target.id==='help-modal') e.target.classList.add('hidden');});
+  document.querySelectorAll('.view-toggle').forEach(btn=>btn.addEventListener('click',()=>{const i=Number(btn.dataset.chart); state.rotating[i]=!state.rotating[i]; syncToggleButtons(); saveAuto();}));
+  document.querySelectorAll('.axis-choice').forEach(btn=>btn.addEventListener('click',()=>{
+    const i=Number(btn.dataset.chart);state.axisModes[i]=btn.dataset.axis;
+    syncAxisButtons();syncToggleButtons();saveAuto();
+  }));
+  document.querySelectorAll('input[data-angle]').forEach(input=>input.addEventListener('input',()=>{
+    const i=Number(input.dataset.chart),k='xyz'.indexOf(input.dataset.angle);
+    if(input.value.trim()!=='')setViewAngle(i,k,Number(input.value));
+  }));
+  document.getElementById('common-view-btn').addEventListener('click',()=>{
+    const master=charts[0];const pose=state.angles[0].slice();
+    for(let i=1;i<4;i++){
+      state.angles[i]=pose.slice();
+      charts[i].camera.position.copy(master.camera.position);
+      charts[i].camera.up.copy(master.camera.up);
+      charts[i].controls.target.copy(master.controls.target);
+      charts[i].camera.lookAt(charts[i].controls.target);
+      charts[i].controls.update();syncAngleUI(i);
+    }
+    saveAuto();
+  });
+  setLanguage(state.lang,false);
+  syncToggleButtons();
+  applyViews();
+  recalcAll();
+  updateUndoButtons();
+}
+init();
+</script>
+</body>
+</html>
