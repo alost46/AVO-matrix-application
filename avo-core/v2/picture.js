@@ -5,7 +5,7 @@ const el=(tag,cls,text)=>{const x=document.createElement(tag);if(cls)x.className
 const fmt=n=>!Number.isFinite(n)?'∞':Math.abs(n)<1e-9?'0':String(Number(n.toFixed(4)));
 export class Picture {
   constructor(app,config){
-    this.app=app;this.config=config;this.id=config.id;this.root=el('section','picture');this.root.dataset.picture=this.id;this.root.dataset.coreVersion='01f';
+    this.app=app;this.config=config;this.id=config.id;this.root=el('section','picture');this.root.dataset.picture=this.id;this.root.dataset.coreVersion='01g';
     const header=el('div','picture-header');this.heading=el('h2');header.append(this.heading);
     const tools=el('div','panel-tools');
     const mainTools=el('div','primary-tools');const gestureRow=el('div','gesture-row');
@@ -51,11 +51,15 @@ export class Picture {
       const b=el('button','small axis-btn',axis==='free'?'◎':axis.toUpperCase());b.addEventListener('click',()=>{this.view.axis=axis;this.renderControls();this.app.autosave();});axisTools.append(b);this.axisButtons[axis]=b;
     }
     axisRow.append(axisTools);this.viewOpts.append(axisRow);
-    this.plotWrap=el('div','plot-wrap');this.plotCaption=el('span','plot-caption');this.plotWrap.append(this.plotCaption);
+    this.plotWrap=el('div','plot-wrap');this.plotCaption=el('span','plot-caption');this.overlapNotice=el('div','avo-overlap-notice');this.overlapNotice.setAttribute('role','status');this.overlapNotice.hidden=true;this.plotWrap.append(this.plotCaption,this.overlapNotice);
     this.endInfo=el('div','end-info');
     this.root.append(header,this.viewOpts,this.plotWrap,this.dataZone,this.endInfo);
-    this.view=new View3D(this.plotWrap,()=>this.viewChanged(),(binding,pos)=>this.handleMove(binding,pos),()=>this.app.finishGesture());
+    this.view=new View3D(this.plotWrap,()=>this.viewChanged(),(binding,pos)=>this.handleMove(binding,pos),()=>this.app.finishGesture(),active=>this.setOverlapNotice(active));
     this.view.resize();this.buildMatrix();this.renderLanguage();this.renderControls();
+  }
+  setOverlapNotice(active){
+    this.overlapNotice.hidden=!active;
+    if(active)this.overlapNotice.textContent=this.app.t('markerOverlap');
   }
   get matrixName(){return this.config.matrixId||this.config.outputMatrixId||'result';}
   get numericMatrix(){
@@ -117,6 +121,7 @@ export class Picture {
     this.heading.textContent=m(this.config.titleKey);
     if(this.dataTitle)this.dataTitle.textContent=`${t('matrix')} ${this.config.matrixId||this.result?.label||this.config.displayName||this.id}`;
     this.axisLabel.textContent=t('selectAxis');
+    if(!this.overlapNotice.hidden)this.overlapNotice.textContent=t('markerOverlap');
     this.fullButton.textContent=t('full');this.resetViewButton.textContent=t('resetView');
     if(this.resetMatrixButton)this.resetMatrixButton.textContent=`${this.app.lang==='ru'?'Сброс':this.app.lang==='he'?'אפס':'Reset'} ${this.config.matrixId}`;
     if(this.orderLabel)this.orderLabel.textContent=t('order')+': ';

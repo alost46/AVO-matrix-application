@@ -1,4 +1,4 @@
-/* AVO Core v2 01c · restored orthographic AVO view and stable screen-space editing. */
+/* AVO Core v2 01g · unified picture with native mobile touch handling. */
 import * as THREE from 'three';
 import {GeometryLayer} from './geometry.js';
 import {solveXY,solveZ} from './drag-math.js';
@@ -7,8 +7,8 @@ const modAngle=n=>((n%360)+360)%360;
 const vector=p=>new THREE.Vector3(...p);
 const colorCode=n=>'#'+(n??0x265fb1).toString(16).padStart(6,'0');
 export class View3D {
-  constructor(root,onCameraChanged,onHandleMove,onHandleEnd){
-    this.root=root;this.onCameraChanged=onCameraChanged;this.onHandleMove=onHandleMove;this.onHandleEnd=onHandleEnd;
+  constructor(root,onCameraChanged,onHandleMove,onHandleEnd,onOverlapChanged){
+    this.root=root;this.onCameraChanged=onCameraChanged;this.onHandleMove=onHandleMove;this.onHandleEnd=onHandleEnd;this.onOverlapChanged=onOverlapChanged;this.overlapActive=false;
     this.angles=[35,20,25];this.radius=14;this.fitHalf=4.7;this.latestGeometry=null;this.mode='off';this.axis='free';this.dragAxis='xy';this.editAxis='xy';this.target=new THREE.Vector3();
     this.scene=new THREE.Scene();this.scene.background=new THREE.Color(0xffffff);
     this.camera=new THREE.OrthographicCamera(-4.7,4.7,4.7,-4.7,.08,3000);
@@ -23,7 +23,7 @@ export class View3D {
     this.markerLayer.setAttribute('aria-hidden','true');root.append(this.markerLayer);this.markerElements=new Map();
     this.staticGroup=new THREE.Group();this.scene.add(this.staticGroup);this.drawAxes();
     this.geo=new GeometryLayer(this.scene);
-    this.pointers=new Map();this.drag=null;this.pinchDistance=null;
+    this.pointers=new Map();this.drag=null;this.pinchDistance=null;this.nativeTouchEnabled=("ontouchstart" in window);
     this.sizeObserver=new ResizeObserver(()=>this.resize());this.sizeObserver.observe(root);
     this.attachEvents();this.updateCamera();
   }
@@ -222,36 +222,87 @@ export class View3D {
       el.style.borderColor=colorCode(handle.color);
     }
     for(const [id,el] of this.markerElements)if(!ids.has(id)){el.remove();this.markerElements.delete(id);}
+    // A genuine 3D separation does not guarantee separable screen projections.
+    this.checkMarkerOverlap();
+  }
+  checkMarkerOverlap(){
+    const points=this.geo?.handles.map(h=>this.screenPosition(h.position)).filter(Boolean)||[];
+    const threshold=this.nativeTouchEnabled?26:17;
+    let close=false;
+    for(let i=0;i<points.length&&!close;i++)for(let j=i+1;j<points.length;j++){
+      if(Math.hypot(points[i][0]-points[j][0],points[i][1]-points[j][1])<threshold){close=true;break;}
+    }
+    const active=this.mode==='edit'&&close;
+    if(this.overlapActive!==active){this.overlapActive=active;this.onOverlapChanged?.(active);}
   }
   setAngles(angles,notify=true){if(!Array.isArray(angles)||angles.length!==3||!angles.every(Number.isFinite))return;
     this.angles=angles.map(modAngle);this.updateCamera();if(notify)this.onCameraChanged?.(this);}
   changeAngles(axis,value){const next=this.angles.slice();next[axis]=modAngle(value);this.setAngles(next);}
   setRadius(radius,notify=true){this.radius=Math.min(200,Math.max(2,Number(radius)||14));this.updateCamera();if(notify)this.onCameraChanged?.(this);}
   resetView(){this.radius=14;this.fitHalf=4.7;this.updateFit(this.latestGeometry);this.setAngles([35,20,25]);}
-  setMode(mode){this.mode=mode;this.renderer.domElement.style.touchAction=mode==='off'?'pan-y':'none';}
+  setMode(mode){this.mode=mode;this.checkMarkerOverlap();const action=mode==='off'?'pan-y':'none';this.renderer.domElement.style.touchAction=action;this.root.style.touchAction=action;}
   attachEvents(){
     const el=this.renderer.domElement;el.style.touchAction='pan-y';
     el.addEventListener('pointerdown',e=>this.onDown(e));el.addEventListener('pointermove',e=>this.onMove(e));
     el.addEventListener('pointerup',e=>this.onUp(e));el.addEventListener('pointercancel',e=>this.onUp(e));
     el.addEventListener('wheel',e=>{if(this.mode==='off')return;e.preventDefault();this.setRadius(this.radius*(e.deltaY>0?1.09:.91));},{passive:false});
     el.addEventListener('dblclick',()=>{if(this.mode!=='off')this.resetView();});
+    // Safari/iOS can cancel Pointer Events when a touch is interpreted as
+    // page scroll/zoom. Use native Touch Events as the sole touch input when
+    // available; mouse/pen continue to use Pointer Events unchanged.
+    if(this.nativeTouchEnabled){
+      const synthetic=(touch)=>({pointerId:100000+touch.identifier,pointerType:'touch',
+        clientX:touch.clientX,clientY:touch.clientY,button:0,nativeTouch:true,
+        preventDefault(){}});
+      el.addEventListener('touchstart',e=>{
+        if(this.mode==='off')return;
+        e.preventDefault();
+        for(const t of e.changedTouches)this.onDown(synthetic(t));
+      },{passive:false});
+      el.addEventListener('touchmove',e=>{
+        if(this.mode==='off')return;
+        e.preventDefault();
+        for(const t of e.changedTouches)this.onMove(synthetic(t));
+      },{passive:false});
+      const end=e=>{
+        if(this.mode!=='off')e.preventDefault();
+        for(const t of e.changedTouches)this.onUp(synthetic(t));
+      };
+      el.addEventListener('touchend',end,{passive:false});
+      el.addEventListener('touchcancel',end,{passive:false});
+    }
   }
   hitAt(e){
-    const rect=this.renderer.domElement.getBoundingClientRect(),radius=e.pointerType==='touch'?24:17;
-    let nearest=null,distance=radius*radius;
+    const rect=this.renderer.domElement.getBoundingClientRect(),radius=e.pointerType==='touch'?36:17;
+    const candidates=[];
     for(const h of this.geo.handles){
       const p=this.screenPosition(h.position);if(!p)continue;
-      const dx=rect.left+p[0]-e.clientX,dy=rect.top+p[1]-e.clientY,d=dx*dx+dy*dy;
-      if(d<=distance){nearest=h;distance=d;}
+      const dx=rect.left+p[0]-e.clientX,dy=rect.top+p[1]-e.clientY,d=Math.hypot(dx,dy);
+      if(d<=radius)candidates.push({handle:h,point:p,distance:d});
     }
-    return nearest;
+    candidates.sort((a,b)=>a.distance-b.distance);
+    if(candidates.length>1){
+      const a=candidates[0].point,b=candidates[1].point;
+      // A wide touch target is helpful, but must not silently pick one
+      // of two almost superimposed projected endpoints.
+      if(Math.hypot(a[0]-b[0],a[1]-b[1])<(e.pointerType==='touch'?26:17))return {ambiguous:true};
+    }
+    return candidates[0]?{handle:candidates[0].handle,ambiguous:false}:null;
   }
   onDown(e){
     if(this.mode==='off'||(e.pointerType==='mouse'&&e.button!==0))return;
-    this.renderer.domElement.setPointerCapture(e.pointerId);
+    if(this.nativeTouchEnabled&&e.pointerType==='touch'&&!e.nativeTouch)return;
+    if(!e.nativeTouch)this.renderer.domElement.setPointerCapture(e.pointerId);
     this.pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
     if(this.pointers.size===2){if(this.drag?.changed)this.onHandleEnd?.();this.drag=null;this.pinchDistance=this.dist();return;}
-    const handle=this.mode==='edit'?this.hitAt(e):null;
+    const picked=this.mode==='edit'?this.hitAt(e):null;
+    if(picked?.ambiguous){
+      this.onOverlapChanged?.(true);
+      // Do not turn an ambiguous marker drag into either editing or rotation.
+      this.drag={id:e.pointerId,x:e.clientX,y:e.clientY,handleId:null,binding:null,changed:false,blocked:true};
+      e.preventDefault();return;
+    }
+    const handle=picked?.handle;
     this.drag={id:e.pointerId,x:e.clientX,y:e.clientY,handleId:handle?String(handle.id):null,binding:handle?.binding,changed:false};
     e.preventDefault();
   }
@@ -276,10 +327,12 @@ export class View3D {
     if(success!==false)drag.changed=true;
   }
   onMove(e){
+    if(this.nativeTouchEnabled&&e.pointerType==='touch'&&!e.nativeTouch)return;
     if(this.mode==='off'||!this.pointers.has(e.pointerId))return;
     const prev=this.pointers.get(e.pointerId);this.pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
     if(this.pointers.size===2){const d=this.dist();if(this.pinchDistance&&d>5)this.setRadius(this.radius*this.pinchDistance/d);this.pinchDistance=d;e.preventDefault();return;}
     const drag=this.drag;if(!drag||drag.id!==e.pointerId)return;
+    if(drag.blocked){e.preventDefault();return;}
     const dx=e.clientX-prev.x,dy=e.clientY-prev.y;
     if(drag.handleId)this.moveHandle(e,drag,dx,dy);
     else{
@@ -293,11 +346,12 @@ export class View3D {
     e.preventDefault();
   }
   onUp(e){
+    if(this.nativeTouchEnabled&&e.pointerType==='touch'&&!e.nativeTouch)return;
     if(!this.pointers.has(e.pointerId))return;
     this.pointers.delete(e.pointerId);
     if(this.drag?.id===e.pointerId){if(this.drag.changed)this.onHandleEnd?.();this.drag=null;}
     if(this.pointers.size<2)this.pinchDistance=null;
-    try{if(this.renderer.domElement.hasPointerCapture?.(e.pointerId))this.renderer.domElement.releasePointerCapture(e.pointerId);}catch(_){}
+    if(!e.nativeTouch)try{if(this.renderer.domElement.hasPointerCapture?.(e.pointerId))this.renderer.domElement.releasePointerCapture(e.pointerId);}catch(_){}
   }
   state(){return {angles:this.angles.slice(),radius:this.radius,mode:this.mode,axis:this.axis,dragAxis:this.dragAxis,editAxis:this.editAxis};}
   applyState(s){if(!s||!Array.isArray(s.angles)||s.angles.length!==3||!s.angles.every(Number.isFinite))return;

@@ -83,3 +83,15 @@
 .picture .order-control .order-select option{font-weight:750}
 .picture .gesture-row{display:flex!important;visibility:visible!important}
 .picture[data-core-version="01f"] .gesture-tools{display:inline-flex!important;visibility:visible!important}
+
+/* 01g: one typographic contract for every picture, including computed output. */
+body,.shell,.picture,.picture button,.picture input,.picture select,.picture label,.picture span,.picture .read,.picture .order-control,.picture .order-label,.picture .order-select{font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif;font-weight:750}
+.picture .data-title,.picture .matrix-table .read,.picture .matrix-table input,.picture .metric,.picture .formula,.picture .order-label,.picture .order-select,.picture .order-control{font-size:16px;font-weight:800}
+.picture .matrix-table .read{min-width:55px}
+/* A gesture belongs to the graphic, not the browser's page scroll or zoom. */
+.picture .plot-wrap{overscroll-behavior:contain}
+.picture .plot-wrap canvas{touch-action:none}
+.picture .plot-wrap .avo-marker-layer{touch-action:none}
+
+.avo-overlap-notice{position:absolute;top:8px;left:8px;right:8px;z-index:5;pointer-events:none;padding:8px 10px;background:#fff4cd;color:#573e00;border:2px solid #c89117;border-radius:8px;font-size:15px;font-weight:700;text-align:center}
+.avo-overlap-notice[hidden]{display:none}
