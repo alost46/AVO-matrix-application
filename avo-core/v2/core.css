@@ -5,3 +5,28 @@
 .avo-marker-layer{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:2}
 .avo-marker{position:absolute;display:block;width:20px;height:20px;transform:translate(-50%,-50%);border:4px solid #265fb1;background:#fff;border-radius:50%;box-shadow:0 0 0 1px #15313b88;pointer-events:none}
 .avo-marker[hidden]{display:none}
+
+/* 01c. Restore the proven AVO picture-first layout and plot-to-control proportions. */
+.plot-wrap{height:clamp(285px,31vw,460px);background:#fff}
+.avo-marker{width:12px;height:12px;border-width:3px;box-shadow:0 0 0 1px #18354c66}
+.avo-axis-labels{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
+.picture-full{position:fixed;inset:6px;display:flex;flex-direction:column;overflow:hidden}
+.picture-full .picture-header{flex:0 0 auto;padding:6px 10px}
+.picture-full .picture-header h2{font-size:17px;margin:0 0 3px}
+.picture-full .panel-tools button{font-size:12px;min-height:28px;padding:3px 7px}
+.picture-full .matrix-zone{display:none}
+.picture-full .view-opts{flex:0 0 auto;max-height:none;overflow:visible;padding:2px 8px}
+.picture-full .view-opts .angle-row{min-height:25px}
+.picture-full .rays{margin:0 auto;gap:2px;width:min(640px,100%)}
+.picture-full .ray-widget{gap:0}
+.picture-full .ray-widget svg{width:52px;height:52px}
+.picture-full .ray-widget input{height:25px}
+.picture-full .edit-tools{flex:0 0 auto;padding:2px 9px}
+.picture-full .plot-wrap{flex:1 1 auto;height:auto;min-height:140px}
+.picture-full .end-info{display:none}
+@media(max-width:750px){
+ .plot-wrap{height:min(53dvh,490px);min-height:310px}
+ .picture-full .plot-wrap{height:auto;min-height:180px}
+ .picture-full .ray-widget svg{width:43px;height:43px}
+ .picture-full .ray-widget input{font-size:13px;width:61px}
+}

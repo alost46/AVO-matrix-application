@@ -1,4 +1,4 @@
-/* AVO Core v2 01b · universal Three.js view + stable screen-space editing. */
+/* AVO Core v2 01c · restored orthographic AVO view and stable screen-space editing. */
 import * as THREE from 'three';
 import {GeometryLayer} from './geometry.js';
 import {solveXY,solveZ} from './drag-math.js';
@@ -9,12 +9,15 @@ const colorCode=n=>'#'+(n??0x265fb1).toString(16).padStart(6,'0');
 export class View3D {
   constructor(root,onCameraChanged,onHandleMove,onHandleEnd){
     this.root=root;this.onCameraChanged=onCameraChanged;this.onHandleMove=onHandleMove;this.onHandleEnd=onHandleEnd;
-    this.angles=[35,20,25];this.radius=14;this.mode='off';this.axis='free';this.editAxis='xy';this.target=new THREE.Vector3();
-    this.scene=new THREE.Scene();this.scene.background=new THREE.Color(0xf6fbff);
-    this.camera=new THREE.PerspectiveCamera(47,1,.08,3000);
+    this.angles=[35,20,25];this.radius=14;this.fitHalf=4.7;this.latestGeometry=null;this.mode='off';this.axis='free';this.editAxis='xy';this.target=new THREE.Vector3();
+    this.scene=new THREE.Scene();this.scene.background=new THREE.Color(0xffffff);
+    this.camera=new THREE.OrthographicCamera(-4.7,4.7,4.7,-4.7,.08,3000);
     this.renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'low-power'});
     this.renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));
     this.renderer.domElement.setAttribute('aria-label','3D');root.append(this.renderer.domElement);
+    this.axisLabels=document.createElement('canvas');this.axisLabels.className='avo-axis-labels';
+    this.axisLabels.setAttribute('aria-hidden','true');root.append(this.axisLabels);
+    this.axisCtx=this.axisLabels.getContext('2d');
     // Circles have fixed CSS pixel diameter and cannot inflate as they approach camera.
     this.markerLayer=document.createElement('div');this.markerLayer.className='avo-marker-layer';
     this.markerLayer.setAttribute('aria-hidden','true');root.append(this.markerLayer);this.markerElements=new Map();
@@ -25,27 +28,181 @@ export class View3D {
     this.attachEvents();this.updateCamera();
   }
   drawAxes(){
-    const makeLine=(from,to,color,opacity=.8)=>{
-      const g=new THREE.BufferGeometry().setFromPoints([vector(from),vector(to)]);
-      const l=new THREE.Line(g,new THREE.LineBasicMaterial({color,transparent:true,opacity,depthWrite:false}));this.staticGroup.add(l);
+    const grid=(plane,at)=>{
+      const verts=[];
+      for(let i=-3;i<=3;i++){
+        if(plane==='xy')verts.push([-3,i,at],[3,i,at],[i,-3,at],[i,3,at]);
+        else if(plane==='xz')verts.push([-3,at,i],[3,at,i],[i,at,-3],[i,at,3]);
+        else verts.push([at,-3,i],[at,3,i],[at,i,-3],[at,i,3]);
+      }
+      const geom=new THREE.BufferGeometry().setFromPoints(verts.map(vector));
+      this.staticGroup.add(new THREE.LineSegments(geom,new THREE.LineBasicMaterial({color:0xa2b1bd,transparent:true,opacity:.48,depthWrite:false})));
     };
-    for(let i=-4;i<=4;i++){makeLine([-4,i,0],[4,i,0],0xaebfcb,.26);makeLine([i,-4,0],[i,4,0],0xaebfcb,.26);}
-    makeLine([-5,0,0],[5,0,0],0xde3c40,1);
-    makeLine([0,-5,0],[0,5,0],0xa98758,1);
-    makeLine([0,0,-5],[0,0,5],0x60aa26,1);
+    // Same three boundary coordinate grids as the established AVO applications.
+    grid('xy',-3);grid('xz',3);grid('yz',-3);
+    for(const [axis,color] of [[0,0xe1333c],[1,0x987448],[2,0x64a524]]){
+      const a=[0,0,0],b=[0,0,0];a[axis]=-3;b[axis]=3;
+      const line=new THREE.Line(new THREE.BufferGeometry().setFromPoints([vector(a),vector(b)]),new THREE.LineBasicMaterial({color,depthTest:false}));
+      this.staticGroup.add(line);
+    }
+  }
+  updateFrustum(){
+    const w=Math.max(100,this.root.clientWidth),h=Math.max(100,this.root.clientHeight),aspect=w/h;
+    const half=this.fitHalf*this.radius/14;
+    if(aspect>=1){this.camera.left=-half*aspect;this.camera.right=half*aspect;this.camera.top=half;this.camera.bottom=-half;}
+    else {this.camera.left=-half;this.camera.right=half;this.camera.top=half/aspect;this.camera.bottom=-half/aspect;}
+    this.camera.updateProjectionMatrix();
   }
   updateCamera(){
     const q=new THREE.Quaternion().setFromEuler(new THREE.Euler(...this.angles.map(a=>a*RAD),'XYZ'));
     this.camera.position.copy(this.target).add(new THREE.Vector3(0,0,this.radius).applyQuaternion(q));
     this.camera.up.copy(new THREE.Vector3(0,1,0).applyQuaternion(q));
-    this.camera.lookAt(this.target);this.camera.updateProjectionMatrix();this.render();
+    this.camera.lookAt(this.target);this.updateFrustum();this.render();
   }
-  render(){if(this.renderer&&!this.disposed){this.renderer.render(this.scene,this.camera);this.updateMarkers();}}
+  render(){if(this.renderer&&!this.disposed){this.renderer.render(this.scene,this.camera);this.updateMarkers();this.drawAxisLabels();}}
   resize(){if(this.disposed)return;
     const w=Math.max(100,this.root.clientWidth),h=Math.max(100,this.root.clientHeight);
-    this.renderer.setSize(w,h,false);this.camera.aspect=w/h;this.camera.updateProjectionMatrix();this.render();
+    this.renderer.setSize(w,h,false);this.updateFrustum();
+    const dpr=Math.min(devicePixelRatio||1,2);
+    this.axisLabels.width=Math.round(w*dpr);this.axisLabels.height=Math.round(h*dpr);
+    this.axisCtx?.setTransform(dpr,0,0,dpr,0,0);this.render();
   }
-  setGeometry(geometry){this.geo.update(geometry);this.render();}
+ drawAxisLabels(){
+  // Only the 2D annotation layer is changed in 03d. The 3D scene, gesture
+  // handlers, view synchronization and matrices are exactly as in 03b.
+  const ctx=this.axisCtx;if(!ctx)return;
+  const w=this.root.clientWidth,h=this.root.clientHeight;
+  ctx.clearRect(0,0,w,h);
+  if(w<70||h<70)return;
+  const camera=this.camera;
+  const v=new THREE.Vector3();
+  const xy=(x,y,z)=>{
+   v.set(x,y,z).project(camera);
+   return {x:(v.x+1)*w/2,y:(1-v.y)*h/2,visible:v.z>=-1&&v.z<=1};
+  };
+  const origin2=xy(0,0,0);
+  const cubeCorners=[
+   [-3,-3,-3],[-3,3,-3],[-3,-3,3],
+   [3,3,-3],[-3,3,3],[3,3,3],[3,-3,-3]
+  ].map(p=>xy(...p));
+  // All candidates are REAL outside edges of one of the three rendered grids:
+  // XY(z=-3), XZ(y=3), YZ(x=-3). We never draw numbers on imaginary edges.
+  const grids={
+   x:[[-3,-3],[3,-3],[3,3]],
+   y:[[-3,-3],[3,-3],[-3,3]],
+   z:[[-3,-3],[-3,3],[3,3]]
+  };
+  const edgePoint=(axis,fix,k)=>axis==='x'?xy(k,fix[0],fix[1]):
+    axis==='y'?xy(fix[0],k,fix[1]):xy(fix[0],fix[1],k);
+  const padding=10, tickSize=11.5, labelOffset=17;
+  const bbox=(value,x,y,size)=>({
+   x:x-Math.max(11,String(value).length*size*.34)-2,
+   y:y-size*.65-2,
+   x2:x+Math.max(11,String(value).length*size*.34)+2,
+   y2:y+size*.65+2
+  });
+  const fits=b=>b.x>=padding&&b.x2<=w-padding&&b.y>=padding&&b.y2<=h-padding;
+  const overlaps=(a,b)=>a.x<b.x2&&a.x2>b.x&&a.y<b.y2&&a.y2>b.y;
+  const reserved=[{x:6,y:4,x2:Math.min(235,w*.70),y2:39}]; // live readout at top-left
+  // Keep the current 03b placement of X/Y/Z letters. Reserve their space
+  // before distributing numeric graduations so digits do not collide with them.
+  const letters=[];
+  for(const [letter,axis] of [['X','x'],['Y','y'],['Z','z']]){
+   const p=axis==='x'?xy(3,0,0):axis==='y'?xy(0,3,0):xy(0,0,3);
+   const n=axis==='x'?xy(-3,0,0):axis==='y'?xy(0,-3,0):xy(0,0,-3);
+   const chosen=Math.abs(p.x-n.x)>5?(p.x>n.x?p:n):(p.y<n.y?p:n);
+   const dx=chosen.x-origin2.x,dy=chosen.y-origin2.y;
+   const d=Math.max(1,Math.hypot(dx,dy));
+   const x=Math.max(11,Math.min(w-11,chosen.x+dx/d*14));
+   const y=Math.max(11,Math.min(h-11,chosen.y+dy/d*14));
+   if(chosen.visible){letters.push({value:letter,x,y,size:17});reserved.push(bbox(letter,x,y,17));}
+  }
+  const options={};
+  for(const axis of ['x','y','z']){
+   options[axis]=[];
+   for(const fixed of grids[axis]){
+    const a=edgePoint(axis,fixed,-3),b=edgePoint(axis,fixed,3);
+    if(!a.visible||!b.visible)continue;
+    const dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy);
+    if(len<27)continue;
+    let nx=-dy/len,ny=dx/len;
+    // Choose the outward normal of a real rendered grid edge.
+    if((origin2.x-a.x)*nx+(origin2.y-a.y)*ny>0){nx=-nx;ny=-ny;}
+    const outside=Math.max(...cubeCorners.map(p=>(p.x-a.x)*nx+(p.y-a.y)*ny));
+    if(outside>1.5)continue;
+    let ticks;
+    if(len/6>=31)ticks=[-3,-2,-1,0,1,2,3];
+    else if(len/3>=30)ticks=[-3,-1,1,3];
+    else if(len/2>=29)ticks=[-3,0,3];
+    else ticks=[-3,3];
+    // On narrow phone graphs the OUTSIDE of a Z edge often lies beyond
+    // the canvas boundary. Keep the same visible, outermost vertical edge,
+    // but put its numbers a few pixels INSIDE the plot when necessary.
+    // X and Y retain exactly the successful 03c outside-label strategy.
+    const sides=axis==='z'?[1,-1]:[1];
+    for(const side of sides){
+     const items=[];
+     for(const k of ticks){
+      const p=edgePoint(axis,fixed,k);
+      const x=p.x+nx*labelOffset*side;
+      const y=p.y+ny*labelOffset*side;
+      const box=bbox(k,x,y,tickSize);
+      if(p.visible&&fits(box)&&!reserved.some(r=>overlaps(box,r)))
+       items.push({value:String(k),x,y,size:tickSize,box});
+     }
+     if(items.length){
+      const insetPenalty=side<0?45:0;
+      const score=items.length*100+Math.min(len,500)*.08-insetPenalty;
+      options[axis].push({items,score});
+     }
+    }
+   }
+   options[axis].sort((a,b)=>b.score-a.score);
+  }
+  // There are at most three outside edges per axis: evaluate <=27 layouts.
+  // The joint choice avoids crowding at corners where numeric axes meet.
+  let best=null;
+  // Prefer a valid Z scale over extra X/Y labels. In the old layout
+  // Z could be silently omitted on both desktops and phones.
+  const candidates=axis=>[...(options[axis]||[]),{items:[],score:axis==='z'?-1000:-200}];
+  for(const x of candidates('x'))for(const y of candidates('y'))for(const z of candidates('z')){
+   const combined=[...x.items,...y.items,...z.items];
+   let clashes=0;
+   for(let i=0;i<combined.length;i++)for(let j=i+1;j<combined.length;j++)
+    if(overlaps(combined[i].box,combined[j].box))clashes++;
+   const score=x.score+y.score+z.score-clashes*180;
+   if(!best||score>best.score)best={score,axes:[x,y,z]};
+  }
+  const occupied=[...reserved];
+  const draw=(value,x,y,size,emph=false)=>{
+   ctx.font=`${emph?900:750} ${size}px system-ui, Arial, sans-serif`;
+   ctx.textAlign='center';ctx.textBaseline='middle';
+   ctx.lineJoin='round';ctx.strokeStyle='#ffffff';ctx.lineWidth=emph?4.5:3.8;
+   ctx.strokeText(value,x,y);
+   ctx.fillStyle=emph?'#152b40':'#273f55';ctx.fillText(value,x,y);
+  };
+  // Paint Z first so a neighboring X/Y tick cannot hide the entire Z scale.
+  if(best)for(const selected of [best.axes[2],best.axes[0],best.axes[1]])for(const item of selected.items){
+   if(occupied.some(r=>overlaps(item.box,r)))continue;
+   occupied.push(item.box);
+   draw(item.value,item.x,item.y,item.size);
+  }
+  for(const letter of letters)draw(letter.value,letter.x,letter.y,letter.size,true);
+ }
+  updateFit(geometry){
+    // Preserve the successful original scale for ordinary objects. For larger
+    // user-defined objects, fit their actual geometry rather than cutting off
+    // endpoints. Dragging never changes the camera scale mid-gesture.
+    if(this.drag?.handleId)return;
+    let extent=0;
+    const include=p=>{if(Array.isArray(p)&&p.length===3&&p.every(Number.isFinite))extent=Math.max(extent,Math.hypot(...p));};
+    for(const p of geometry?.points||[])include(p.xyz);
+    for(const h of geometry?.handles||[])include(h.position);
+    for(const l of geometry?.lines||[]){include(l.from);include(l.to);}
+    for(const f of geometry?.faces||[])for(const p of f.vertices||[])include(p);
+    this.fitHalf=Math.max(this.fitHalf,4.7,extent*1.12);
+  }
+  setGeometry(geometry){this.latestGeometry=geometry;this.updateFit(geometry);this.geo.update(geometry);this.updateFrustum();this.render();}
   screenPosition(pos){
     if(!Array.isArray(pos)||pos.length!==3||!pos.every(Number.isFinite))return null;
     const v=vector(pos).project(this.camera),w=this.renderer.domElement.clientWidth||this.root.clientWidth,h=this.renderer.domElement.clientHeight||this.root.clientHeight;
@@ -70,7 +227,7 @@ export class View3D {
     this.angles=angles.map(modAngle);this.updateCamera();if(notify)this.onCameraChanged?.(this);}
   changeAngles(axis,value){const next=this.angles.slice();next[axis]=modAngle(value);this.setAngles(next);}
   setRadius(radius,notify=true){this.radius=Math.min(200,Math.max(2,Number(radius)||14));this.updateCamera();if(notify)this.onCameraChanged?.(this);}
-  resetView(){this.radius=14;this.setAngles([35,20,25]);}
+  resetView(){this.radius=14;this.fitHalf=4.7;this.updateFit(this.latestGeometry);this.setAngles([35,20,25]);}
   setMode(mode){this.mode=mode;this.renderer.domElement.style.touchAction=mode==='off'?'pan-y':'none';}
   attachEvents(){
     const el=this.renderer.domElement;el.style.touchAction='pan-y';
@@ -146,5 +303,5 @@ export class View3D {
     this.editAxis=s.editAxis==='z'?'z':'xy';this.setMode(['off','view','edit'].includes(s.mode)?s.mode:'off');this.setAngles(s.angles,false);
   }
   dispose(){this.disposed=true;this.sizeObserver.disconnect();this.geo.dispose();this.staticGroup.traverse(o=>{o.geometry?.dispose();o.material?.dispose();});
-    this.renderer.dispose();this.renderer.domElement.remove();this.markerLayer.remove();}
+    this.renderer.dispose();this.renderer.domElement.remove();this.axisLabels.remove();this.markerLayer.remove();}
 }
