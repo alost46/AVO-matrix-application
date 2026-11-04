@@ -13,9 +13,13 @@ export class Picture {
     this.resetViewButton=el('button','small');this.resetViewButton.addEventListener('click',()=>this.view.resetView());tools.append(this.resetViewButton);
     if(config.matrixId){this.resetMatrixButton=el('button','small');this.resetMatrixButton.addEventListener('click',()=>app.resetMatrix(config.matrixId));tools.append(this.resetMatrixButton);}
     header.append(tools);
-    this.dataZone=el('section','matrix-zone');this.dataTitle=el('div','data-title');this.dataZone.append(this.dataTitle);
-    this.matrixRow=el('div','matrix-row');this.dataZone.append(this.matrixRow);
-    this.matrixTable=el('table','matrix-table');this.matrixTable.setAttribute('aria-label','Matrix');this.matrixRow.append(this.matrixTable);
+    this.dataZone=el('section','matrix-zone');this.hasMatrix=!!(config.matrixId||config.outputMatrixId);
+    if(this.hasMatrix){
+      this.dataTitle=el('div','data-title');this.dataZone.append(this.dataTitle);
+    }
+    this.matrixRow=el('div','matrix-row');
+    if(this.hasMatrix||config.orderSelect)this.dataZone.append(this.matrixRow);
+    if(this.hasMatrix){this.matrixTable=el('table','matrix-table');this.matrixTable.setAttribute('aria-label','Matrix');this.matrixRow.append(this.matrixTable);}
     if(config.orderSelect){
       this.orderWrapper=el('div');this.orderLabel=el('label');this.orderSelect=el('select','order-select');
       for(const v of ['BA','AB']){const o=el('option',null,v);o.value=v;this.orderSelect.append(o);}
@@ -43,11 +47,13 @@ export class Picture {
   get matrixName(){return this.config.matrixId||this.config.outputMatrixId||'result';}
   get numericMatrix(){
     const id=this.config.matrixId;
-    return id?this.app.matrixFactory.getNumericMatrix(id):this.result?.matrix;
+    return id?this.app.matrixFactory?.getNumericMatrix(id):this.result?.matrix;
   }
   buildMatrix(){
-    this.cells=[];this.matrixTable.replaceChildren();
-    const matrix=this.numericMatrix||[[0,0,0],[0,0,0],[0,0,0]];
+    this.cells=[];if(!this.hasMatrix)return;
+    this.matrixTable.replaceChildren();
+    const matrix=this.numericMatrix;
+    if(!matrix)return;
     for(let r=0;r<matrix.length;r++){
       const tr=el('tr');this.cells[r]=[];
       for(let c=0;c<matrix[r].length;c++){
@@ -66,7 +72,7 @@ export class Picture {
       this.matrixTable.append(tr);
     }
   }
-  renderMatrix(){const matrix=this.numericMatrix;if(!matrix)return;
+  renderMatrix(){if(!this.hasMatrix)return;const matrix=this.numericMatrix;if(!matrix)return;
     if(!this.cells.length||matrix.length!==this.cells.length){this.buildMatrix();}
     for(let r=0;r<matrix.length;r++)for(let c=0;c<matrix[r].length;c++){
       const input=this.cells[r]?.[c];if(!input)continue;
@@ -90,7 +96,8 @@ export class Picture {
   }
   renderLanguage(){
     const t=this.app.t.bind(this.app),m=this.app.msg.bind(this.app);
-    this.heading.textContent=m(this.config.titleKey);this.dataTitle.textContent=`${t('matrix')} ${this.config.matrixId||this.result?.label||this.config.displayName||this.id}`;
+    this.heading.textContent=m(this.config.titleKey);
+    if(this.dataTitle)this.dataTitle.textContent=`${t('matrix')} ${this.config.matrixId||this.result?.label||this.config.displayName||this.id}`;
     this.axisLabel.textContent=t('selectAxis');this.editLabel.textContent=t('selectDrag');
     this.fullButton.textContent=t('full');this.resetViewButton.textContent=t('resetView');
     if(this.resetMatrixButton)this.resetMatrixButton.textContent=`${this.app.lang==='ru'?'Сброс':this.app.lang==='he'?'אפס':'Reset'} ${this.config.matrixId}`;
@@ -104,8 +111,9 @@ export class Picture {
     this.renderMatrix();this.renderLanguage();
     this.metrics.replaceChildren();
     for(const metric of this.result.metrics||[]){const p=el('div','metric');p.textContent=`${this.app.t(metric.key)||metric.key}: ${metric.value}`;this.metrics.append(p);}
-    this.formula.textContent=this.result.formula?(this.result.formulaLabel?this.app.t(this.result.formulaLabel)+': ':'')+this.result.formula:'';
-    this.endInfo.textContent=this.app.msg(this.config.descriptionKey)||'';
+    const formulas=this.result.formulas||[];
+    this.formula.textContent=[this.result.formula?(this.result.formulaLabel?this.app.t(this.result.formulaLabel)+': ':'')+this.result.formula:null,...formulas.map(f=>typeof f==='string'?f:`${this.app.t(f.key)}: ${f.value}`)].filter(Boolean).join(' · ');
+    this.endInfo.textContent=this.config.descriptionKey?(this.app.msg(this.config.descriptionKey)||''):'';
   }
   state(){return this.view.state();}
   applyState(state){this.view.applyState(state);this.renderControls();}

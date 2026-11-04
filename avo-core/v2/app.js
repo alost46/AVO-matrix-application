@@ -3,11 +3,27 @@ import {MatrixFactory,clone,validateMatrix,identity} from './matrices.js';
 import {Picture} from './picture.js';
 import {UI,LANGS,readLang,saveLang,flag,textDirection} from './i18n.js';
 const element=(tag,cls,text)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=text;return n;};
+// Old 01a apps passed {A: matrix, B: matrix}; 01b also accepts arbitrary data.
+const legacyMatrices=data=>Object.keys(data||{}).length>0&&Object.values(data).every(m=>Array.isArray(m)&&Array.isArray(m[0])&&m[0].every(Number.isFinite));
+function sameShape(template,data,depth=0){
+ if(depth>16)return false;
+ if(typeof template==='number')return typeof data==='number'&&Number.isFinite(data);
+ if(template===null)return data===null;
+ if(Array.isArray(template))return Array.isArray(data)&&template.length===data.length&&template.every((v,i)=>sameShape(v,data[i],depth+1));
+ if(typeof template==='object')return !!data&&typeof data==='object'&&!Array.isArray(data)&&Object.keys(template).length===Object.keys(data).length&&Object.keys(template).every(k=>Object.hasOwn(data,k)&&sameShape(template[k],data[k],depth+1));
+ return typeof data===typeof template;
+}
+
 export class AVOApp {
  constructor(options){
   this.options=options;this.appId=options.appId;this.lang=readLang();textDirection(this.lang);
-  this.matrixFactory=new MatrixFactory(options.initialInputs);
-  this.order='BA';this.layout=3;this.shared=false;this.viewsCache={};this.history=[];this.future=[];this.pending=null;
+  const initial=options.initialInputs||{};
+  this.generic=!legacyMatrices(initial);
+  this.initialData=this.generic?clone(initial):null;
+  this.currentData=this.generic?clone(initial):null;
+  this.matrixFactory=this.generic?(initial.matrices?new MatrixFactory(initial.matrices):null):new MatrixFactory(initial);
+  this.layouts=options.layoutOptions||[2,3,4];
+  this.order='BA';this.layout=this.layouts.includes(3)?3:this.layouts[0];this.shared=false;this.viewsCache={};this.history=[];this.future=[];this.pending=null;
   this.pictures=new Map();this.storageKey=`avo-core-v2:${this.appId}:state-v2`;
   this.root=document.getElementById(options.mountId||'app');if(!this.root)throw new Error('Missing #app');
   this.buildShell();this.restoreLocal();this.buildPictures();this.compute();this.refreshShell();this.notify('notice');
@@ -35,7 +51,7 @@ export class AVOApp {
     catch(e){console.error(e);this.notify('badFile',true);}
     finally{this.fileInput.value='';}
   });this.toolbar.append(this.fileInput);this.note=element('output','status');this.note.setAttribute('role','status');this.toolbar.append(this.note);
-  const opts=element('div','options');this.layoutLabel=element('label');this.layoutSelect=element('select');for(const n of [2,3,4]){const o=element('option',null,String(n));o.value=String(n);this.layoutSelect.append(o);}
+  const opts=element('div','options');this.layoutLabel=element('label');this.layoutSelect=element('select');for(const n of this.layouts){const o=element('option',null,String(n));o.value=String(n);this.layoutSelect.append(o);}
   this.layoutSelect.addEventListener('change',()=>this.setLayout(Number(this.layoutSelect.value)));this.layoutLabel.append(this.layoutSelect);opts.append(this.layoutLabel);
   this.syncLabel=element('label');this.syncCheck=element('input');this.syncCheck.type='checkbox';this.syncCheck.addEventListener('change',()=>this.setShared(this.syncCheck.checked));this.syncText=element('span');this.syncLabel.append(this.syncCheck,this.syncText);opts.append(this.syncLabel);
   this.lead=element('p','tip');opts.append(this.lead);
@@ -66,11 +82,22 @@ export class AVOApp {
   const url=URL.createObjectURL(file),a=element('a');a.href=url;a.download=`${this.appId}_state_v2.json`;
   document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),5000);this.notify('saved');
  }
- resetAll(){this.applyChange(()=>{for(const name of Object.keys(this.matrixFactory.current))this.matrixFactory.resetMatrix(name);this.order='BA';});}
- resetMatrix(name){this.applyChange(()=>this.matrixFactory.resetMatrix(name));}
- startOver(){this.applyChange(()=>{this.matrixFactory.startOver();this.order='BA';for(const p of this.pictures.values())p.applyState({angles:[35,20,25],radius:14,mode:'off',axis:'free',editAxis:'xy'});});}
+ resetAll(){this.applyChange(()=>{
+   if(this.generic){
+     if(this.options.mathModel.resetInputs)this.options.mathModel.resetInputs(this.currentData);
+     else this.currentData=clone(this.initialData);
+     if(this.matrixFactory){this.matrixFactory.setCurrent(this.currentData.matrices);}
+   }else for(const name of Object.keys(this.matrixFactory.current))this.matrixFactory.resetMatrix(name);
+   this.order='BA';
+ });}
+ resetMatrix(name){if(!this.matrixFactory)return;this.applyChange(()=>{this.matrixFactory.resetMatrix(name);this.syncMatrices();});}
+ startOver(){this.applyChange(()=>{
+   if(this.generic){this.currentData=clone(this.initialData);if(this.matrixFactory)this.matrixFactory.setCurrent(this.currentData.matrices);}
+   else this.matrixFactory.startOver();
+   this.order='BA';for(const p of this.pictures.values())p.applyState({angles:[35,20,25],radius:14,mode:'off',axis:'free',editAxis:'xy'});
+ });}
  setOrder(order){if(!['AB','BA'].includes(order))return;this.applyChange(()=>{this.order=order;});}
- setLayout(n){if(![2,3,4].includes(n))return;this.applyChange(()=>{this.layout=n;this.buildPictures();});}
+ setLayout(n){if(!this.layouts.includes(n))return;this.applyChange(()=>{this.layout=n;this.buildPictures();});}
  setShared(value){this.shared=!!value;if(this.shared){const source=this.pictures.values().next().value;
    if(source)this.cameraChanged(source);
   }this.refreshShell();this.autosave();}
@@ -87,40 +114,62 @@ export class AVOApp {
   if(this.shared){const source=this.pictures.values().next().value;if(source)this.cameraChanged(source);}
   this.refreshShell();
  }
+ syncMatrices(){if(this.generic&&this.matrixFactory)this.currentData.matrices=clone(this.matrixFactory.current);}
+ currentInputs(){return this.generic?this.currentData:this.matrixFactory.current;}
+ initialInputs(){return this.generic?this.initialData:this.matrixFactory.initial;}
+ restoreInputs(initial,current){
+   if(this.generic){this.initialData=clone(initial);this.currentData=clone(current);
+     if(this.matrixFactory){this.matrixFactory.initial=clone(initial.matrices);this.matrixFactory.setCurrent(current.matrices);}}
+   else{this.matrixFactory.initial=clone(initial);this.matrixFactory.setCurrent(current);}
+ }
  compute(){
   let result;
-  try{result=this.options.mathModel.calculate({getNumericMatrix:(name,ctx)=>this.matrixFactory.getNumericMatrix(name,ctx),inputs:clone(this.matrixFactory.current),parameters:{order:this.order},t:0});}
-  catch(e){console.error('Math model failed',e);this.note.textContent=e.message;return;}
+  try{
+    this.syncMatrices();
+    const context={inputs:clone(this.currentInputs()),parameters:{order:this.order},t:0};
+    if(this.matrixFactory)context.getNumericMatrix=(name,ctx)=>this.matrixFactory.getNumericMatrix(name,ctx);
+    result=this.options.mathModel.calculate(context);
+  }catch(e){console.error('Math model failed',e);this.note.textContent=e.message;return;}
   for(const [id,picture] of this.pictures)pictureSafe(picture,result.pictures?.[id]);
   this.lastResult=result;this.refreshHistory();
  }
- setCell(name,row,col,n){if(!Number.isFinite(n))return;this.beginGesture();
+ setCell(name,row,col,n){if(!Number.isFinite(n)||!this.matrixFactory)return;this.beginGesture();
   if(this.matrixFactory.setCell(name,row,col,n)){this.compute();this.autosave();}
  }
- moveHandle(binding,pos){if(binding?.type!=='matrixColumn'||!this.matrixFactory.current[binding.matrixId])return false;
-  this.beginGesture();if(!this.matrixFactory.setColumn(binding.matrixId,binding.column,pos))return false;
-  this.compute();this.autosave();return true;
+ moveHandle(binding,pos){if(!binding||!Array.isArray(pos)||pos.length!==3||!pos.every(Number.isFinite))return false;
+  let changed=false;
+  if(binding.type==='matrixColumn'&&this.matrixFactory?.current[binding.matrixId]){
+    this.beginGesture();changed=this.matrixFactory.setColumn(binding.matrixId,binding.column,pos);this.syncMatrices();
+  }else if(this.generic&&typeof this.options.mathModel.moveHandle==='function'){
+    this.beginGesture();const before=clone(this.currentData);
+    try{changed=this.options.mathModel.moveHandle({inputs:this.currentData,binding,position:pos})!==false;
+      if(!sameShape(this.initialData,this.currentData)){this.currentData=before;changed=false;}}
+    catch(e){console.warn('Handle edit rejected',e);this.currentData=before;changed=false;}
+  }
+  if(changed){this.compute();this.autosave();}return changed;
  }
  serialize(){
   const views={...clone(this.viewsCache)};for(const p of this.pictures.values())views[p.id]=p.state();
-  return {schemaVersion:2,appId:this.appId,initialInputs:clone(this.matrixFactory.initial),inputs:clone(this.matrixFactory.current),order:this.order,layout:this.layout,shared:this.shared,lang:this.lang,views};
+  return {schemaVersion:2,appId:this.appId,initialInputs:clone(this.initialInputs()),inputs:clone(this.currentInputs()),order:this.order,layout:this.layout,shared:this.shared,lang:this.lang,views};
  }
  applySaved(state,fromFile=false){
   this.validateSaved(state);this.beginGesture();
-  this.matrixFactory.initial=clone(state.initialInputs);this.matrixFactory.setCurrent(state.inputs);
+  this.restoreInputs(state.initialInputs,state.inputs);
   this.order=state.order;this.layout=state.layout;this.shared=!!state.shared;this.viewsCache=clone(state.views||{});
   this.lang=state.lang;textDirection(this.lang);saveLang(this.lang);this.buildPictures(false);this.compute();this.refreshShell();this.autosave();
  }
  validateSaved(s){
-  if(!s||s.schemaVersion!==2||s.appId!==this.appId||![2,3,4].includes(s.layout)||!['AB','BA'].includes(s.order)||!LANGS.includes(s.lang))throw Error('Schema mismatch');
-  for(const [name,original] of Object.entries(this.options.initialInputs)){
+  if(!s||s.schemaVersion!==2||s.appId!==this.appId||!this.layouts.includes(s.layout)||!['AB','BA'].includes(s.order)||!LANGS.includes(s.lang))throw Error('Schema mismatch');
+  if(this.generic){
+    if(!sameShape(this.options.initialInputs||{},s.inputs)||!sameShape(this.options.initialInputs||{},s.initialInputs))throw Error('Invalid object inputs');
+  }else for(const [name,original] of Object.entries(this.options.initialInputs)){
     if(!validateMatrix(s.inputs?.[name],original.length,original[0].length)||!validateMatrix(s.initialInputs?.[name],original.length,original[0].length))throw Error('Invalid matrix');
   }
   if(s.views&& (typeof s.views!=='object'||Array.isArray(s.views)||Object.keys(s.views).length>50))throw Error('Bad views');
  }
  restoreLocal(){
   try{const raw=localStorage.getItem(this.storageKey);if(!raw)return;const state=JSON.parse(raw);this.validateSaved(state);
-    this.matrixFactory.initial=clone(state.initialInputs);this.matrixFactory.setCurrent(state.inputs);
+    this.restoreInputs(state.initialInputs,state.inputs);
     this.order=state.order;this.layout=state.layout;this.shared=!!state.shared;this.viewsCache=clone(state.views||{});
     // ?lang=... from home must override saved application's lang.
     if(!new URLSearchParams(location.search).has('lang')){this.lang=state.lang;textDirection(this.lang);}
@@ -138,7 +187,7 @@ export class AVOApp {
  applyChange(action){this.beginGesture();action();this.compute();this.finishGesture();this.refreshShell();}
  undo(){this.finishGesture();if(!this.history.length)return;const past=this.history.pop();this.future.push(this.serialize());this.restoreHistory(past);this.refreshHistory();}
  redo(){this.finishGesture();if(!this.future.length)return;const future=this.future.pop();this.history.push(this.serialize());this.restoreHistory(future);this.refreshHistory();}
- restoreHistory(state){this.matrixFactory.initial=clone(state.initialInputs);this.matrixFactory.setCurrent(state.inputs);
+ restoreHistory(state){this.restoreInputs(state.initialInputs,state.inputs);
   this.order=state.order;this.layout=state.layout;this.shared=!!state.shared;this.viewsCache=clone(state.views||{});
   this.buildPictures(false);this.compute();this.refreshShell();this.autosave();}
  refreshHistory(){if(this.buttons?.undo)this.buttons.undo.disabled=this.history.length===0;

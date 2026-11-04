@@ -1,8 +1,9 @@
-/* AVO Core v2 · universal geometry conversion: points, segments, triangle faces, editable handles. */
+/* AVO Core v2 01b · model-independent lines, faces, points and editable handles.
+   Handles are descriptors; View3D positions fixed-pixel DOM circles over the WebGL view. */
 import * as THREE from 'three';
 const palette=[0xf02a28,0xc6a77d,0x80c92f,0x348dc1,0xa264cb,0xeea929];
-export function matrixGeometry(matrix, matrixId=null){
-  const origin=[0,0,0], points=[],lines=[],handles=[];
+export function matrixGeometry(matrix,matrixId=null){
+  const origin=[0,0,0],points=[],lines=[],handles=[];
   for(let c=0;c<3;c++){
     const end=[matrix[0][c],matrix[1][c],matrix[2][c]];
     points.push({id:`v${c+1}`,xyz:end,color:palette[c],label:`${c+1}`});
@@ -11,15 +12,15 @@ export function matrixGeometry(matrix, matrixId=null){
   }
   return {points,lines,faces:[],handles};
 }
+function validPoint(p){return Array.isArray(p)&&p.length===3&&p.every(Number.isFinite);}
 export class GeometryLayer {
-  constructor(scene){this.scene=scene;this.group=new THREE.Group();scene.add(this.group);this.hit=[];}
+  constructor(scene){this.scene=scene;this.group=new THREE.Group();scene.add(this.group);this.handles=[];}
   clear(){
     this.group.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material){const mats=Array.isArray(o.material)?o.material:[o.material];mats.forEach(m=>m.dispose());}});
-    this.scene.remove(this.group);this.group=new THREE.Group();this.scene.add(this.group);this.hit=[];
+    this.scene.remove(this.group);this.group=new THREE.Group();this.scene.add(this.group);this.handles=[];
   }
-  update(data={}) {
-    this.clear();
-    const add=o=>this.group.add(o);
+  update(data={}){
+    this.clear();const add=o=>this.group.add(o);
     for(const line of data.lines||[]){
       if(!validPoint(line.from)||!validPoint(line.to))continue;
       const g=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(...line.from),new THREE.Vector3(...line.to)]);
@@ -33,17 +34,15 @@ export class GeometryLayer {
     }
     for(const p of data.points||[]){
       if(!validPoint(p.xyz))continue;
-      const g=new THREE.SphereGeometry(.055,12,8),m=new THREE.MeshBasicMaterial({color:p.color??0x275da1});
-      const point=new THREE.Mesh(g,m);point.position.fromArray(p.xyz);add(point);
+      // An editable point already has a fixed-pixel circle. A second 3D sphere
+      // at the same location could still grow into a large disk near the camera.
+      if((data.handles||[]).some(h=>validPoint(h.position)&&h.position.every((v,i)=>v===p.xyz[i])))continue;
+      const point=new THREE.Mesh(new THREE.SphereGeometry(.055,12,8),new THREE.MeshBasicMaterial({color:p.color??0x275da1}));
+      point.position.fromArray(p.xyz);add(point);
     }
-    for(const handle of data.handles||[]){
-      if(!validPoint(handle.position))continue;
-      const color=handle.color??0x265fb1;
-      const rim=new THREE.Mesh(new THREE.SphereGeometry(.19,16,12),new THREE.MeshBasicMaterial({color}));
-      const white=new THREE.Mesh(new THREE.SphereGeometry(.128,16,12),new THREE.MeshBasicMaterial({color:0xffffff}));
-      rim.add(white);rim.position.fromArray(handle.position);rim.userData.handle=handle;add(rim);this.hit.push(rim);
-    }
+    // Do not use perspective-sized spheres for handles: they can become huge disks.
+    // Their identity and binding survive scene rebuilds via stable ids.
+    this.handles=(data.handles||[]).filter(h=>validPoint(h.position)&&h.id&&h.binding);
   }
   dispose(){this.clear();this.scene.remove(this.group);}
 }
-function validPoint(p){return Array.isArray(p)&&p.length===3&&p.every(Number.isFinite);}
