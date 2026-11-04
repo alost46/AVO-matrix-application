@@ -34,7 +34,7 @@
 
 /* 01d. Compact single-line view control band and unified edit/view toggle. */
 .picture .panel-tools{gap:5px;align-items:center}
-.picture .panel-tools .edit-tools{display:inline-flex;gap:4px;align-items:center;background:transparent;padding:0;margin:0}
+.picture .panel-tools .gesture-tools{display:inline-flex;gap:4px;align-items:center;background:transparent;padding:0;margin:0}
 .picture .panel-tools button{font-size:15px;font-weight:750}
 .picture .panel-tools button.small{font-size:15px;font-weight:750}
 .picture .view-opts{display:block;padding:4px 7px}
@@ -65,3 +65,13 @@
  .picture .view-opts .axis-tools button.small{min-width:27px;min-height:30px;font-size:13px;padding:3px}
  .picture .panel-tools button,.picture .panel-tools button.small{font-size:14px;font-weight:750}
 }
+
+/* 01e: invariant view-gesture buttons in all pictures, regardless of editability. */
+.picture .panel-tools .gesture-tools{flex:0 0 auto}
+.picture .panel-tools .gesture-tools button{min-width:31px}
+
+/* 01e: the two control rows are structurally identical in object/result. */
+.picture .panel-tools{display:flex;flex-direction:column;align-items:flex-start;gap:4px}
+.picture .panel-tools .primary-tools,.picture .panel-tools .gesture-row{display:flex;gap:5px;align-items:center;flex-wrap:wrap;width:100%}
+.picture .panel-tools .gesture-row{min-height:31px}
+.picture .panel-tools .gesture-row .gesture-tools{display:inline-flex;align-items:center;gap:4px;flex-wrap:nowrap}

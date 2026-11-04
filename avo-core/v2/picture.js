@@ -8,21 +8,23 @@ export class Picture {
     this.app=app;this.config=config;this.id=config.id;this.root=el('section','picture');this.root.dataset.picture=this.id;
     const header=el('div','picture-header');this.heading=el('h2');header.append(this.heading);
     const tools=el('div','panel-tools');
+    const mainTools=el('div','primary-tools');const gestureRow=el('div','gesture-row');
     // Editable pictures use one button: Edit turns both editing AND view gestures on/off.
-    if(config.editable){this.editButton=el('button');this.editButton.addEventListener('click',()=>this.switchEdit());tools.append(this.editButton);}
-    else {this.viewButton=el('button');this.viewButton.addEventListener('click',()=>this.switchView());tools.append(this.viewButton);}
-    this.fullButton=el('button','small');this.fullButton.addEventListener('click',()=>this.toggleFull());tools.append(this.fullButton);
-    this.resetViewButton=el('button','small');this.resetViewButton.addEventListener('click',()=>this.view.resetView());tools.append(this.resetViewButton);
-    // XY/Z belongs next to Reset A (or Reset B), not in a separate row.
-    if(config.editable){
-      this.editTools=el('div','edit-tools');this.editTools.setAttribute('role','group');this.editButtons={};
-      for(const axis of ['xy','z']){const b=el('button','small',axis==='xy'?'XY':'Z');
-        b.addEventListener('click',()=>{this.view.editAxis=axis;this.renderControls();this.app.autosave();});
-        this.editTools.append(b);this.editButtons[axis]=b;}
-      tools.append(this.editTools);
+    if(config.editable){this.editButton=el('button');this.editButton.addEventListener('click',()=>this.switchEdit());mainTools.append(this.editButton);}
+    else {this.viewButton=el('button');this.viewButton.addEventListener('click',()=>this.switchView());mainTools.append(this.viewButton);}
+    this.fullButton=el('button','small');this.fullButton.addEventListener('click',()=>this.toggleFull());mainTools.append(this.fullButton);
+    this.resetViewButton=el('button','small');this.resetViewButton.addEventListener('click',()=>this.view.resetView());mainTools.append(this.resetViewButton);
+    // All pictures have exactly the same view controls, including XY/Z.
+    // Whether a picture has editable handles never affects view gesture controls.
+    this.gestureTools=el('div','gesture-tools');this.gestureTools.setAttribute('role','group');this.gestureButtons={};
+    for(const axis of ['xy','z']){
+      const b=el('button','small',axis==='xy'?'XY':'Z');
+      b.addEventListener('click',()=>{this.view.dragAxis=axis;this.renderControls();this.app.autosave();});
+      this.gestureTools.append(b);this.gestureButtons[axis]=b;
     }
-    if(config.matrixId){this.resetMatrixButton=el('button','small');this.resetMatrixButton.addEventListener('click',()=>app.resetMatrix(config.matrixId));tools.append(this.resetMatrixButton);}
-    header.append(tools);
+    gestureRow.append(this.gestureTools);
+    if(config.matrixId){this.resetMatrixButton=el('button','small');this.resetMatrixButton.addEventListener('click',()=>app.resetMatrix(config.matrixId));gestureRow.append(this.resetMatrixButton);}
+    tools.append(mainTools,gestureRow);header.append(tools);
     this.dataZone=el('section','matrix-zone');this.hasMatrix=!!(config.matrixId||config.outputMatrixId);
     if(this.hasMatrix){
       this.dataTitle=el('div','data-title');this.dataZone.append(this.dataTitle);
@@ -38,7 +40,11 @@ export class Picture {
     this.metrics=el('div','metrics');this.formula=el('div','formula');this.dataZone.append(this.metrics,this.formula);
     this.viewOpts=el('div','view-opts');const axisRow=el('div','angle-row');
     this.axisLabel=el('span','tip axis-label');axisRow.append(this.axisLabel);
-    const raysArea=el('div','rays');this.setRays=buildRays(raysArea,(index,value)=>this.view.changeAngles(index,value));axisRow.append(raysArea);
+    const raysArea=el('div','rays');this.setRays=buildRays(raysArea,(index,value)=>{
+      // Ray selector applies to ray adjustment, never to free-area drag.
+      const axis=['x','y','z'][index];
+      if(this.view.axis==='free'||this.view.axis===axis)this.view.changeAngles(index,value);
+    });axisRow.append(raysArea);
     this.axisButtons={};const axisTools=el('div','axis-tools');
     for(const axis of ['free','x','y','z']){
       const b=el('button','small axis-btn',axis==='free'?'◎':axis.toUpperCase());b.addEventListener('click',()=>{this.view.axis=axis;this.renderControls();this.app.autosave();});axisTools.append(b);this.axisButtons[axis]=b;
@@ -95,9 +101,11 @@ export class Picture {
     const tr=this.app.t.bind(this.app);
     if(this.viewButton){this.viewButton.textContent=tr('view');this.viewButton.classList.toggle('active',this.view.mode!=='off');this.viewButton.setAttribute('aria-pressed',String(this.view.mode!=='off'));}
     if(this.editButton){this.editButton.textContent=tr('edit');this.editButton.classList.toggle('active',this.view.mode==='edit');this.editButton.setAttribute('aria-pressed',String(this.view.mode==='edit'));}
-    if(this.editTools){
-      this.editTools.setAttribute('aria-label',tr('selectDrag'));
-      for(const [name,button] of Object.entries(this.editButtons)){button.classList.toggle('active',name===this.view.editAxis);button.setAttribute('aria-pressed',String(name===this.view.editAxis));button.title=tr('selectDrag')+' '+name.toUpperCase();}
+    this.gestureTools.setAttribute('aria-label',tr('gestureDrag'));
+    for(const [name,button] of Object.entries(this.gestureButtons)){
+      button.classList.toggle('active',name===this.view.dragAxis);
+      button.setAttribute('aria-pressed',String(name===this.view.dragAxis));
+      button.title=tr(name==='xy'?'gestureXY':'gestureZ');
     }
     for(const [name,button] of Object.entries(this.axisButtons))button.classList.toggle('active',name===this.view.axis);
     this.plotCaption.textContent=tr(this.view.mode==='edit'?'statusEdit':this.view.mode==='view'?'statusView':'statusOff');

@@ -9,7 +9,7 @@ const colorCode=n=>'#'+(n??0x265fb1).toString(16).padStart(6,'0');
 export class View3D {
   constructor(root,onCameraChanged,onHandleMove,onHandleEnd){
     this.root=root;this.onCameraChanged=onCameraChanged;this.onHandleMove=onHandleMove;this.onHandleEnd=onHandleEnd;
-    this.angles=[35,20,25];this.radius=14;this.fitHalf=4.7;this.latestGeometry=null;this.mode='off';this.axis='free';this.editAxis='xy';this.target=new THREE.Vector3();
+    this.angles=[35,20,25];this.radius=14;this.fitHalf=4.7;this.latestGeometry=null;this.mode='off';this.axis='free';this.dragAxis='xy';this.editAxis='xy';this.target=new THREE.Vector3();
     this.scene=new THREE.Scene();this.scene.background=new THREE.Color(0xffffff);
     this.camera=new THREE.OrthographicCamera(-4.7,4.7,4.7,-4.7,.08,3000);
     this.renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'low-power'});
@@ -263,7 +263,10 @@ export class View3D {
     // Project local unit vectors. Never divide by ray/plane incidence angle.
     const projection=(axis)=>{const q=pos.slice();q[axis]+=1;const p=this.screenPosition(q);return p?[p[0]-base[0],p[1]-base[1]]:[0,0];};
     const jx=projection(0),jy=projection(1),jz=projection(2);
-    if(this.editAxis==='xy'){
+    // Editing endpoints is separate from XY/Z VIEW gestures.
+    // Existing saved endpoint-edit mode is preserved. Shift+drag on a marker
+    // temporarily edits its Z-coordinate without changing the view mode.
+    if(this.editAxis==='xy'&&!e.shiftKey){
       const [a,b]=solveXY(jx,jy,dx,dy);pos[0]+=a;pos[1]+=b;
     }else{
       pos[2]+=solveZ(jz,dx,dy,Math.max(Math.hypot(...jx),Math.hypot(...jy)));
@@ -280,12 +283,11 @@ export class View3D {
     const dx=e.clientX-prev.x,dy=e.clientY-prev.y;
     if(drag.handleId)this.moveHandle(e,drag,dx,dy);
     else{
+      // XY/Z view gestures are identical for editable and calculated pictures.
+      // Ray-axis selector (this.axis) is independent of free-area drag mode.
       const next=this.angles.slice();
-      if(this.axis==='x')next[0]+=dy*.53;
-      else if(this.axis==='y')next[1]+=dx*.53;
-      else if(this.axis==='z')next[2]+=(dx-dy)*.45;
-      else if(e.shiftKey)next[2]+=(dx-dy)*.45;
-      else{next[0]+=dy*.43;next[1]+=dx*.43;}
+      if(this.dragAxis==='z'||e.shiftKey)next[2]+=(dx-dy)*.45;
+      else {next[0]+=dy*.43;next[1]+=dx*.43;}
       this.setAngles(next);
     }
     e.preventDefault();
@@ -297,9 +299,11 @@ export class View3D {
     if(this.pointers.size<2)this.pinchDistance=null;
     try{if(this.renderer.domElement.hasPointerCapture?.(e.pointerId))this.renderer.domElement.releasePointerCapture(e.pointerId);}catch(_){}
   }
-  state(){return {angles:this.angles.slice(),radius:this.radius,mode:this.mode,axis:this.axis,editAxis:this.editAxis};}
+  state(){return {angles:this.angles.slice(),radius:this.radius,mode:this.mode,axis:this.axis,dragAxis:this.dragAxis,editAxis:this.editAxis};}
   applyState(s){if(!s||!Array.isArray(s.angles)||s.angles.length!==3||!s.angles.every(Number.isFinite))return;
     this.radius=Math.min(200,Math.max(2,Number(s.radius)||14));this.axis=['free','x','y','z'].includes(s.axis)?s.axis:'free';
+    // Old JSON states only contained editAxis. Preserve them on load.
+    this.dragAxis=(s.dragAxis==='xy'||s.dragAxis==='z')?s.dragAxis:(s.editAxis==='z'?'z':'xy');
     this.editAxis=s.editAxis==='z'?'z':'xy';this.setMode(['off','view','edit'].includes(s.mode)?s.mode:'off');this.setAngles(s.angles,false);
   }
   dispose(){this.disposed=true;this.sizeObserver.disconnect();this.geo.dispose();this.staticGroup.traverse(o=>{o.geometry?.dispose();o.material?.dispose();});
