@@ -26,7 +26,12 @@ export class AVOApp {
   this.order='BA';this.initialLayout=this.layouts.includes(3)?3:this.layouts[0];this.layout=this.initialLayout;this.shared=false;this.viewsCache={};this.history=[];this.future=[];this.pending=null;
   this.pictures=new Map();this.storageKey=`avo-core-v2:${this.appId}:state-v2`;
   this.root=document.getElementById(options.mountId||'app');if(!this.root)throw new Error('Missing #app');
-  this.buildShell();this.restoreLocal();this.buildPictures();this.compute();this.refreshShell();this.notify('notice');
+  this.buildShell();this.restoreLocal();
+  // Every new page session starts with View/Edit OFF, even if autosave
+  // remembers that a control was active in the previous session.
+  // Keep angles, zoom, axis choices and all mathematical inputs intact.
+  for(const state of Object.values(this.viewsCache))if(state&&typeof state==='object')state.mode='off';
+  this.buildPictures();this.compute();this.refreshShell();this.notify('notice');
   window.addEventListener('pagehide',()=>this.autosave());
  }
  t(key){return UI[this.lang]?.[key]??key;}

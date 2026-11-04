@@ -55,7 +55,7 @@ export class View3D {
   }
   updateCamera(){
     const q=new THREE.Quaternion().setFromEuler(new THREE.Euler(...this.angles.map(a=>a*RAD),'XYZ'));
-    this.camera.position.copy(this.target).add(new THREE.Vector3(0,0,this.radius).applyQuaternion(q));
+    this.camera.position.copy(this.target).add(new THREE.Vector3(0,0,Math.max(30,this.radius)).applyQuaternion(q));
     this.camera.up.copy(new THREE.Vector3(0,1,0).applyQuaternion(q));
     this.camera.lookAt(this.target);this.updateFrustum();this.render();
   }
@@ -238,7 +238,7 @@ export class View3D {
   setAngles(angles,notify=true){if(!Array.isArray(angles)||angles.length!==3||!angles.every(Number.isFinite))return;
     this.angles=angles.map(modAngle);this.updateCamera();if(notify)this.onCameraChanged?.(this);}
   changeAngles(axis,value){const next=this.angles.slice();next[axis]=modAngle(value);this.setAngles(next);}
-  setRadius(radius,notify=true){this.radius=Math.min(200,Math.max(2,Number(radius)||14));this.updateCamera();if(notify)this.onCameraChanged?.(this);}
+  setRadius(radius,notify=true){this.radius=Math.min(200,Math.max(0.75,Number(radius)||14));this.updateCamera();if(notify)this.onCameraChanged?.(this);}
   resetView(){this.radius=14;this.fitHalf=4.7;this.updateFit(this.latestGeometry);this.setAngles([35,20,25]);}
   setMode(mode){this.mode=mode;this.checkMarkerOverlap();const action=mode==='off'?'pan-y':'none';this.renderer.domElement.style.touchAction=action;this.root.style.touchAction=action;}
   attachEvents(){
@@ -355,7 +355,7 @@ export class View3D {
   }
   state(){return {angles:this.angles.slice(),radius:this.radius,mode:this.mode,axis:this.axis,dragAxis:this.dragAxis,editAxis:this.editAxis};}
   applyState(s){if(!s||!Array.isArray(s.angles)||s.angles.length!==3||!s.angles.every(Number.isFinite))return;
-    this.radius=Math.min(200,Math.max(2,Number(s.radius)||14));this.axis=['free','x','y','z'].includes(s.axis)?s.axis:'free';
+    this.radius=Math.min(200,Math.max(0.75,Number(s.radius)||14));this.axis=['free','x','y','z'].includes(s.axis)?s.axis:'free';
     // Old JSON states only contained editAxis. Preserve them on load.
     this.dragAxis=(s.dragAxis==='xy'||s.dragAxis==='z')?s.dragAxis:(s.editAxis==='z'?'z':'xy');
     this.editAxis=s.editAxis==='z'?'z':'xy';this.setMode(['off','view','edit'].includes(s.mode)?s.mode:'off');this.setAngles(s.angles,false);
