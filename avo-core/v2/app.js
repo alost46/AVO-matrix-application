@@ -23,7 +23,7 @@ export class AVOApp {
   this.currentData=this.generic?clone(initial):null;
   this.matrixFactory=this.generic?(initial.matrices?new MatrixFactory(initial.matrices):null):new MatrixFactory(initial);
   this.layouts=options.layoutOptions||[2,3,4];
-  this.order='BA';this.layout=this.layouts.includes(3)?3:this.layouts[0];this.shared=false;this.viewsCache={};this.history=[];this.future=[];this.pending=null;
+  this.order='BA';this.initialLayout=this.layouts.includes(3)?3:this.layouts[0];this.layout=this.initialLayout;this.shared=false;this.viewsCache={};this.history=[];this.future=[];this.pending=null;
   this.pictures=new Map();this.storageKey=`avo-core-v2:${this.appId}:state-v2`;
   this.root=document.getElementById(options.mountId||'app');if(!this.root)throw new Error('Missing #app');
   this.buildShell();this.restoreLocal();this.buildPictures();this.compute();this.refreshShell();this.notify('notice');
@@ -51,8 +51,8 @@ export class AVOApp {
     catch(e){console.error(e);this.notify('badFile',true);}
     finally{this.fileInput.value='';}
   });this.toolbar.append(this.fileInput);this.note=element('output','status');this.note.setAttribute('role','status');this.toolbar.append(this.note);
-  const opts=element('div','options');this.layoutLabel=element('label');this.layoutSelect=element('select');for(const n of this.layouts){const o=element('option',null,String(n));o.value=String(n);this.layoutSelect.append(o);}
-  this.layoutSelect.addEventListener('change',()=>this.setLayout(Number(this.layoutSelect.value)));this.layoutLabel.append(this.layoutSelect);opts.append(this.layoutLabel);
+  // Layout count is defined by the app. There is deliberately no user-facing 'Pictures' selector.
+  const opts=element('div','options');
   this.syncLabel=element('label');this.syncCheck=element('input');this.syncCheck.type='checkbox';this.syncCheck.addEventListener('change',()=>this.setShared(this.syncCheck.checked));this.syncText=element('span');this.syncLabel.append(this.syncCheck,this.syncText);opts.append(this.syncLabel);
   this.lead=element('p','tip');opts.append(this.lead);
   this.grid=element('div','layout');this.footer=element('p','tip');
@@ -64,8 +64,6 @@ export class AVOApp {
   this.helpButton.title=this.t('help');this.helpButton.setAttribute('aria-label',this.t('help'));
   for(const [name,button] of Object.entries(this.buttons))button.textContent=this.t(name);
   for(const [lang,b] of Object.entries(this.flagButtons)){b.classList.toggle('active',lang===this.lang);b.setAttribute('aria-pressed',String(lang===this.lang));}
-  this.layoutLabel.childNodes[0] && this.layoutLabel.childNodes[0].nodeType===3 && this.layoutLabel.childNodes[0].remove();
-  this.layoutLabel.prepend(document.createTextNode(this.t('layout')+': '));this.layoutSelect.value=String(this.layout);
   this.syncText.textContent=this.t('sync');this.syncCheck.checked=this.shared;
   this.lead.textContent=this.msg('lead');this.footer.textContent=this.msg('testNote');
   this.helpTitle.textContent=this.msg('helpTitle');this.helpBody.replaceChildren();this.helpBody.dir=this.lang==='he'?'rtl':'ltr';
@@ -155,7 +153,7 @@ export class AVOApp {
  applySaved(state,fromFile=false){
   this.validateSaved(state);this.beginGesture();
   this.restoreInputs(state.initialInputs,state.inputs);
-  this.order=state.order;this.layout=state.layout;this.shared=!!state.shared;this.viewsCache=clone(state.views||{});
+  this.order=state.order;this.layout=this.initialLayout;this.shared=!!state.shared;this.viewsCache=clone(state.views||{});
   this.lang=state.lang;textDirection(this.lang);saveLang(this.lang);this.buildPictures(false);this.compute();this.refreshShell();this.autosave();
  }
  validateSaved(s){
@@ -170,7 +168,7 @@ export class AVOApp {
  restoreLocal(){
   try{const raw=localStorage.getItem(this.storageKey);if(!raw)return;const state=JSON.parse(raw);this.validateSaved(state);
     this.restoreInputs(state.initialInputs,state.inputs);
-    this.order=state.order;this.layout=state.layout;this.shared=!!state.shared;this.viewsCache=clone(state.views||{});
+    this.order=state.order;this.layout=this.initialLayout;this.shared=!!state.shared;this.viewsCache=clone(state.views||{});
     // ?lang=... from home must override saved application's lang.
     if(!new URLSearchParams(location.search).has('lang')){this.lang=state.lang;textDirection(this.lang);}
   }catch(e){console.warn('Ignoring invalid autosave',e);}
@@ -188,7 +186,7 @@ export class AVOApp {
  undo(){this.finishGesture();if(!this.history.length)return;const past=this.history.pop();this.future.push(this.serialize());this.restoreHistory(past);this.refreshHistory();}
  redo(){this.finishGesture();if(!this.future.length)return;const future=this.future.pop();this.history.push(this.serialize());this.restoreHistory(future);this.refreshHistory();}
  restoreHistory(state){this.restoreInputs(state.initialInputs,state.inputs);
-  this.order=state.order;this.layout=state.layout;this.shared=!!state.shared;this.viewsCache=clone(state.views||{});
+  this.order=state.order;this.layout=this.initialLayout;this.shared=!!state.shared;this.viewsCache=clone(state.views||{});
   this.buildPictures(false);this.compute();this.refreshShell();this.autosave();}
  refreshHistory(){if(this.buttons?.undo)this.buttons.undo.disabled=this.history.length===0;
   if(this.buttons?.redo)this.buttons.redo.disabled=this.future.length===0;}

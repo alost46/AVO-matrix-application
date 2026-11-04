@@ -30,3 +30,38 @@
  .picture-full .ray-widget svg{width:43px;height:43px}
  .picture-full .ray-widget input{font-size:13px;width:61px}
 }
+
+
+/* 01d. Compact single-line view control band and unified edit/view toggle. */
+.picture .panel-tools{gap:5px;align-items:center}
+.picture .panel-tools .edit-tools{display:inline-flex;gap:4px;align-items:center;background:transparent;padding:0;margin:0}
+.picture .panel-tools button{font-size:15px;font-weight:750}
+.picture .panel-tools button.small{font-size:15px;font-weight:750}
+.picture .view-opts{display:block;padding:4px 7px}
+.picture .view-opts .angle-row{display:flex;align-items:center;justify-content:space-between;gap:3px;flex-wrap:nowrap;min-width:0}
+.picture .view-opts .axis-label{font-size:15px;font-weight:750;white-space:nowrap;flex:0 0 auto}
+.picture .view-opts .rays{display:flex;align-items:center;justify-content:space-around;flex:1 1 auto;min-width:0;width:auto;margin:0;gap:1px;flex-wrap:nowrap;direction:ltr}
+.picture .view-opts .ray-widget{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:0 1 62px;min-width:48px;max-width:68px;gap:0}
+.picture .view-opts .ray-widget label{font-size:14px;font-weight:750;line-height:16px}
+.picture .view-opts .ray-widget svg{width:43px;height:43px;flex-shrink:0}
+.picture .view-opts .ray-widget input{width:60px;max-width:100%;height:24px;padding:1px 2px;font-size:15px;font-weight:750}
+.picture .view-opts .axis-tools{display:flex;align-items:center;gap:2px;flex:0 0 auto;flex-wrap:nowrap}
+.picture .view-opts .axis-tools button.small{min-width:29px;min-height:32px;padding:3px 4px;font-size:15px;font-weight:750}
+.picture .data-title,.picture .metrics,.picture .formula,.picture .end-info{font-size:15px;font-weight:700}
+.picture .plot-caption{font-size:14px;font-weight:700}
+.picture-full .view-opts{padding:2px 7px}
+.picture-full .view-opts .rays{width:auto;margin:0}
+.picture-full .view-opts .ray-widget svg{width:41px;height:41px}
+.picture-full .panel-tools button,.picture-full .panel-tools button.small{font-size:15px;font-weight:750;min-height:30px;padding:3px 7px}
+@media(max-width:500px){
+ .picture .view-opts{padding:3px 4px}
+ .picture .view-opts .angle-row{gap:2px}
+ .picture .view-opts .axis-label{font-size:13px}
+ .picture .view-opts .ray-widget{flex:0 1 49px;min-width:42px;max-width:51px}
+ .picture .view-opts .ray-widget label{font-size:13px}
+ .picture .view-opts .ray-widget svg{width:36px;height:36px}
+ .picture .view-opts .ray-widget input{width:47px;height:23px;font-size:13px}
+ .picture .view-opts .axis-tools{gap:1px}
+ .picture .view-opts .axis-tools button.small{min-width:27px;min-height:30px;font-size:13px;padding:3px}
+ .picture .panel-tools button,.picture .panel-tools button.small{font-size:14px;font-weight:750}
+}

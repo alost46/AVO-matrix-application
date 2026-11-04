@@ -7,10 +7,20 @@ export class Picture {
   constructor(app,config){
     this.app=app;this.config=config;this.id=config.id;this.root=el('section','picture');this.root.dataset.picture=this.id;
     const header=el('div','picture-header');this.heading=el('h2');header.append(this.heading);
-    const tools=el('div','panel-tools');this.viewButton=el('button');this.viewButton.addEventListener('click',()=>this.switchView());tools.append(this.viewButton);
+    const tools=el('div','panel-tools');
+    // Editable pictures use one button: Edit turns both editing AND view gestures on/off.
     if(config.editable){this.editButton=el('button');this.editButton.addEventListener('click',()=>this.switchEdit());tools.append(this.editButton);}
+    else {this.viewButton=el('button');this.viewButton.addEventListener('click',()=>this.switchView());tools.append(this.viewButton);}
     this.fullButton=el('button','small');this.fullButton.addEventListener('click',()=>this.toggleFull());tools.append(this.fullButton);
     this.resetViewButton=el('button','small');this.resetViewButton.addEventListener('click',()=>this.view.resetView());tools.append(this.resetViewButton);
+    // XY/Z belongs next to Reset A (or Reset B), not in a separate row.
+    if(config.editable){
+      this.editTools=el('div','edit-tools');this.editTools.setAttribute('role','group');this.editButtons={};
+      for(const axis of ['xy','z']){const b=el('button','small',axis==='xy'?'XY':'Z');
+        b.addEventListener('click',()=>{this.view.editAxis=axis;this.renderControls();this.app.autosave();});
+        this.editTools.append(b);this.editButtons[axis]=b;}
+      tools.append(this.editTools);
+    }
     if(config.matrixId){this.resetMatrixButton=el('button','small');this.resetMatrixButton.addEventListener('click',()=>app.resetMatrix(config.matrixId));tools.append(this.resetMatrixButton);}
     header.append(tools);
     this.dataZone=el('section','matrix-zone');this.hasMatrix=!!(config.matrixId||config.outputMatrixId);
@@ -27,20 +37,16 @@ export class Picture {
     }
     this.metrics=el('div','metrics');this.formula=el('div','formula');this.dataZone.append(this.metrics,this.formula);
     this.viewOpts=el('div','view-opts');const axisRow=el('div','angle-row');
-    this.axisLabel=el('span','tip');axisRow.append(this.axisLabel);
+    this.axisLabel=el('span','tip axis-label');axisRow.append(this.axisLabel);
+    const raysArea=el('div','rays');this.setRays=buildRays(raysArea,(index,value)=>this.view.changeAngles(index,value));axisRow.append(raysArea);
     this.axisButtons={};const axisTools=el('div','axis-tools');
     for(const axis of ['free','x','y','z']){
       const b=el('button','small axis-btn',axis==='free'?'◎':axis.toUpperCase());b.addEventListener('click',()=>{this.view.axis=axis;this.renderControls();this.app.autosave();});axisTools.append(b);this.axisButtons[axis]=b;
     }
     axisRow.append(axisTools);this.viewOpts.append(axisRow);
-    const raysArea=el('div','rays');this.setRays=buildRays(raysArea,(index,value)=>this.view.changeAngles(index,value));this.viewOpts.append(raysArea);
-    this.editTools=el('div','edit-tools');this.editLabel=el('span','tip');this.editTools.append(this.editLabel);
-    this.editButtons={};for(const axis of ['xy','z']){
-      const b=el('button','small',axis==='xy'?'XY':'Z');b.addEventListener('click',()=>{this.view.editAxis=axis;this.renderControls();this.app.autosave();});this.editTools.append(b);this.editButtons[axis]=b;
-    }
     this.plotWrap=el('div','plot-wrap');this.plotCaption=el('span','plot-caption');this.plotWrap.append(this.plotCaption);
     this.endInfo=el('div','end-info');
-    this.root.append(header,this.editTools,this.viewOpts,this.plotWrap,this.dataZone,this.endInfo);
+    this.root.append(header,this.viewOpts,this.plotWrap,this.dataZone,this.endInfo);
     this.view=new View3D(this.plotWrap,()=>this.viewChanged(),(binding,pos)=>this.handleMove(binding,pos),()=>this.app.finishGesture());
     this.view.resize();this.buildMatrix();this.renderLanguage();this.renderControls();
   }
@@ -86,10 +92,13 @@ export class Picture {
   switchEdit(){this.view.setMode(this.view.mode==='edit'?'off':'edit');this.renderControls();this.app.autosave();}
   toggleFull(){const full=this.root.classList.toggle('picture-full');this.fullButton.setAttribute('aria-pressed',String(full));requestAnimationFrame(()=>this.view.resize());}
   renderControls(){
-    const tr=this.app.t.bind(this.app);this.viewButton.textContent=tr('view');this.viewButton.classList.toggle('active',this.view.mode!=='off');this.viewButton.setAttribute('aria-pressed',String(this.view.mode!=='off'));
+    const tr=this.app.t.bind(this.app);
+    if(this.viewButton){this.viewButton.textContent=tr('view');this.viewButton.classList.toggle('active',this.view.mode!=='off');this.viewButton.setAttribute('aria-pressed',String(this.view.mode!=='off'));}
     if(this.editButton){this.editButton.textContent=tr('edit');this.editButton.classList.toggle('active',this.view.mode==='edit');this.editButton.setAttribute('aria-pressed',String(this.view.mode==='edit'));}
-    this.editTools.hidden=this.view.mode!=='edit'||!this.config.editable;
-    for(const [name,button] of Object.entries(this.editButtons))button.classList.toggle('active',name===this.view.editAxis);
+    if(this.editTools){
+      this.editTools.setAttribute('aria-label',tr('selectDrag'));
+      for(const [name,button] of Object.entries(this.editButtons)){button.classList.toggle('active',name===this.view.editAxis);button.setAttribute('aria-pressed',String(name===this.view.editAxis));button.title=tr('selectDrag')+' '+name.toUpperCase();}
+    }
     for(const [name,button] of Object.entries(this.axisButtons))button.classList.toggle('active',name===this.view.axis);
     this.plotCaption.textContent=tr(this.view.mode==='edit'?'statusEdit':this.view.mode==='view'?'statusView':'statusOff');
     this.setRays(this.view.angles);
@@ -98,7 +107,7 @@ export class Picture {
     const t=this.app.t.bind(this.app),m=this.app.msg.bind(this.app);
     this.heading.textContent=m(this.config.titleKey);
     if(this.dataTitle)this.dataTitle.textContent=`${t('matrix')} ${this.config.matrixId||this.result?.label||this.config.displayName||this.id}`;
-    this.axisLabel.textContent=t('selectAxis');this.editLabel.textContent=t('selectDrag');
+    this.axisLabel.textContent=t('selectAxis');
     this.fullButton.textContent=t('full');this.resetViewButton.textContent=t('resetView');
     if(this.resetMatrixButton)this.resetMatrixButton.textContent=`${this.app.lang==='ru'?'Сброс':this.app.lang==='he'?'אפס':'Reset'} ${this.config.matrixId}`;
     if(this.orderLabel)this.orderLabel.textContent=t('order')+': ';
@@ -116,6 +125,11 @@ export class Picture {
     this.endInfo.textContent=this.config.descriptionKey?(this.app.msg(this.config.descriptionKey)||''):'';
   }
   state(){return this.view.state();}
-  applyState(state){this.view.applyState(state);this.renderControls();}
+  applyState(state){this.view.applyState(state);
+    // Backward-compatible restoration: the old 'view only' state on editable
+    // panels now corresponds to the combined Edit + View state.
+    if(this.config.editable&&this.view.mode==='view')this.view.setMode('edit');
+    if(!this.config.editable&&this.view.mode==='edit')this.view.setMode('view');
+    this.renderControls();}
   dispose(){this.view.dispose();this.root.remove();}
 }
