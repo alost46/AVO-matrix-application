@@ -40,7 +40,7 @@ export class Picture {
     }
     this.plotWrap=el('div','plot-wrap');this.plotCaption=el('span','plot-caption');this.plotWrap.append(this.plotCaption);
     this.endInfo=el('div','end-info');
-    this.root.append(header,this.dataZone,this.editTools,this.viewOpts,this.plotWrap,this.endInfo);
+    this.root.append(header,this.editTools,this.viewOpts,this.plotWrap,this.dataZone,this.endInfo);
     this.view=new View3D(this.plotWrap,()=>this.viewChanged(),(binding,pos)=>this.handleMove(binding,pos),()=>this.app.finishGesture());
     this.view.resize();this.buildMatrix();this.renderLanguage();this.renderControls();
   }
