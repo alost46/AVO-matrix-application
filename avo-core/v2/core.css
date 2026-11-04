@@ -75,3 +75,11 @@
 .picture .panel-tools .primary-tools,.picture .panel-tools .gesture-row{display:flex;gap:5px;align-items:center;flex-wrap:wrap;width:100%}
 .picture .panel-tools .gesture-row{min-height:31px}
 .picture .panel-tools .gesture-row .gesture-tools{display:inline-flex;align-items:center;gap:4px;flex-wrap:nowrap}
+
+/* 01f: explicit shared panel invariant and clear, bold output ordering. */
+.picture .order-control{display:inline-flex;align-items:center;gap:7px;font-size:16px;font-weight:750}
+.picture .order-control .order-label{font-size:16px;font-weight:750;white-space:nowrap;color:#17364d}
+.picture .order-control .order-select{font-size:16px;font-weight:750;min-height:36px;padding:4px 9px;color:#17364d}
+.picture .order-control .order-select option{font-weight:750}
+.picture .gesture-row{display:flex!important;visibility:visible!important}
+.picture[data-core-version="01f"] .gesture-tools{display:inline-flex!important;visibility:visible!important}

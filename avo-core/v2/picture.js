@@ -1,11 +1,11 @@
-/* AVO Core v2 · repeated self-contained picture (data + plot + view controls). */
+/* AVO Core v2 01f · one universal Picture interface for editable and calculated objects. */
 import {View3D} from './view.js';
 import {buildRays} from './rays.js';
 const el=(tag,cls,text)=>{const x=document.createElement(tag);if(cls)x.className=cls;if(text!==undefined)x.textContent=text;return x;};
 const fmt=n=>!Number.isFinite(n)?'∞':Math.abs(n)<1e-9?'0':String(Number(n.toFixed(4)));
 export class Picture {
   constructor(app,config){
-    this.app=app;this.config=config;this.id=config.id;this.root=el('section','picture');this.root.dataset.picture=this.id;
+    this.app=app;this.config=config;this.id=config.id;this.root=el('section','picture');this.root.dataset.picture=this.id;this.root.dataset.coreVersion='01f';
     const header=el('div','picture-header');this.heading=el('h2');header.append(this.heading);
     const tools=el('div','panel-tools');
     const mainTools=el('div','primary-tools');const gestureRow=el('div','gesture-row');
@@ -22,6 +22,7 @@ export class Picture {
       b.addEventListener('click',()=>{this.view.dragAxis=axis;this.renderControls();this.app.autosave();});
       this.gestureTools.append(b);this.gestureButtons[axis]=b;
     }
+    // This identical gesture row is REQUIRED for editable objects AND calculated results.
     gestureRow.append(this.gestureTools);
     if(config.matrixId){this.resetMatrixButton=el('button','small');this.resetMatrixButton.addEventListener('click',()=>app.resetMatrix(config.matrixId));gestureRow.append(this.resetMatrixButton);}
     tools.append(mainTools,gestureRow);header.append(tools);
@@ -33,9 +34,9 @@ export class Picture {
     if(this.hasMatrix||config.orderSelect)this.dataZone.append(this.matrixRow);
     if(this.hasMatrix){this.matrixTable=el('table','matrix-table');this.matrixTable.setAttribute('aria-label','Matrix');this.matrixRow.append(this.matrixTable);}
     if(config.orderSelect){
-      this.orderWrapper=el('div');this.orderLabel=el('label');this.orderSelect=el('select','order-select');
+      this.orderWrapper=el('div','order-control');this.orderLabel=el('label','order-label');this.orderSelect=el('select','order-select');
       for(const v of ['BA','AB']){const o=el('option',null,v);o.value=v;this.orderSelect.append(o);}
-      this.orderSelect.addEventListener('change',()=>app.setOrder(this.orderSelect.value));this.orderWrapper.append(this.orderLabel,this.orderSelect);this.matrixRow.append(this.orderWrapper);
+      this.orderSelect.id=`avo-order-${this.id}`;this.orderLabel.htmlFor=this.orderSelect.id;this.orderSelect.addEventListener('change',()=>app.setOrder(this.orderSelect.value));this.orderWrapper.append(this.orderLabel,this.orderSelect);this.matrixRow.append(this.orderWrapper);
     }
     this.metrics=el('div','metrics');this.formula=el('div','formula');this.dataZone.append(this.metrics,this.formula);
     this.viewOpts=el('div','view-opts');const axisRow=el('div','angle-row');
