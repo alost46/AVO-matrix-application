@@ -6,7 +6,7 @@
 .chart-toolbar button{min-height:36px;padding:5px 10px;font-size:17px;min-width:37px}
 .chart-toolbar label{display:inline-flex;align-items:center;gap:5px;font-size:14px;font-weight:700}
 .chart-toolbar select{padding:6px 5px;min-height:36px;max-width:160px;border:1px solid #9cacc4;border-radius:6px;font:600 14px Arial;background:white;color:var(--ink)}
-.chart-toolbar .push{flex:1 1 auto}
+.chart-toolbar .zoom-reset{display:inline-flex;align-items:center;justify-content:center;padding:5px 7px;min-width:37px}.chart-toolbar .push{flex:1 1 auto}
 canvas{width:100%;height:390px;display:block;touch-action:none;cursor:grab}canvas:active{cursor:grabbing}
 .chart:fullscreen,.chart.fullscreen-fallback{position:fixed;inset:0;z-index:1000;border-radius:0;margin:0;display:flex;flex-direction:column;background:white;padding:14px}
 .chart:fullscreen canvas,.chart.fullscreen-fallback canvas{flex:1;min-height:0;height:auto}
@@ -30,24 +30,24 @@ body:has(.fullscreen-fallback){overflow:hidden}.legend{font-size:14px;color:var(
 <div class="grid"><article class="chart"><h2>Исходная функция</h2><p id="labelOriginal">y = f(x)</p><div class="chart-toolbar" aria-label="Управление графиком 1">
 <button type="button" class="zoom-in" data-chart="0" title="Увеличить">＋</button>
 <button type="button" class="zoom-out" data-chart="0" title="Уменьшить">−</button>
-<button type="button" class="zoom-reset" data-chart="0" title="Восстановить масштаб">1:1</button>
+<button type="button" class="zoom-reset" data-chart="0" title="Сбросить увеличение и вернуть линейный масштаб"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5.5 5.5"/></svg></button>
 <label>X <select class="axis-x" data-chart="0" aria-label="Масштаб оси X"><option value="linear">Линейный</option><option value="symlog">Логарифм. ±</option></select></label>
 <label>Y <select class="axis-y" data-chart="0" aria-label="Масштаб оси Y"><option value="linear">Линейный</option><option value="symlog">Логарифм. ±</option></select></label>
 <span class="push"></span><button type="button" class="fullscreen-toggle" data-chart="0" title="На весь экран" aria-label="На весь экран">⛶</button>
 </div><canvas id="graph0" aria-label="График 1"></canvas><div class="legend">Синий: выбранная функция или ветвь · Серый: другие ветви</div></article><article class="chart"><h2>Чётная часть</h2><p>fₑ(x) = [f(x) + f(−x)] / 2</p><div class="chart-toolbar" aria-label="Управление графиком 2">
 <button type="button" class="zoom-in" data-chart="1" title="Увеличить">＋</button>
 <button type="button" class="zoom-out" data-chart="1" title="Уменьшить">−</button>
-<button type="button" class="zoom-reset" data-chart="1" title="Восстановить масштаб">1:1</button>
+<button type="button" class="zoom-reset" data-chart="1" title="Сбросить увеличение и вернуть линейный масштаб"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5.5 5.5"/></svg></button>
 <label>X <select class="axis-x" data-chart="1" aria-label="Масштаб оси X"><option value="linear">Линейный</option><option value="symlog">Логарифм. ±</option></select></label>
 <label>Y <select class="axis-y" data-chart="1" aria-label="Масштаб оси Y"><option value="linear">Линейный</option><option value="symlog">Логарифм. ±</option></select></label>
 <span class="push"></span><button type="button" class="fullscreen-toggle" data-chart="1" title="На весь экран" aria-label="На весь экран">⛶</button>
 </div><canvas id="graph1" aria-label="График 2"></canvas><div class="legend">Оранжевый · Симметрия относительно оси Y</div></article><article class="chart"><h2>Нечётная часть</h2><p>fₒ(x) = [f(x) − f(−x)] / 2</p><div class="chart-toolbar" aria-label="Управление графиком 3">
 <button type="button" class="zoom-in" data-chart="2" title="Увеличить">＋</button>
 <button type="button" class="zoom-out" data-chart="2" title="Уменьшить">−</button>
-<button type="button" class="zoom-reset" data-chart="2" title="Восстановить масштаб">1:1</button>
+<button type="button" class="zoom-reset" data-chart="2" title="Сбросить увеличение и вернуть линейный масштаб"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5.5 5.5"/></svg></button>
 <label>X <select class="axis-x" data-chart="2" aria-label="Масштаб оси X"><option value="linear">Линейный</option><option value="symlog">Логарифм. ±</option></select></label>
 <label>Y <select class="axis-y" data-chart="2" aria-label="Масштаб оси Y"><option value="linear">Линейный</option><option value="symlog">Логарифм. ±</option></select></label>
 <span class="push"></span><button type="button" class="fullscreen-toggle" data-chart="2" title="На весь экран" aria-label="На весь экран">⛶</button>
-</div><canvas id="graph2" aria-label="График 3"></canvas><div class="legend">Зелёный · Симметрия относительно начала координат</div></article></div>
-<section class="math"><p><strong>Масштаб:</strong> «Линейный» или «Логарифм. ±» можно выбирать отдельно по X и Y для каждого графика. Симметричная логарифмическая шкала сохраняет ноль и отрицательные значения. Кнопки ＋/− изменяют увеличение, 1:1 восстанавливает вид; график можно сдвигать мышью или одним пальцем.</p><p><strong>Правило разложения:</strong> f(x) = fₑ(x) + fₒ(x), если одновременно существуют f(x) и f(−x).</p><p id="note">Для неявного уравнения F(x,y)=0 сначала выбирают ветвь y(x). Разные ветви могут давать разные разложения.</p></section><div class="footer">AVO · Чётная и нечётная части · приложение 01b · автономная двумерная визуализация</div></main>
+</div><canvas id="graph2" aria-label="График 3"></canvas><div class="legend">Салатовый · Симметрия относительно начала координат</div></article></div>
+<section class="math"><p><strong>Масштаб:</strong> «Линейный» или «Логарифм. ±» можно выбирать отдельно по X и Y для каждого графика. Симметричная логарифмическая шкала сохраняет ноль и отрицательные значения. Кнопки ＋/− изменяют увеличение, лупа возвращает исходный линейный масштаб и положение; график можно сдвигать мышью или одним пальцем.</p><p><strong>Правило разложения:</strong> f(x) = fₑ(x) + fₒ(x), если одновременно существуют f(x) и f(−x).</p><p id="note">Для неявного уравнения F(x,y)=0 сначала выбирают ветвь y(x). Разные ветви могут давать разные разложения.</p></section><div class="footer">AVO · Чётная и нечётная части · приложение 01d · автономная двумерная визуализация</div></main>
 <script src="app.js"></script></body></html>
