@@ -45,8 +45,6 @@
 .picture .view-opts .ray-widget label{font-size:14px;font-weight:750;line-height:16px}
 .picture .view-opts .ray-widget svg{width:43px;height:43px;flex-shrink:0}
 .picture .view-opts .ray-widget input{width:60px;max-width:100%;height:24px;padding:1px 2px;font-size:15px;font-weight:750}
-.picture .view-opts .axis-tools{display:flex;align-items:center;gap:2px;flex:0 0 auto;flex-wrap:nowrap}
-.picture .view-opts .axis-tools button.small{min-width:29px;min-height:32px;padding:3px 4px;font-size:15px;font-weight:750}
 .picture .data-title,.picture .metrics,.picture .formula,.picture .end-info{font-size:15px;font-weight:700}
 .picture .plot-caption{font-size:14px;font-weight:700}
 .picture-full .view-opts{padding:2px 7px}
@@ -61,8 +59,6 @@
  .picture .view-opts .ray-widget label{font-size:13px}
  .picture .view-opts .ray-widget svg{width:36px;height:36px}
  .picture .view-opts .ray-widget input{width:47px;height:23px;font-size:13px}
- .picture .view-opts .axis-tools{gap:1px}
- .picture .view-opts .axis-tools button.small{min-width:27px;min-height:30px;font-size:13px;padding:3px}
  .picture .panel-tools button,.picture .panel-tools button.small{font-size:14px;font-weight:750}
 }
 
@@ -95,3 +91,4 @@ body,.shell,.picture,.picture button,.picture input,.picture select,.picture lab
 
 .avo-overlap-notice{position:absolute;top:8px;left:8px;right:8px;z-index:5;pointer-events:none;padding:8px 10px;background:#fff4cd;color:#573e00;border:2px solid #c89117;border-radius:8px;font-size:15px;font-weight:700;text-align:center}
 .avo-overlap-notice[hidden]{display:none}
+

@@ -367,7 +367,7 @@ export class View3D {
   }
   state(){return {angles:this.angles.slice(),radius:this.radius,mode:this.mode,axis:this.axis,dragAxis:this.dragAxis,editAxis:this.editAxis};}
   applyState(s){if(!s||!Array.isArray(s.angles)||s.angles.length!==3||!s.angles.every(Number.isFinite))return;
-    this.radius=Math.min(200,Math.max(0.75,Number(s.radius)||14));this.axis=['free','x','y','z'].includes(s.axis)?s.axis:'free';
+    this.radius=Math.min(200,Math.max(0.75,Number(s.radius)||14));this.axis='free'; // 01i: legacy axis-selection states no longer restrict angle rays
     // Old JSON states only contained editAxis. Preserve them on load.
     this.dragAxis=(s.dragAxis==='xy'||s.dragAxis==='z')?s.dragAxis:(s.editAxis==='z'?'z':'xy');
     this.editAxis=s.editAxis==='z'?'z':'xy';this.setMode(['off','view','edit'].includes(s.mode)?s.mode:'off');this.setAngles(s.angles,false);

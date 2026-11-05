@@ -1,11 +1,11 @@
-/* AVO Core v2 01h · one universal Picture interface; endpoint markers belong to editable objects only. */
+/* AVO Core v2 01i · universal Picture, independent X/Y/Z angle rays, XY/Z drag modes. */
 import {View3D} from './view.js';
 import {buildRays} from './rays.js';
 const el=(tag,cls,text)=>{const x=document.createElement(tag);if(cls)x.className=cls;if(text!==undefined)x.textContent=text;return x;};
 const fmt=n=>!Number.isFinite(n)?'∞':Math.abs(n)<1e-9?'0':String(Number(n.toFixed(4)));
 export class Picture {
   constructor(app,config){
-    this.app=app;this.config=config;this.id=config.id;this.root=el('section','picture');this.root.dataset.picture=this.id;this.root.dataset.coreVersion='01h';
+    this.app=app;this.config=config;this.id=config.id;this.root=el('section','picture');this.root.dataset.picture=this.id;this.root.dataset.coreVersion='01i';
     const header=el('div','picture-header');this.heading=el('h2');header.append(this.heading);
     const tools=el('div','panel-tools');
     const mainTools=el('div','primary-tools');const gestureRow=el('div','gesture-row');
@@ -41,16 +41,11 @@ export class Picture {
     this.metrics=el('div','metrics');this.formula=el('div','formula');this.dataZone.append(this.metrics,this.formula);
     this.viewOpts=el('div','view-opts');const axisRow=el('div','angle-row');
     this.axisLabel=el('span','tip axis-label');axisRow.append(this.axisLabel);
+    // Each of the three rays ALWAYS controls its own angle. The old ◎/X/Y/Z
+    // axis selector is redundant and must not silently lock any ray.
     const raysArea=el('div','rays');this.setRays=buildRays(raysArea,(index,value)=>{
-      // Ray selector applies to ray adjustment, never to free-area drag.
-      const axis=['x','y','z'][index];
-      if(this.view.axis==='free'||this.view.axis===axis)this.view.changeAngles(index,value);
-    });axisRow.append(raysArea);
-    this.axisButtons={};const axisTools=el('div','axis-tools');
-    for(const axis of ['free','x','y','z']){
-      const b=el('button','small axis-btn',axis==='free'?'◎':axis.toUpperCase());b.addEventListener('click',()=>{this.view.axis=axis;this.renderControls();this.app.autosave();});axisTools.append(b);this.axisButtons[axis]=b;
-    }
-    axisRow.append(axisTools);this.viewOpts.append(axisRow);
+      this.view.changeAngles(index,value);
+    });axisRow.append(raysArea);this.viewOpts.append(axisRow);
     this.plotWrap=el('div','plot-wrap');this.plotCaption=el('span','plot-caption');this.overlapNotice=el('div','avo-overlap-notice');this.overlapNotice.setAttribute('role','status');this.overlapNotice.hidden=true;this.plotWrap.append(this.plotCaption,this.overlapNotice);
     this.endInfo=el('div','end-info');
     this.root.append(header,this.viewOpts,this.plotWrap,this.dataZone,this.endInfo);
@@ -112,7 +107,6 @@ export class Picture {
       button.setAttribute('aria-pressed',String(name===this.view.dragAxis));
       button.title=tr(name==='xy'?'gestureXY':'gestureZ');
     }
-    for(const [name,button] of Object.entries(this.axisButtons))button.classList.toggle('active',name===this.view.axis);
     this.plotCaption.textContent=tr(this.view.mode==='edit'?'statusEdit':this.view.mode==='view'?'statusView':'statusOff');
     this.setRays(this.view.angles);
   }
