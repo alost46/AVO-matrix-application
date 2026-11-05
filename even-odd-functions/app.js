@@ -1,5 +1,5 @@
 'use strict';
-// AVO Even/Odd 01d: independent 2D app. No modification of AVO Core.
+// AVO Even/Odd 01f: independent 2D app. No modification of AVO Core.
 const $=id=>document.getElementById(id);
 const ALLOWED_FUNCS={sin:Math.sin,cos:Math.cos,tan:Math.tan,asin:Math.asin,acos:Math.acos,atan:Math.atan,sinh:Math.sinh,cosh:Math.cosh,tanh:Math.tanh,exp:Math.exp,ln:Math.log,log:Math.log10,sqrt:Math.sqrt,abs:Math.abs,floor:Math.floor,ceil:Math.ceil,round:Math.round,sign:Math.sign};
 function tokenize(s){s=s.replace(/π/g,'pi').replace(/−/g,'-').replace(/²/g,'^2').replace(/³/g,'^3').replace(/\s+/g,'');const result=[];let i=0;while(i<s.length){let rem=s.slice(i);let m=rem.match(/^(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?/);if(m){result.push({type:'num',value:Number(m[0])});i+=m[0].length;continue;}m=rem.match(/^[a-zA-Z_][a-zA-Z_0-9]*/);if(m){result.push({type:'name',value:m[0].toLowerCase()});i+=m[0].length;continue;}let c=s[i];if('+-*/^(),'.includes(c)){result.push({type:c,value:c});i++;continue;}throw Error('Недопустимый символ «'+c+'»');}
@@ -51,7 +51,7 @@ function bounds(arrays){let vals=arrays.flatMap(a=>a).filter(Number.isFinite).so
 // Symmetric logarithm has a linear neighbourhood of zero and retains both signs.
 const axisTransform=(v,mode)=>mode==='symlog'?Math.sign(v)*Math.log10(1+Math.abs(v)):v;
 const axisInverse=(u,mode)=>mode==='symlog'?Math.sign(u)*(Math.pow(10,Math.min(Math.abs(u),300))-1):u;
-const chartViews=Array.from({length:3},()=>({xMode:'linear',yMode:'linear',zoom:1,dx:0,dy:0}));
+const chartViews=Array.from({length:3},()=>({xMode:'linear',yMode:'linear',zoom:1,dx:0,dy:0,zoomEnabled:false}));
 const redraw=()=>{if(current)for(let k=0;k<3;k++)graph($('graph'+k),current,k);};
 function graph(canvas,data,kind){
  const view=chartViews[kind],w=canvas.clientWidth||450,h=canvas.clientHeight||390,dpr=Math.min(window.devicePixelRatio||1,2);
@@ -94,7 +94,7 @@ function graph(canvas,data,kind){
  if(kind===0&&data.implicit){const max=Math.max(0,...data.all.map(a=>a.length));for(let j=0;j<Math.min(max,12);j++)draw(data.all.map(r=>r[j]??NaN),'#bdc5d0',1.3);}
  draw(kind===0?data.ys:kind===1?data.evens:data.odds,kind===0?'#225bb5':kind===1?'#bd6a0a':'#7CFC00',2.8);ctx.restore();
 }
-function zoomChart(k,factor){const v=chartViews[k];v.zoom=Math.max(.1,Math.min(500,v.zoom*factor));redraw();}
+function zoomChart(k,factor){const v=chartViews[k];if(!v.zoomEnabled)return;v.zoom=Math.max(.1,Math.min(500,v.zoom*factor));redraw();}
 function resetChart(k,resetAxes=false){
  const v=chartViews[k];v.zoom=1;v.dx=0;v.dy=0;
  if(resetAxes){
@@ -106,11 +106,19 @@ function resetChart(k,resetAxes=false){
  }
  redraw();
 }
-function resetAllCharts(){for(let k=0;k<3;k++)resetChart(k,true);}
+function setZoomEnabled(k,enabled){
+ const v=chartViews[k];v.zoomEnabled=enabled;
+ const btn=document.querySelector('.zoom-reset[data-chart="'+k+'"]');
+ if(btn){btn.setAttribute('aria-pressed',String(enabled));btn.title=enabled?'Выключить масштабирование':'Включить масштабирование';btn.setAttribute('aria-label',btn.title);}
+ document.querySelectorAll('.zoom-in[data-chart="'+k+'"],.zoom-out[data-chart="'+k+'"]').forEach(b=>{b.disabled=!enabled;});
+ const cvs=$('graph'+k);cvs.classList.toggle('zoom-enabled',enabled);cvs.classList.toggle('zoom-disabled',!enabled);
+ if(!enabled)cvs.dispatchEvent(new Event('avo-zoom-disabled'));
+}
+function resetAllCharts(){for(let k=0;k<3;k++){resetChart(k,true);setZoomEnabled(k,false);}}
 function installChartControls(){
  document.querySelectorAll('.zoom-in').forEach(b=>b.addEventListener('click',()=>zoomChart(Number(b.dataset.chart),1.5)));
  document.querySelectorAll('.zoom-out').forEach(b=>b.addEventListener('click',()=>zoomChart(Number(b.dataset.chart),1/1.5)));
- document.querySelectorAll('.zoom-reset').forEach(b=>b.addEventListener('click',()=>resetChart(Number(b.dataset.chart),true)));
+ document.querySelectorAll('.zoom-reset').forEach(b=>b.addEventListener('click',()=>{const k=Number(b.dataset.chart);setZoomEnabled(k,!chartViews[k].zoomEnabled);}));
  document.querySelectorAll('.axis-x,.axis-y').forEach(el=>el.addEventListener('change',()=>{const k=Number(el.dataset.chart),v=chartViews[k];if(el.classList.contains('axis-x'))v.xMode=el.value;else v.yMode=el.value;resetChart(k); }));
  document.querySelectorAll('.fullscreen-toggle').forEach(b=>b.addEventListener('click',async()=>{
  const card=b.closest('.chart');if(document.fullscreenElement===card){await document.exitFullscreen();return;}
@@ -123,20 +131,87 @@ function installChartControls(){
  document.addEventListener('keydown',e=>{if(e.key==='Escape'){document.querySelectorAll('.fullscreen-fallback').forEach(e=>e.classList.remove('fullscreen-fallback'));redraw();}});
  for(let k=0;k<3;k++){
  const canvas=$('graph'+k),active=new Map();let lastOne=null,lastPinch=null;
- canvas.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button!==0)return;e.preventDefault();canvas.setPointerCapture?.(e.pointerId);active.set(e.pointerId,{x:e.clientX,y:e.clientY});lastOne=active.size===1?{x:e.clientX,y:e.clientY}:null;lastPinch=null;});
- canvas.addEventListener('pointermove',e=>{if(!active.has(e.pointerId))return;e.preventDefault();active.set(e.pointerId,{x:e.clientX,y:e.clientY});const v=chartViews[k];
+ canvas.addEventListener('avo-zoom-disabled',()=>{active.clear();lastOne=null;lastPinch=null;});
+ canvas.addEventListener('pointerdown',e=>{if(!chartViews[k].zoomEnabled)return;if(e.pointerType==='mouse'&&e.button!==0)return;e.preventDefault();canvas.setPointerCapture?.(e.pointerId);active.set(e.pointerId,{x:e.clientX,y:e.clientY});lastOne=active.size===1?{x:e.clientX,y:e.clientY}:null;lastPinch=null;});
+ canvas.addEventListener('pointermove',e=>{if(!chartViews[k].zoomEnabled||!active.has(e.pointerId))return;e.preventDefault();active.set(e.pointerId,{x:e.clientX,y:e.clientY});const v=chartViews[k];
  if(active.size===1){if(lastOne&&v.lastW&&v.lastH){v.dx-=(e.clientX-lastOne.x)*v.lastSpanX/v.lastW;v.dy+=(e.clientY-lastOne.y)*v.lastSpanY/v.lastH;redraw();}lastOne={x:e.clientX,y:e.clientY};lastPinch=null;}
  else if(active.size===2){const a=[...active.values()],d=Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y);if(lastPinch&&d>3)zoomChart(k,d/lastPinch);lastPinch=d;lastOne=null;}
  });
  const stop=e=>{active.delete(e.pointerId);lastOne=null;lastPinch=null;};canvas.addEventListener('pointerup',stop);canvas.addEventListener('pointercancel',stop);canvas.addEventListener('lostpointercapture',stop);
- canvas.addEventListener('wheel',e=>{e.preventDefault();zoomChart(k,e.deltaY<0?1.18:1/1.18);},{passive:false});
+ canvas.addEventListener('wheel',e=>{if(!chartViews[k].zoomEnabled)return;e.preventDefault();zoomChart(k,e.deltaY<0?1.18:1/1.18);},{passive:false});
  }
 }
+
+// Display symbolic components whenever the input is a single-valued explicit formula.
+// Polynomial expressions are simplified exactly; general elementary expressions use
+// transparent substitution x -> (-x), with no unsupported symbolic claims.
+function polynomialCoefficients(src){
+ const toks=tokenize(src);let pos=0;const peek=()=>toks[pos];const next=()=>toks[pos++];
+ const add=(a,b,sign=1)=>{const c=new Map(a);for(const [k,v] of b)c.set(k,(c.get(k)||0)+sign*v);return c;};
+ const mult=(a,b)=>{const c=new Map();for(const [k,v] of a)for(const [l,w] of b){if(k+l>24)throw Error('high degree');c.set(k+l,(c.get(k+l)||0)+v*w);}return c;};
+ const constant=v=>new Map([[0,v]]);
+ function parse(min=0){const t=next();if(!t)throw Error('incomplete');let a;
+ if(t.type==='num')a=constant(t.value);
+ else if(t.type==='name'){if(t.value==='x')a=new Map([[1,1]]);else if(t.value==='pi')a=constant(Math.PI);else if(t.value==='e')a=constant(Math.E);else throw Error('not polynomial');}
+ else if(t.type==='('){a=parse(0);if(next()?.type!==')')throw Error('parentheses');}
+ else if(t.type==='+'||t.type==='-'){a=parse(3);if(t.type==='-')a=mult(a,constant(-1));}
+ else throw Error('not polynomial');
+ const prec={'+':1,'-':1,'*':2,'/':2,'^':4};
+ while(peek()&&prec[peek().type]>=min){const op=next().type,b=parse(prec[op]+(op==='^'?0:1));
+ if(op==='+')a=add(a,b);else if(op==='-')a=add(a,b,-1);else if(op==='*')a=mult(a,b);
+ else if(op==='/'){if(b.size!==1||!b.has(0)||Math.abs(b.get(0))<1e-14)throw Error('rational');a=mult(a,constant(1/b.get(0)));}
+ else if(op==='^'){if(b.size!==1||!b.has(0)||!Number.isInteger(b.get(0))||b.get(0)<0||b.get(0)>16)throw Error('power');let r=constant(1);for(let j=0;j<b.get(0);j++)r=mult(r,a);a=r;}
+ }return a;}
+ const result=parse(0);if(pos!==toks.length)throw Error('trailing');return result;
+}
+function formatPolynomial(terms){
+ const clean=[...terms].filter(([k,v])=>Number.isFinite(v)&&Math.abs(v)>1e-10).sort((a,b)=>b[0]-a[0]);
+ if(!clean.length)return '0';let text='';
+ for(const [power,c] of clean){const neg=c<0,abs=Math.abs(c),n=Number(abs.toPrecision(10)).toString();const coeff=(power!==0&&Math.abs(abs-1)<1e-10)?'':n;
+ const monomial=power===0?n:coeff+(power===1?'x':'x^'+power);
+ text+=(text?(neg?' − ':' + '):(neg?'−':''))+monomial;
+ }return text;
+}
+function expressionParts(){
+ const source=$('formula').value.trim(),parsed=parseEquation(source);
+ if(parsed.implicit){
+  const flat=source.replace(/\s+/g,'').toLowerCase();
+  const cc=flat.match(/^(?:x\^2\+y\^2|y\^2\+x\^2)=([0-9]+(?:\.[0-9]+)?)$/);
+  if(cc){
+   const radiusSquared=Number(cc[1]);const branch=$('branch').value;
+   const positive=branch==='upper'||branch==='1';
+   const sign=positive?'':'−';
+   if(radiusSquared>=0)return ['fₑ(x) = '+sign+'sqrt('+radiusSquared+' − x^2)','fₒ(x) = 0'];
+  }
+  const side=flat==='x=y^2-1'||flat==='y^2-1=x';
+  if(side){const positive=$('branch').value==='upper'||$('branch').value==='1';const sg=positive?'':'−';
+   return ['fₑ(x) = '+sg+'(sqrt(x+1) + sqrt(1−x))/2', 'fₒ(x) = '+sg+'(sqrt(x+1) − sqrt(1−x))/2'];
+  }
+  return [
+   'Явное выражение для выбранной ветви не найдено; построение численное.',
+   'Явное выражение для выбранной ветви не найдено; построение численное.'
+  ];
+ }
+ const pieces=source.split('=');const f=(pieces.length===1?pieces[0]:pieces[0].trim().toLowerCase()==='y'?pieces[1]:pieces[0]).trim();
+ try{
+  const poly=polynomialCoefficients(f);const even=new Map(),odd=new Map();for(const [power,v] of poly)(power%2===0?even:odd).set(power,v);
+  return ['fₑ(x) = '+formatPolynomial(even),'fₒ(x) = '+formatPolynomial(odd)];
+ }catch{
+  // Explicit expression, but not necessarily simplifiable by the polynomial engine.
+  const mirrored=f.replace(/\bx\b/gi,'(-x)');
+  return ['fₑ(x) = (('+f+') + ('+mirrored+')) / 2', 'fₒ(x) = (('+f+') − ('+mirrored+')) / 2'];
+ }
+}
+function updateExpressionLabels(){const [even,odd]=expressionParts();$('evenFormula').textContent=even;$('oddFormula').textContent=odd;
+ $('evenFormula').classList.toggle('note',even.startsWith('Явное выражение'));
+ $('oddFormula').classList.toggle('note',odd.startsWith('Явное выражение'));
+}
+
 function plot(){try{const data=derive();current=data;const eCount=data.evens.filter(Number.isFinite).length;const status=$('status');status.classList.remove('error');if(!data.found)status.textContent='В заданной области не найдено точек графика. Для неявного уравнения попробуйте увеличить диапазон поиска y или выбрать другую ветвь.';
 else if(!eCount)status.textContent='Исходная ветвь найдена, но f(x) и f(−x) не определены одновременно в заданном интервале. Разложение здесь не отображается.';
 else status.textContent=(data.implicit?'Неявное уравнение: показана выбранная ветвь и другие найденные ветви. ':'Явная функция. ')+`Точек исходного графика: ${data.found} из ${data.xs.length}. Точек разложения: ${eCount}.`;
-$('labelOriginal').textContent=$('formula').value;const symmetry=Math.min(data.b,-data.a)-Math.max(data.a,-data.b);$('note').textContent=(data.implicit?'Для неявного уравнения чётная и нечётная части определяются для выбранной ветви y(x), а не для всего множества решений. ':'')+(symmetry<=0?'Заданный интервал не содержит ненулевого симметричного отрезка. ':'Разложение вычисляется там, где одновременно определены f(x) и f(−x). ')+ 'Для неявного случая численное нахождение корней может пропускать касания и сложные ветвления.';
+$('labelOriginal').textContent=$('formula').value;updateExpressionLabels();const symmetry=Math.min(data.b,-data.a)-Math.max(data.a,-data.b);$('note').textContent=(data.implicit?'Для неявного уравнения чётная и нечётная части определяются для выбранной ветви y(x), а не для всего множества решений. ':'')+(symmetry<=0?'Заданный интервал не содержит ненулевого симметричного отрезка. ':'Разложение вычисляется там, где одновременно определены f(x) и f(−x). ')+ 'Для неявного случая численное нахождение корней может пропускать касания и сложные ветвления.';
 requestAnimationFrame(()=>{for(let k=0;k<3;k++)graph($('graph'+k),data,k);});}catch(err){$('status').classList.add('error');$('status').textContent='Ошибка: '+err.message;}}
 function example(which){const set={poly:['y = x^3 - 2*x^2 + x',-4,4,-8,8],sin:['y = sin(x) + x^2/4',-7,7,-8,8],circle:['x^2 + y^2 = 9',-3.5,3.5,-4,4],cubic:['y^3 - 3*y + x = 0',-3,3,-4,4],parabola:['x = y^2 - 1',-2,6,-4,4]};const v=set[which]||set.poly;$('formula').value=v[0];$('xmin').value=v[1];$('xmax').value=v[2];$('ymin').value=v[3];$('ymax').value=v[4];$('branch').value='upper';plot();}
 $('plot').addEventListener('click',()=>{resetAllCharts();plot();});$('reset').addEventListener('click',()=>{resetAllCharts();$('examples').value='poly';example('poly');});$('examples').addEventListener('change',e=>{if(e.target.value){resetAllCharts();example(e.target.value);}});$('branch').addEventListener('change',plot);$('ymin').addEventListener('change',plot);$('ymax').addEventListener('change',plot);window.addEventListener('resize',()=>{if(current)requestAnimationFrame(()=>{for(let k=0;k<3;k++)graph($('graph'+k),current,k);});});
-window.AVO_EVEN_ODD_TEST={compile,parseEquation,rootsAt,derive,axisTransform,axisInverse,chartViews};installChartControls();example('poly');
+window.AVO_EVEN_ODD_TEST={compile,parseEquation,rootsAt,derive,axisTransform,axisInverse,chartViews,polynomialCoefficients,formatPolynomial,expressionParts,setZoomEnabled};installChartControls();for(let k=0;k<3;k++)setZoomEnabled(k,false);example('poly');
