@@ -19,7 +19,8 @@ export class GeometryLayer {
     this.group.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material){const mats=Array.isArray(o.material)?o.material:[o.material];mats.forEach(m=>m.dispose());}});
     this.scene.remove(this.group);this.group=new THREE.Group();this.scene.add(this.group);this.handles=[];
   }
-  update(data={}){
+  update(data={}, options={}){
+    const showVectorEndpoints=options.showVectorEndpoints!==false;
     this.clear();const add=o=>this.group.add(o);
     for(const line of data.lines||[]){
       if(!validPoint(line.from)||!validPoint(line.to))continue;
@@ -34,6 +35,10 @@ export class GeometryLayer {
     }
     for(const p of data.points||[]){
       if(!validPoint(p.xyz))continue;
+      // On calculated View pictures, vector tips do not have edit circles.
+      // Preserve unrelated mathematical points, e.g. an isolated vertex.
+      if(!showVectorEndpoints&&(data.lines||[]).some(line=>validPoint(line.to)&&validPoint(line.from)&&
+          line.from.every(v=>Math.abs(v)<1e-12)&&line.to.every((v,i)=>v===p.xyz[i])))continue;
       // An editable point already has a fixed-pixel circle. A second 3D sphere
       // at the same location could still grow into a large disk near the camera.
       if((data.handles||[]).some(h=>validPoint(h.position)&&h.position.every((v,i)=>v===p.xyz[i])))continue;

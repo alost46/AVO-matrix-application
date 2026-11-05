@@ -1,11 +1,11 @@
-/* AVO Core v2 01f · one universal Picture interface for editable and calculated objects. */
+/* AVO Core v2 01h · one universal Picture interface; endpoint markers belong to editable objects only. */
 import {View3D} from './view.js';
 import {buildRays} from './rays.js';
 const el=(tag,cls,text)=>{const x=document.createElement(tag);if(cls)x.className=cls;if(text!==undefined)x.textContent=text;return x;};
 const fmt=n=>!Number.isFinite(n)?'∞':Math.abs(n)<1e-9?'0':String(Number(n.toFixed(4)));
 export class Picture {
   constructor(app,config){
-    this.app=app;this.config=config;this.id=config.id;this.root=el('section','picture');this.root.dataset.picture=this.id;this.root.dataset.coreVersion='01g';
+    this.app=app;this.config=config;this.id=config.id;this.root=el('section','picture');this.root.dataset.picture=this.id;this.root.dataset.coreVersion='01h';
     const header=el('div','picture-header');this.heading=el('h2');header.append(this.heading);
     const tools=el('div','panel-tools');
     const mainTools=el('div','primary-tools');const gestureRow=el('div','gesture-row');
@@ -54,7 +54,7 @@ export class Picture {
     this.plotWrap=el('div','plot-wrap');this.plotCaption=el('span','plot-caption');this.overlapNotice=el('div','avo-overlap-notice');this.overlapNotice.setAttribute('role','status');this.overlapNotice.hidden=true;this.plotWrap.append(this.plotCaption,this.overlapNotice);
     this.endInfo=el('div','end-info');
     this.root.append(header,this.viewOpts,this.plotWrap,this.dataZone,this.endInfo);
-    this.view=new View3D(this.plotWrap,()=>this.viewChanged(),(binding,pos)=>this.handleMove(binding,pos),()=>this.app.finishGesture(),active=>this.setOverlapNotice(active));
+    this.view=new View3D(this.plotWrap,()=>this.viewChanged(),(binding,pos)=>this.handleMove(binding,pos),()=>this.app.finishGesture(),active=>this.setOverlapNotice(active),!!config.editable);
     this.view.resize();this.buildMatrix();this.renderLanguage();this.renderControls();
   }
   setOverlapNotice(active){

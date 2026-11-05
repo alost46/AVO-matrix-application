@@ -1,4 +1,4 @@
-/* AVO Core v2 01g · unified picture with native mobile touch handling. */
+/* AVO Core v2 01h · unified Picture: editing capability controls endpoint markers. */
 import * as THREE from 'three';
 import {GeometryLayer} from './geometry.js';
 import {solveXY,solveZ} from './drag-math.js';
@@ -7,8 +7,8 @@ const modAngle=n=>((n%360)+360)%360;
 const vector=p=>new THREE.Vector3(...p);
 const colorCode=n=>'#'+(n??0x265fb1).toString(16).padStart(6,'0');
 export class View3D {
-  constructor(root,onCameraChanged,onHandleMove,onHandleEnd,onOverlapChanged){
-    this.root=root;this.onCameraChanged=onCameraChanged;this.onHandleMove=onHandleMove;this.onHandleEnd=onHandleEnd;this.onOverlapChanged=onOverlapChanged;this.overlapActive=false;
+  constructor(root,onCameraChanged,onHandleMove,onHandleEnd,onOverlapChanged,editable=true){
+    this.root=root;this.showEditMarkers=!!editable;this.onCameraChanged=onCameraChanged;this.onHandleMove=onHandleMove;this.onHandleEnd=onHandleEnd;this.onOverlapChanged=onOverlapChanged;this.overlapActive=false;
     this.angles=[35,20,25];this.radius=14;this.fitHalf=4.7;this.latestGeometry=null;this.mode='off';this.axis='free';this.dragAxis='xy';this.editAxis='xy';this.target=new THREE.Vector3();
     this.scene=new THREE.Scene();this.scene.background=new THREE.Color(0xffffff);
     this.camera=new THREE.OrthographicCamera(-4.7,4.7,4.7,-4.7,.08,3000);
@@ -202,7 +202,7 @@ export class View3D {
     for(const f of geometry?.faces||[])for(const p of f.vertices||[])include(p);
     this.fitHalf=Math.max(this.fitHalf,4.7,extent*1.12);
   }
-  setGeometry(geometry){this.latestGeometry=geometry;this.updateFit(geometry);this.geo.update(geometry);this.updateFrustum();this.render();}
+  setGeometry(geometry){this.latestGeometry=geometry;this.updateFit(geometry);this.geo.update(geometry,{showVectorEndpoints:this.showEditMarkers});this.updateFrustum();this.render();}
   screenPosition(pos){
     if(!Array.isArray(pos)||pos.length!==3||!pos.every(Number.isFinite))return null;
     const v=vector(pos).project(this.camera),w=this.renderer.domElement.clientWidth||this.root.clientWidth,h=this.renderer.domElement.clientHeight||this.root.clientHeight;
@@ -211,6 +211,14 @@ export class View3D {
   }
   updateMarkers(){
     if(!this.geo)return;
+    // Non-editable Picture results keep their geometry but never display or hit-test
+    // the endpoint handle circles. The mode button does not affect this property.
+    if(!this.showEditMarkers){
+      for(const marker of this.markerElements.values())marker.remove();
+      this.markerElements.clear();
+      if(this.overlapActive){this.overlapActive=false;this.onOverlapChanged?.(false);}
+      return;
+    }
     const ids=new Set();
     for(const handle of this.geo.handles){
       const id=String(handle.id),p=this.screenPosition(handle.position);ids.add(id);
@@ -226,6 +234,10 @@ export class View3D {
     this.checkMarkerOverlap();
   }
   checkMarkerOverlap(){
+    if(!this.showEditMarkers){
+      if(this.overlapActive){this.overlapActive=false;this.onOverlapChanged?.(false);}
+      return;
+    }
     const points=this.geo?.handles.map(h=>this.screenPosition(h.position)).filter(Boolean)||[];
     const threshold=this.nativeTouchEnabled?26:17;
     let close=false;
@@ -295,7 +307,7 @@ export class View3D {
     if(!e.nativeTouch)this.renderer.domElement.setPointerCapture(e.pointerId);
     this.pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
     if(this.pointers.size===2){if(this.drag?.changed)this.onHandleEnd?.();this.drag=null;this.pinchDistance=this.dist();return;}
-    const picked=this.mode==='edit'?this.hitAt(e):null;
+    const picked=this.mode==='edit'&&this.showEditMarkers?this.hitAt(e):null;
     if(picked?.ambiguous){
       this.onOverlapChanged?.(true);
       // Do not turn an ambiguous marker drag into either editing or rotation.
