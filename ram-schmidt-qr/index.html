@@ -1,16 +1,13 @@
 <!DOCTYPE html>
 <html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="color-scheme" content="light"><title>AVO · Грам–Шмидт и QR · 01a</title>
-<link rel="stylesheet" href="../avo-core/v2/core.css?core=01k">
+<link rel="stylesheet" href="../avo-core/v2/core.css">
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js"}}</script>
 <link rel="icon" href="../favicon-32.png"></head><body>
 <div id="app"><noscript>Для запуска нужен JavaScript.</noscript></div>
 <script type="module">
-import {createApp} from '../avo-core/v2/app.js?core=01k';
+import {createApp} from '../avo-core/v2/app.js';
 import {MSG,initialInputs,mathModel,picturesForLayout} from './model.js';
-try{
-  const app=createApp({appId:'gram-schmidt-qr',mountId:'app',initialInputs,messages:MSG,mathModel,picturesForLayout,layoutOptions:[4]});
-  window.AVOQR=app;
-}
+try{window.AVOQR=createApp({appId:'gram-schmidt-qr',mountId:'app',initialInputs,messages:MSG,mathModel,picturesForLayout,layoutOptions:[4]});}
 catch(error){console.error(error);const p=document.createElement('p');p.className='error';p.textContent='AVO v2: '+error.message;document.getElementById('app').append(p);}
 </script></body></html>
