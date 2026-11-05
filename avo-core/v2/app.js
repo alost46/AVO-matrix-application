@@ -2,7 +2,7 @@
 import {MatrixFactory,clone,validateMatrix,identity} from './matrices.js';
 import {Picture} from './picture.js';
 import {UI,LANGS,readLang,saveLang,flag,textDirection} from './i18n.js';
-export const CORE_VERSION='01k';
+export const CORE_VERSION='01l';
 const element=(tag,cls,text)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=text;return n;};
 // The launching catalog owns the return address; the app and Picture never hardcode it.
 // Accept an HTTPS/HTTP URL if it was passed by the referring catalog. A same-origin
@@ -62,7 +62,7 @@ export class AVOApp {
  msg(key){return this.options.messages[this.lang]?.[key]??key;}
  buildShell(){
   const shell=element('main','shell'),top=element('header','top'),brand=element('div','brand');
-  const img=element('img');img.src='../../avo-logo.png';img.alt='OA';brand.append(img);
+  const img=element('img');img.src=new URL('../../avo-logo.png',import.meta.url).href;img.alt='OA';brand.append(img);
   this.title=element('h1');brand.append(this.title);top.append(brand);
   const actions=element('div','top-actions');
   this.home=element('a','home');actions.append(this.home);
