@@ -2,7 +2,7 @@
 import {MatrixFactory,clone,validateMatrix,identity} from './matrices.js';
 import {Picture} from './picture.js';
 import {UI,LANGS,readLang,saveLang,flag,textDirection} from './i18n.js';
-export const CORE_VERSION='01l';
+export const CORE_VERSION='01m';
 const element=(tag,cls,text)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=text;return n;};
 // The launching catalog owns the return address; the app and Picture never hardcode it.
 // Accept an HTTPS/HTTP URL if it was passed by the referring catalog. A same-origin
@@ -84,9 +84,9 @@ export class AVOApp {
   const opts=element('div','options');
   this.syncLabel=element('label');this.syncCheck=element('input');this.syncCheck.type='checkbox';this.syncCheck.addEventListener('change',()=>this.setShared(this.syncCheck.checked));this.syncText=element('span');this.syncLabel.append(this.syncCheck,this.syncText);opts.append(this.syncLabel);
   this.lead=element('p','tip');opts.append(this.lead);
-  this.grid=element('div','layout');this.footer=element('p','tip');this.versionLabel=element('small','core-version-foot',`Core v2 ${CORE_VERSION}`);
+  this.grid=element('div','layout');this.footer=element('div','avo-footer-line');this.footerText=element('span','avo-footer-message');this.versionLabel=element('small','core-version-foot',`Core v2 ${CORE_VERSION}`);this.footer.append(this.footerText,this.versionLabel);
   this.dialog=element('dialog');this.helpTitle=element('h2');this.helpBody=element('div','help-content');this.closeHelpButton=element('button');this.closeHelpButton.addEventListener('click',()=>this.dialog.close());this.dialog.append(this.helpTitle,this.helpBody,this.closeHelpButton);
-  shell.append(top,this.toolbar,opts,this.grid,this.footer,this.versionLabel,this.dialog);this.root.append(shell);
+  shell.append(top,this.toolbar,opts,this.grid,this.footer,this.dialog);this.root.append(shell);
  }
  refreshShell(){
   this.title.textContent=this.msg('appTitle');document.title=this.msg('appTitle');this.home.textContent=this.t('home');const homeUrl=new URL(this.returnUrl.href);homeUrl.searchParams.set('lang',this.lang);this.home.href=homeUrl.href;
@@ -94,7 +94,7 @@ export class AVOApp {
   for(const [name,button] of Object.entries(this.buttons))button.textContent=this.t(name);
   for(const [lang,b] of Object.entries(this.flagButtons)){b.classList.toggle('active',lang===this.lang);b.setAttribute('aria-pressed',String(lang===this.lang));}
   this.syncText.textContent=this.t('sync');this.syncCheck.checked=this.shared;
-  this.lead.textContent=this.msg('lead');this.footer.textContent=this.msg('testNote');
+  this.lead.textContent=this.msg('lead');this.footerText.textContent=this.msg('testNote')||'';this.versionLabel.textContent=`Core v2 ${CORE_VERSION}`;
   this.helpTitle.textContent=this.msg('helpTitle');this.helpBody.replaceChildren();this.helpBody.dir=this.lang==='he'?'rtl':'ltr';
   for(const txt of [this.t('helpCommon'),this.msg('helpMath')])this.helpBody.append(element('p',null,txt));
   this.closeHelpButton.textContent=this.t('closeHelp');this.refreshHistory();
