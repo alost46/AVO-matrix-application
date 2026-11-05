@@ -2,7 +2,31 @@
 import {MatrixFactory,clone,validateMatrix,identity} from './matrices.js';
 import {Picture} from './picture.js';
 import {UI,LANGS,readLang,saveLang,flag,textDirection} from './i18n.js';
+export const CORE_VERSION='01k';
 const element=(tag,cls,text)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=text;return n;};
+// The launching catalog owns the return address; the app and Picture never hardcode it.
+// Accept an HTTPS/HTTP URL if it was passed by the referring catalog. A same-origin
+// URL is also valid for a copied/deep link without Referrer (GitHub Pages use case).
+const DEFAULT_HOME=new URL('../../',import.meta.url);
+function getReturnUrl(){
+  const params=new URLSearchParams(location.search),value=params.get('returnUrl');
+  if(value&&value.length<=2048){
+    try{
+      const url=new URL(value,location.href);
+      const safeProtocol=url.protocol==='https:'||(url.protocol==='http:'&&location.protocol==='http:');
+      if(safeProtocol&&url.username===''&&url.password===''){
+        let approved=url.origin===location.origin;
+        if(!approved&&document.referrer){
+          const source=new URL(document.referrer);
+          approved=source.origin===url.origin;
+        }
+        if(approved){url.hash='';return url;}
+      }
+    }catch(_){/* Use the neutral fallback below. */}
+  }
+  return new URL(DEFAULT_HOME.href);
+}
+
 // Old 01a apps passed {A: matrix, B: matrix}; 01b also accepts arbitrary data.
 const legacyMatrices=data=>Object.keys(data||{}).length>0&&Object.values(data).every(m=>Array.isArray(m)&&Array.isArray(m[0])&&m[0].every(Number.isFinite));
 function sameShape(template,data,depth=0){
@@ -16,7 +40,7 @@ function sameShape(template,data,depth=0){
 
 export class AVOApp {
  constructor(options){
-  this.options=options;this.appId=options.appId;this.lang=readLang();textDirection(this.lang);
+  this.options=options;this.appId=options.appId;this.returnUrl=getReturnUrl();this.lang=readLang();textDirection(this.lang);
   const initial=options.initialInputs||{};
   this.generic=!legacyMatrices(initial);
   this.initialData=this.generic?clone(initial):null;
@@ -60,12 +84,12 @@ export class AVOApp {
   const opts=element('div','options');
   this.syncLabel=element('label');this.syncCheck=element('input');this.syncCheck.type='checkbox';this.syncCheck.addEventListener('change',()=>this.setShared(this.syncCheck.checked));this.syncText=element('span');this.syncLabel.append(this.syncCheck,this.syncText);opts.append(this.syncLabel);
   this.lead=element('p','tip');opts.append(this.lead);
-  this.grid=element('div','layout');this.footer=element('p','tip');
+  this.grid=element('div','layout');this.footer=element('p','tip');this.versionLabel=element('small','core-version-foot',`Core v2 ${CORE_VERSION}`);
   this.dialog=element('dialog');this.helpTitle=element('h2');this.helpBody=element('div','help-content');this.closeHelpButton=element('button');this.closeHelpButton.addEventListener('click',()=>this.dialog.close());this.dialog.append(this.helpTitle,this.helpBody,this.closeHelpButton);
-  shell.append(top,this.toolbar,opts,this.grid,this.footer,this.dialog);this.root.append(shell);
+  shell.append(top,this.toolbar,opts,this.grid,this.footer,this.versionLabel,this.dialog);this.root.append(shell);
  }
  refreshShell(){
-  this.title.textContent=this.msg('appTitle');document.title=this.msg('appTitle');this.home.textContent=this.t('home');this.home.href='../../?lang='+this.lang;
+  this.title.textContent=this.msg('appTitle');document.title=this.msg('appTitle');this.home.textContent=this.t('home');const homeUrl=new URL(this.returnUrl.href);homeUrl.searchParams.set('lang',this.lang);this.home.href=homeUrl.href;
   this.helpButton.title=this.t('help');this.helpButton.setAttribute('aria-label',this.t('help'));
   for(const [name,button] of Object.entries(this.buttons))button.textContent=this.t(name);
   for(const [lang,b] of Object.entries(this.flagButtons)){b.classList.toggle('active',lang===this.lang);b.setAttribute('aria-pressed',String(lang===this.lang));}

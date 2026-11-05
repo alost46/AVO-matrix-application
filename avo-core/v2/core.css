@@ -92,3 +92,9 @@ body,.shell,.picture,.picture button,.picture input,.picture select,.picture lab
 .avo-overlap-notice{position:absolute;top:8px;left:8px;right:8px;z-index:5;pointer-events:none;padding:8px 10px;background:#fff4cd;color:#573e00;border:2px solid #c89117;border-radius:8px;font-size:15px;font-weight:700;text-align:center}
 .avo-overlap-notice[hidden]{display:none}
 
+
+/* 01j: core version visible in the shared application header. */
+.brand .core-version{display:inline-block;white-space:nowrap;font-size:clamp(14px,1.4vw,18px);font-weight:750;color:#174064;border:1px solid #b7c7d7;border-radius:6px;padding:3px 7px;background:#edf5fc}
+
+/* 01k: service-only core version, discreetly below the picture area. */
+.core-version-foot{display:block;margin:2px 2px 10px;padding:0 4px;text-align:right;color:#71808d;font-family:inherit;font-size:11px;font-weight:400;line-height:1.4;direction:ltr}

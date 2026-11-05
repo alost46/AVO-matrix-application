@@ -1,11 +1,11 @@
-/* AVO Core v2 01i · universal Picture, independent X/Y/Z angle rays, XY/Z drag modes. */
+/* AVO Core v2 01j · universal Picture, independent X/Y/Z angle rays, XY/Z drag modes. */
 import {View3D} from './view.js';
 import {buildRays} from './rays.js';
 const el=(tag,cls,text)=>{const x=document.createElement(tag);if(cls)x.className=cls;if(text!==undefined)x.textContent=text;return x;};
 const fmt=n=>!Number.isFinite(n)?'∞':Math.abs(n)<1e-9?'0':String(Number(n.toFixed(4)));
 export class Picture {
   constructor(app,config){
-    this.app=app;this.config=config;this.id=config.id;this.root=el('section','picture');this.root.dataset.picture=this.id;this.root.dataset.coreVersion='01i';
+    this.app=app;this.config=config;this.id=config.id;this.root=el('section','picture');this.root.dataset.picture=this.id;this.root.dataset.coreVersion='01j';
     const header=el('div','picture-header');this.heading=el('h2');header.append(this.heading);
     const tools=el('div','panel-tools');
     const mainTools=el('div','primary-tools');const gestureRow=el('div','gesture-row');
