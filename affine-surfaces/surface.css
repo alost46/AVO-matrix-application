@@ -103,3 +103,6 @@
 
 /* Vector T coordinates are direct text entry, no browser numeric increment spinners. */
 .picture[data-picture="transform"] .surface-shift-fields input{appearance:textfield;-moz-appearance:textfield;}
+
+/* 01l: compact app-local grid sizing controls; hidden while in automatic mode. */
+.surface-settings-panel select{min-width:110px}

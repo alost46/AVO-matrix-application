@@ -1,11 +1,12 @@
 /* Progressively draw surface meshes in the EXISTING AVO Core Picture canvases.
    No changes to the common core and no replacement of its navigation/gestures. */
 import * as THREE from 'three';
-import {setupSurface,affine,display,visible,implicitEquationTexts,intersectionSlabs,solveIsolatedPoints,coordinateTimeEquations,parameterValues,timeImplicitAt} from './math.js?v=01k';
+import {AdaptiveGrids} from './grid-scale.js?v=01l';
+import {setupSurface,affine,display,visible,implicitEquationTexts,intersectionSlabs,solveIsolatedPoints,coordinateTimeEquations,parameterValues,timeImplicitAt} from './math.js?v=01l';
 const nextFrame=()=>new Promise(done=>requestAnimationFrame(done));
 const sleep=ms=>new Promise(done=>setTimeout(done,ms));
 export class SurfaceRenderer {
- constructor(app,onProgress){this.app=app;this.onProgress=onProgress;this.generation=0;this.layers=[];
+ constructor(app,onProgress){this.app=app;this.onProgress=onProgress;this.generation=0;this.layers=[];this.grids=new AdaptiveGrids(app);
   for(const id of ['input','output']){
    const view=app.pictures.get(id).view,group=new THREE.Group();view.scene.add(group);
    const surfaces=new THREE.BufferGeometry(),wires=new THREE.BufferGeometry(),dots=new THREE.BufferGeometry();
@@ -30,6 +31,7 @@ export class SurfaceRenderer {
  async start(){const stamp=++this.generation,app=this.app,s=app.currentInputs(),A=app.matrixFactory.getNumericMatrix('A',{x:0,y:0,z:0,t:0});
   this.clear();for(const layer of this.layers)layer.group.children[3].material.color.setHex(0xffffff);const positions=[[],[]],lines=[[],[]],faces=[[],[]];
   try{
+   this.grids.apply(s,A);
    if(s.shape==='time'){await this.drawParameterized(stamp,s,A);return;}
    if(s.shape==='implicit'){
     const count=implicitEquationTexts(s.implicit).length;
