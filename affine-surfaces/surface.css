@@ -18,3 +18,13 @@
 .surface-controls .scale-wrap label{min-width:112px}
 .surface-controls .surface-row input:invalid{border-color:#bb4455}
 @media(max-width:500px){.surface-controls{padding:9px;font-size:15px}.surface-controls h2{font-size:19px}.surface-controls label{flex-basis:43%}.surface-controls input,.surface-controls select{height:39px}.surface-controls .surface-row{gap:8px}}
+
+/* 01b: single collapsible settings panel. Keeps the three pictures visible. */
+.surface-controls .surface-settings-toggle{margin:5px 0 2px;background:#fff;border:1.5px solid #6e9aba}
+.surface-controls .surface-settings-toggle.active{background:#d4e9f8}
+.surface-controls .surface-settings-panel{margin:8px 0 10px;padding:10px;background:#eaf4fb;border:1px solid #b9d0df;border-radius:10px}
+.surface-controls .surface-settings-panel[hidden]{display:none!important}
+.surface-controls .surface-settings-panel fieldset{padding:8px 10px}
+.surface-controls .surface-settings-extra{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:7px}
+.surface-controls .surface-settings-extra fieldset{min-width:0}
+@media(max-width:500px){.surface-controls .surface-settings-extra{display:block}}
