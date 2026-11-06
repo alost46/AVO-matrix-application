@@ -62,7 +62,7 @@
  padding-left:calc(10px + 2.5ch);
 }
 
-/* 01i layout correction: Matrix A and Vector t have matching header and field rows.
+/* 01i layout correction: Matrix A and Vector T have matching header and field rows.
    Moving the EXISTING Core title/table into an application-owned flex column
    avoids offset hacks and remains responsive on phones and in RTL mode. */
 .picture[data-picture="transform"] .matrix-row.surface-transform-data-row{
@@ -100,3 +100,6 @@
 .surface-time-panel .surface-row{align-items:start}
 .surface-time-panel .surface-row label{min-width:0;flex:1 1 135px}
 .surface-time-note{margin:5px 0;color:#36566d;font-weight:650;font-size:13px}
+
+/* Vector T coordinates are direct text entry, no browser numeric increment spinners. */
+.picture[data-picture="transform"] .surface-shift-fields input{appearance:textfield;-moz-appearance:textfield;}

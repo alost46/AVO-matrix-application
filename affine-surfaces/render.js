@@ -1,7 +1,7 @@
 /* Progressively draw surface meshes in the EXISTING AVO Core Picture canvases.
    No changes to the common core and no replacement of its navigation/gestures. */
 import * as THREE from 'three';
-import {setupSurface,affine,display,visible,implicitEquationTexts,intersectionSlabs,solveIsolatedPoints,coordinateTimeEquations,parameterValues,timeImplicitAt} from './math.js?v=01j';
+import {setupSurface,affine,display,visible,implicitEquationTexts,intersectionSlabs,solveIsolatedPoints,coordinateTimeEquations,parameterValues,timeImplicitAt} from './math.js?v=01k';
 const nextFrame=()=>new Promise(done=>requestAnimationFrame(done));
 const sleep=ms=>new Promise(done=>setTimeout(done,ms));
 export class SurfaceRenderer {
