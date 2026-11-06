@@ -1,7 +1,7 @@
 /* Progressively draw surface meshes in the EXISTING AVO Core Picture canvases.
    No changes to the common core and no replacement of its navigation/gestures. */
 import * as THREE from 'three';
-import {setupSurface,affine,display,visible} from './math.js';
+import {setupSurface,affine,display,visible,implicitEquationTexts,intersectionSlabs} from './math.js';
 const nextFrame=()=>new Promise(done=>requestAnimationFrame(done));
 const sleep=ms=>new Promise(done=>setTimeout(done,ms));
 export class SurfaceRenderer {
@@ -16,16 +16,24 @@ export class SurfaceRenderer {
    const characteristic=new THREE.BufferGeometry();
    const ink=new THREE.LineSegments(characteristic,new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:.98,depthTest:true}));
    ink.renderOrder=9;
-   group.add(face,wire,point,ink);this.layers.push({id,view,group,surfaces,wires,dots,characteristic});
+   const markGeom=new THREE.BufferGeometry();
+   const marker=new THREE.Points(markGeom,new THREE.PointsMaterial({color:0xef2424,size:10,sizeAttenuation:false,depthTest:false,depthWrite:false}));
+   marker.renderOrder=20;
+   group.add(face,wire,point,ink,marker);
+   this.layers.push({id,view,group,surfaces,wires,dots,characteristic,markGeom});
   }
  }
- clear(){for(const l of this.layers){for(const g of [l.surfaces,l.wires,l.dots,l.characteristic])g.setAttribute('position',new THREE.Float32BufferAttribute([],3));l.view.render();}}
+ clear(){for(const l of this.layers){for(const g of [l.surfaces,l.wires,l.dots,l.characteristic,l.markGeom])g.setAttribute('position',new THREE.Float32BufferAttribute([],3));l.view.render();}}
  fill(arr,spec,data){const g=spec[data];g.setAttribute('position',new THREE.Float32BufferAttribute(new Float32Array(arr),3));g.computeBoundingSphere();}
  pushLine(list,a,b){if(visible(a)&&visible(b))list.push(...a,...b);}
  pushTri(list,a,b,c){if(visible(a)&&visible(b)&&visible(c))list.push(...a,...b,...c);}
  async start(){const stamp=++this.generation,app=this.app,s=app.currentInputs(),A=app.matrixFactory.getNumericMatrix('A',{x:0,y:0,z:0,t:0});
-  this.clear();const positions=[[],[]],lines=[[],[]],faces=[[],[]];
+  this.clear();for(const layer of this.layers)layer.group.children[3].material.color.setHex(0xffffff);const positions=[[],[]],lines=[[],[]],faces=[[],[]];
   try{
+   if(s.shape==='implicit' && implicitEquationTexts(s.implicit).length===2){
+    await this.drawIntersection(stamp,s,A);
+    return;
+   }
    const patches=setupSurface(s),globalN=s.stepMode==='auto'?40:null;
    const sparseOnly=!['explicit','implicit'].includes(s.shape);
    let expected=0,done=0,vertices=0;
@@ -115,5 +123,36 @@ export class SurfaceRenderer {
    if(stamp!==this.generation)return;
    drawn();this.onProgress?.({done:expected,expected,vertices,finished:true});
   }catch(e){if(stamp===this.generation){console.error(e);this.onProgress?.({error:e.message});}}
+ } 
+ // Render intersections as redrawn line segments rather than a falsely filled surface.
+ // The slabs progress from low to high Z. Within a slab, cells are scanned X-first, Y-next.
+ async drawIntersection(stamp,s,A){
+  const arrays=[[],[]];let done=0,total=1,vertices=0,chosen=false;
+  const available=Math.max(12,Math.min(72,s.stepMode==='auto'?40:
+    Math.ceil(Math.max((s.bounds.xmax-s.bounds.xmin)/s.dx,(s.bounds.ymax-s.bounds.ymin)/s.dy))));
+  for(const slab of intersectionSlabs(s,available)){
+   if(stamp!==this.generation)return;
+   for(const [a,b] of slab.segments){
+    if(!chosen){
+     const pt=a.map((v,i)=>(v+b[i])/2),transformed=affine(A,s.t,pt);
+     for(let idx=0;idx<2;idx++)this.fill(idx===0?display(pt,s):display(transformed,s),this.layers[idx],'markGeom');
+     chosen=true;
+    }
+    const pp=[display(a,s),display(b,s)],qq=[display(affine(A,s.t,a),s),display(affine(A,s.t,b),s)];
+    if(visible(pp[0])&&visible(pp[1]))arrays[0].push(...pp[0],...pp[1]);
+    if(visible(qq[0])&&visible(qq[1]))arrays[1].push(...qq[0],...qq[1]);
+    vertices+=2;
+   }
+   done=slab.done;total=slab.total;
+   for(let i=0;i<2;i++){
+    this.fill(arrays[i],this.layers[i],'characteristic');
+    this.layers[i].group.children[3].material.color.setHex(i===0?0x125b99:0x1b7a39);
+    this.layers[i].view.render();
+   }
+   this.onProgress?.({done,total,expected:total,vertices,finished:done===total});
+   if(s.delay>0)await sleep(Math.min(2000,s.delay));else await nextFrame();
+  }
+  if(stamp===this.generation&&vertices===0)this.onProgress?.({error:'No intersection found in the selected bounds / Пересечение не найдено в заданном диапазоне'});
  }
+
 }
