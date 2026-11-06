@@ -106,3 +106,6 @@
 
 /* 01l: compact app-local grid sizing controls; hidden while in automatic mode. */
 .surface-settings-panel select{min-width:110px}
+
+/* 01m: the selected point is a depth-tested red dot placed only by picking the visible surface. */
+.picture[data-picture="input"] .plot-wrap canvas{cursor:crosshair}

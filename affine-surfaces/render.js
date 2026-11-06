@@ -1,12 +1,12 @@
 /* Progressively draw surface meshes in the EXISTING AVO Core Picture canvases.
    No changes to the common core and no replacement of its navigation/gestures. */
 import * as THREE from 'three';
-import {AdaptiveGrids} from './grid-scale.js?v=01l';
-import {setupSurface,affine,display,visible,implicitEquationTexts,intersectionSlabs,solveIsolatedPoints,coordinateTimeEquations,parameterValues,timeImplicitAt} from './math.js?v=01l';
+import {AdaptiveGrids} from './grid-scale.js?v=01m';
+import {setupSurface,affine,display,visible,implicitEquationTexts,intersectionSlabs,solveIsolatedPoints,coordinateTimeEquations,parameterValues,timeImplicitAt} from './math.js?v=01m';
 const nextFrame=()=>new Promise(done=>requestAnimationFrame(done));
 const sleep=ms=>new Promise(done=>setTimeout(done,ms));
 export class SurfaceRenderer {
- constructor(app,onProgress){this.app=app;this.onProgress=onProgress;this.generation=0;this.layers=[];this.grids=new AdaptiveGrids(app);
+ constructor(app,onProgress){this.app=app;this.onProgress=onProgress;this.generation=0;this.layers=[];this.grids=new AdaptiveGrids(app);this.clickStart=null;this.pickRaycaster=new THREE.Raycaster();
   for(const id of ['input','output']){
    const view=app.pictures.get(id).view,group=new THREE.Group();view.scene.add(group);
    const surfaces=new THREE.BufferGeometry(),wires=new THREE.BufferGeometry(),dots=new THREE.BufferGeometry();
@@ -19,15 +19,97 @@ export class SurfaceRenderer {
    ink.renderOrder=9;
    const markGeom=new THREE.BufferGeometry();
    const marker=new THREE.Points(markGeom,new THREE.PointsMaterial({color:0xef2424,size:10,sizeAttenuation:false,depthTest:false,depthWrite:false}));
-   marker.renderOrder=20;
-   group.add(face,wire,point,ink,marker);
-   this.layers.push({id,view,group,surfaces,wires,dots,characteristic,markGeom});
+   marker.renderOrder=20; // Legacy red endpoints of parametric paths.
+   const chosenGeom=new THREE.BufferGeometry();
+   const chosenMaterial=new THREE.PointsMaterial({map:this.markerTexture(),size:20,sizeAttenuation:false,transparent:true,alphaTest:.2,depthTest:true,depthWrite:false});
+   const chosen=new THREE.Points(chosenGeom,chosenMaterial);chosen.renderOrder=21;
+   group.add(face,wire,point,ink,marker,chosen);
+   this.layers.push({id,view,group,surfaces,wires,dots,characteristic,markGeom,chosenGeom,face,ink,marker});
   }
+  const canvas=this.layers[0].view.renderer.domElement;
+  // Observe a short click/tap, but never hijack drag gestures, which belong to AVO Core.
+  canvas.addEventListener('pointerdown',e=>{if(e.isPrimary&&e.button===0)this.clickStart={id:e.pointerId,x:e.clientX,y:e.clientY};});
+  canvas.addEventListener('pointercancel',()=>{this.clickStart=null;});
+  canvas.addEventListener('pointerup',e=>{
+   const start=this.clickStart;this.clickStart=null;
+   if(!start||start.id!==e.pointerId||Math.hypot(e.clientX-start.x,e.clientY-start.y)>8)return;
+   const hit=this.pickAt(e.clientX,e.clientY);
+   if(hit)this.selectSourcePoint(hit,true);
+  });
  }
- clear(){for(const l of this.layers){for(const g of [l.surfaces,l.wires,l.dots,l.characteristic,l.markGeom])g.setAttribute('position',new THREE.Float32BufferAttribute([],3));l.view.render();}}
+ markerTexture(){
+  if(this.selectedTexture)return this.selectedTexture;
+  const canvas=document.createElement('canvas');canvas.width=64;canvas.height=64;
+  const ctx=canvas.getContext('2d');ctx.beginPath();ctx.arc(32,32,27,0,Math.PI*2);
+  ctx.fillStyle='#ffffff';ctx.fill();ctx.lineWidth=3;ctx.strokeStyle='#111111';ctx.stroke();
+  ctx.beginPath();ctx.arc(32,32,20,0,Math.PI*2);ctx.fillStyle='#e71921';ctx.fill();
+  ctx.beginPath();ctx.arc(32,32,20,0,Math.PI*2);ctx.strokeStyle='#7a0b10';ctx.lineWidth=2;ctx.stroke();
+  this.selectedTexture=new THREE.CanvasTexture(canvas);return this.selectedTexture;
+ }
+ clear(){for(const l of this.layers){for(const g of [l.surfaces,l.wires,l.dots,l.characteristic,l.markGeom,l.chosenGeom])g.setAttribute('position',new THREE.Float32BufferAttribute([],3));l.view.render();}}
  fill(arr,spec,data){const g=spec[data];g.setAttribute('position',new THREE.Float32BufferAttribute(new Float32Array(arr),3));g.computeBoundingSphere();}
  pushLine(list,a,b){if(visible(a)&&visible(b))list.push(...a,...b);}
  pushTri(list,a,b,c){if(visible(a)&&visible(b)&&visible(c))list.push(...a,...b,...c);}
+ pickAt(clientX,clientY,geometryOnly=false){
+  const layer=this.layers[0],view=layer.view,canvas=view.renderer.domElement,rect=canvas.getBoundingClientRect();
+  if(!rect.width||!rect.height)return null;
+  const nx=((clientX-rect.left)/rect.width)*2-1,ny=1-((clientY-rect.top)/rect.height)*2;
+  if(Math.abs(nx)>1||Math.abs(ny)>1)return null;
+  this.pickRaycaster.setFromCamera(new THREE.Vector2(nx,ny),view.camera);
+  let hit=null;
+  if(layer.surfaces.getAttribute('position')?.count>=3){
+   const faces=this.pickRaycaster.intersectObject(layer.face,false);
+   if(faces.length)hit=faces[0].point;
+  }
+  // If no surface mesh exists, the user may pick a drawn curve or a point.
+  if(!hit&&!geometryOnly&&!(layer.surfaces.getAttribute('position')?.count>=3)){
+   const worldPerPixel=(view.camera.top-view.camera.bottom)/rect.height;
+   this.pickRaycaster.params.Line.threshold=Math.max(.02,12*worldPerPixel);
+   const lines=this.pickRaycaster.intersectObject(layer.ink,false);
+   if(lines.length)hit=lines[0].pointOnLine||lines[0].point;
+   if(!hit){
+    const points=layer.markGeom.getAttribute('position');let best=null;
+    for(let i=0;i<(points?.count||0);i++){
+     const v=new THREE.Vector3().fromBufferAttribute(points,i),p=v.clone().project(view.camera);
+     const px=rect.left+(p.x+1)*rect.width/2,py=rect.top+(1-p.y)*rect.height/2;
+     const dist=Math.hypot(px-clientX,py-clientY);
+     if(dist<14&&(!best||dist<best.dist))best={v,dist};
+    }
+    if(best)hit=best.v;
+   }
+  }
+  if(!hit)return null;
+  const s=this.app.currentInputs();
+  const modes=[s.scaleX,s.scaleY,s.scaleZ];
+  const original=[hit.x,hit.y,hit.z].map((v,i)=>modes[i]==='log'?10**v:modes[i]==='symlog'?Math.sign(v)*(10**Math.abs(v)-1):v);
+  return original.every(Number.isFinite)?original:null;
+ }
+ selectSourcePoint(p,manual){
+  if(!p||!p.every(Number.isFinite))return;
+  const app=this.app;
+  if(manual)app.beginGesture();
+  app.currentData.selectedPoint=p.map(Number);app.currentData.selectedActive=true;
+  if(manual)app.finishGesture();else app.autosave();
+  this.paintSelection();
+ }
+ paintSelection(){
+  const s=this.app.currentInputs(),validSelection=s.selectedActive&&Array.isArray(s.selectedPoint)&&s.selectedPoint.length===3&&s.selectedPoint.every(Number.isFinite);
+  const A=this.app.matrixFactory.getNumericMatrix('A',{x:0,y:0,z:0,t:0});
+  for(let k=0;k<2;k++){
+   const pt=validSelection?(k===0?s.selectedPoint:affine(A,s.t,s.selectedPoint)):null;
+   const displayed=pt?display(pt,s):null;
+   this.fill(visible(displayed)?displayed:[],this.layers[k],'chosenGeom');
+   this.layers[k].view.render();
+  }
+ }
+ chooseVisiblePoint(){
+  const s=this.app.currentInputs();if(s.selectedActive||this.layers[0].surfaces.getAttribute('position')?.count<3)return;
+  const canvas=this.layers[0].view.renderer.domElement,rect=canvas.getBoundingClientRect();
+  for(const [x,y] of [[.5,.5],[.45,.5],[.55,.5],[.5,.4],[.5,.6],[.4,.4],[.6,.4],[.4,.6],[.6,.6],[.35,.5],[.65,.5]]){
+   const hit=this.pickAt(rect.left+x*rect.width,rect.top+y*rect.height,true);
+   if(hit){this.selectSourcePoint(hit,false);return;}
+  }
+ }
  async start(){const stamp=++this.generation,app=this.app,s=app.currentInputs(),A=app.matrixFactory.getNumericMatrix('A',{x:0,y:0,z:0,t:0});
   this.clear();for(const layer of this.layers)layer.group.children[3].material.color.setHex(0xffffff);const positions=[[],[]],lines=[[],[]],faces=[[],[]];
   try{
@@ -88,7 +170,7 @@ export class SurfaceRenderer {
     }
     for(let k=0;k<2;k++)this.fill(structural[k],this.layers[k],'characteristic');
    }
-   const drawn=()=>{for(let k=0;k<2;k++){this.fill(faces[k],this.layers[k],'surfaces');this.fill(lines[k],this.layers[k],'wires');this.fill(positions[k],this.layers[k],'dots');this.layers[k].view.render();}};
+   const drawn=()=>{for(let k=0;k<2;k++){this.fill(faces[k],this.layers[k],'surfaces');this.fill(lines[k],this.layers[k],'wires');this.fill(positions[k],this.layers[k],'dots');}this.paintSelection();};
    for(const {p,nu,nv} of plans){let previous=null;
     for(let j=0;j<=nv;j++){
      if(stamp!==this.generation)return;
@@ -125,7 +207,7 @@ export class SurfaceRenderer {
     }
    }
    if(stamp!==this.generation)return;
-   drawn();this.onProgress?.({done:expected,expected,vertices,finished:true});
+   drawn();this.chooseVisiblePoint();this.onProgress?.({done:expected,expected,vertices,finished:true});
   }catch(e){if(stamp===this.generation){console.error(e);this.onProgress?.({error:e.message});}}
  } 
  // The parameter t is scalar and is NEVER the affine shift vector s.t.

@@ -1,4 +1,4 @@
-import {sourceFormulaText,resultFormulaText} from './math.js?v=01k';
+import {sourceFormulaText,resultFormulaText} from './math.js?v=01m';
 /* App-specific data controls. Core interface (flags, JSON, undo, view, editing) untouched. */
 const TXT={
  ru:{section:'Поверхность и построение',shape:'Поверхность',sphere:'Сфера · центр (0,0,0)',ellipsoid:'Эллипсоид',box:'Прямоугольный параллелепипед · вершина (0,0,0)',cylinder:'Цилиндр · основание XY',cone:'Конус · основание XY',pyramid:'Пирамида · основание XY',torus:'Тор',paraboloid:'Параболоид',frustum:'Усечённый конус',hemisphere:'Полусфера',explicit:'Явная z = f(x,y)',implicit:'Неявная F(x,y,z) = 0',time:'С параметром t: x(t), y(t), z(t) / F(x,y,z,t)=0',timeCoordinates:'Координаты x(t), y(t), z(t)',timeImplicit:'Неявная F(x,y,z,t)=0 (1–3 уравнения)',timeKind:'Способ задания с параметром t',timeExpr:'Формулы координат (1–3, через ; или новую строку)',timeImplicitExpr:'Зависимые от t уравнения (1–3)',timeFrom:'t: начало',timeTo:'t: конец',timeStep:'Шаг Δt',timeTip:'Параметр t скалярный (например, время). Вектор смещения T задаётся отдельно, прямыми координатами.',expr:'Формула z=f(x,y)',imp:'Уравнение или система (разделитель ; или новая строка)',range:'Диапазоны исходных координат',gridMode:'Координатная сетка',gridAuto:'Автоматически по фигуре',gridManual:'Вручную (± по осям)',gridX:'X: от − до +',gridY:'Y: от − до +',gridZ:'Z: от − до +',settings:'Установки',stepMode:'Шаг сетки',auto:'Авто · 40 интервалов',manual:'Вручную',dx:'ΔX (или Δu)',dy:'ΔY (или Δv)',delay:'Задержка, мс',parameter:'Параметры фигуры',a:'a · размер / радиус',b:'b · размер / радиус',c:'c · высота / размер',minor:'r · малый радиус тора',shift:'Смещение T (абсолютные координаты и перетаскивание ⊗)',scales:'Шкалы изображения',linear:'Линейная',log:'Лог 10 (x>0)',symlog:'±Лог',selected:'Выбранная точка поверхности',u:'u / доля X',v:'v / доля Y',rebuild:'Построить заново',status:'Рисование',done:'Готово',error:'Ошибка',hint:'Масштабы меняют только изображение, не координаты для A·p+t. При логарифме неположительные координаты не отображаются. Одно уравнение задаёт поверхность, два линию пересечения, три отдельные точки. Разделите уравнения знаком ; или новой строкой.',many:'Узлов по XY',rank:'Ранг',show:'Дополнительные параметры'},
@@ -58,7 +58,8 @@ export function installControls(app){const section=e('section','surface-controls
  shiftWrap.append(shiftRow);opt.append(shiftWrap);
  const scaleWrap=e('fieldset'),scaleLegend=e('legend');scaleLegend.dataset.tr='scales';scaleWrap.append(scaleLegend);const scalesRow=e('div','surface-row'),scales=[];
  for(const axis of 'XYZ'){const lab=labelWrap(scalesRow,axis),select=e('select');for(const key of ['linear','log','symlog']){const option=e('option');option.value=key;option.dataset.tr=key;select.append(option);}lab.append(select);scales.push(select);}scaleWrap.append(scalesRow);opt.append(scaleWrap);
- const pointWrap=e('fieldset'),pointLegend=e('legend');pointLegend.dataset.tr='selected';pointWrap.append(pointLegend);const pointRow=e('div','surface-row'),u=field(pointRow,'u'),v=field(pointRow,'v');pointWrap.append(pointRow);opt.append(pointWrap);
+ // Point selection is by clicking/tapping the visible original surface.
+ // Legacy u/v parameters stay in saved JSON for backward compatibility.
  settingsPanel.append(opt);section.append(settingsToggle,settingsPanel);
  settingsToggle.addEventListener('click',()=>{settingsPanel.hidden=!settingsPanel.hidden;settingsToggle.setAttribute('aria-expanded',String(!settingsPanel.hidden));settingsToggle.classList.toggle('active',!settingsPanel.hidden);});
  const actions=e('div','surface-actions'),rebuild=e('button'),progress=e('output','status-progress');progress.setAttribute('role','status');actions.append(rebuild,progress);section.append(actions);
@@ -106,14 +107,19 @@ export function installControls(app){const section=e('section','surface-controls
   setValue(timeMin,s.timeMin);setValue(timeMax,s.timeMax);setValue(timeStep,s.timeStep);setValue(dx,s.dx);setValue(dy,s.dy);setValue(delay,s.delay);
   for(const [key,input] of Object.entries(params))setValue(input,s[key]);for(const [key,input] of Object.entries(bounds))setValue(input,s.bounds[key]);
   t.forEach((input,i)=>setValue(input,Number(s.t[i].toFixed(5))));scales.forEach((input,i)=>input.value=s[['scaleX','scaleY','scaleZ'][i]]);
-  setValue(u,s.selectedU);setValue(v,s.selectedV);visibleFields();}
+  visibleFields();}
  function valid(s){const b=s.bounds;if(['xmin','xmax','ymin','ymax','zmin','zmax'].some(k=>!Number.isFinite(b[k])))return false;
   if(b.xmin>=b.xmax||b.ymin>=b.ymax||b.zmin>=b.zmax)return false;
   if(!(s.dx>0&&s.dy>0&&s.dx<1e4&&s.dy<1e4&&s.delay>=0&&s.delay<=2000))return false;
   if(!(s.a>0&&s.b>0&&s.c>0&&s.minor>0))return false;
   if(!['auto','manual'].includes(s.gridMode)||!['gridX','gridY','gridZ'].every(key=>Number.isFinite(s[key])&&s[key]>=.1&&s[key]<=99999))return false;
   if(!Number.isFinite(s.timeMin)||!Number.isFinite(s.timeMax)||!Number.isFinite(s.timeStep)||s.timeMin>=s.timeMax||s.timeStep<=0||s.timeStep>100000)return false;return true;}
- function change(mutator){const s=structuredClone(app.currentInputs());mutator(s);if(!valid(s)){progress.textContent='Invalid values / Неверные значения';return;}
+ function change(mutator){const original=app.currentInputs(),s=structuredClone(original);mutator(s);
+  if(!valid(s)){progress.textContent='Invalid values / Неверные значения';return;}
+  // A and T never change the selected source point. A new source geometry does.
+  const geometryKeys=['shape','a','b','c','minor','expr','implicit','timeMode','timeEquations','dynamicEquations','timeMin','timeMax','timeStep'];
+  const geometryChanged=geometryKeys.some(k=>s[k]!==original[k])||JSON.stringify(s.bounds)!==JSON.stringify(original.bounds);
+  if(geometryChanged)s.selectedActive=false;
   app.applyChange(()=>{Object.assign(app.currentData,s);});}
  shape.addEventListener('change',()=>change(s=>{s.shape=shape.value;}));
  gridMode.addEventListener('change',()=>change(s=>{s.gridMode=gridMode.value;}));
@@ -122,7 +128,7 @@ export function installControls(app){const section=e('section','surface-controls
  timeEq.addEventListener('change',()=>change(s=>{s.timeEquations=timeEq.value;}));
  dynamicEq.addEventListener('change',()=>change(s=>{s.dynamicEquations=dynamicEq.value;}));
  for(const [key,input] of [['timeMin',timeMin],['timeMax',timeMax],['timeStep',timeStep]])input.addEventListener('change',()=>change(s=>{s[key]=Number(input.value.replace(',','.'));}));mode.addEventListener('change',()=>change(s=>{s.stepMode=mode.value;}));
- const props={...params,dx,dy,delay,u,v};const propNames={u:'selectedU',v:'selectedV'};
+ const props={...params,dx,dy,delay};const propNames={};
  for(const [key,input] of Object.entries(props))input.addEventListener('change',()=>change(s=>{s[propNames[key]||key]=Number(input.value.replace(',','.'));}));
  explicit.addEventListener('change',()=>change(s=>{s.expr=explicit.value;}));implicitArea.addEventListener('change',()=>change(s=>{s.implicit=implicitArea.value;}));
  for(const [key,input] of Object.entries(bounds))input.addEventListener('change',()=>change(s=>{s.bounds[key]=Number(input.value.replace(',','.'));}));
