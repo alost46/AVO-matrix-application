@@ -9,12 +9,12 @@ export class SurfaceRenderer {
   for(const id of ['input','output']){
    const view=app.pictures.get(id).view,group=new THREE.Group();view.scene.add(group);
    const surfaces=new THREE.BufferGeometry(),wires=new THREE.BufferGeometry(),dots=new THREE.BufferGeometry();
-   const face=new THREE.Mesh(surfaces,new THREE.MeshBasicMaterial({color:id==='input'?0x5bafd1:0x87c879,side:THREE.DoubleSide,transparent:true,opacity:.36,depthWrite:false,depthTest:true}));
-   const wire=new THREE.LineSegments(wires,new THREE.LineBasicMaterial({color:id==='input'?0xb1d8e8:0xbce7ae,transparent:true,opacity:.56,depthTest:true}));
-   const point=new THREE.Points(dots,new THREE.PointsMaterial({color:id==='input'?0x126395:0x266c32,size:1.4,sizeAttenuation:false,transparent:true,opacity:.35,depthTest:false}));
+   const face=new THREE.Mesh(surfaces,new THREE.MeshBasicMaterial({color:id==='input'?0x5bafd1:0x87c879,side:THREE.DoubleSide,transparent:true,opacity:.28,depthWrite:true,depthTest:true}));
+   const wire=new THREE.LineSegments(wires,new THREE.LineBasicMaterial({color:id==='input'?0xb1d8e8:0xbce7ae,transparent:true,opacity:.45,depthTest:true}));
+   const point=new THREE.Points(dots,new THREE.PointsMaterial({color:id==='input'?0x126395:0x266c32,size:1.4,sizeAttenuation:false,transparent:true,opacity:.30,depthTest:true}));
    // Independent characteristic lines: silhouettes, cylinder generators / circular rims, etc.
    const characteristic=new THREE.BufferGeometry();
-   const ink=new THREE.LineSegments(characteristic,new THREE.LineBasicMaterial({color:id==='input'?0xf8ffff:0xf7fff7,transparent:true,opacity:.97,depthTest:false}));
+   const ink=new THREE.LineSegments(characteristic,new THREE.LineBasicMaterial({color:id==='input'?0xf8ffff:0xf7fff7,transparent:true,opacity:.98,depthTest:true}));
    ink.renderOrder=9;
    group.add(face,wire,point,ink);this.layers.push({id,view,group,surfaces,wires,dots,characteristic});
   }
@@ -27,6 +27,7 @@ export class SurfaceRenderer {
   this.clear();const positions=[[],[]],lines=[[],[]],faces=[[],[]];
   try{
    const patches=setupSurface(s),globalN=s.stepMode==='auto'?40:null;
+   const sparseOnly=!['explicit','implicit'].includes(s.shape);
    let expected=0,done=0,vertices=0;
    const plans=patches.map(p=>{
     const nu=globalN??Math.max(2,Math.ceil((p.u1-p.u0)/s.dx)),nv=globalN??Math.max(2,Math.ceil((p.v1-p.v0)/s.dy));
@@ -46,21 +47,30 @@ export class SurfaceRenderer {
      }
     };
     for(const patch of patches){
-     const side=/(?:side|sphere|ellipsoid|torus|hemi|paraboloid)/.test(patch.name);
-     const round=/^(?:sphere|ellipsoid|torus|cylinder|cone|frustum|hemi|paraboloid)/.test(patch.name);
-     const isCap=/(?:bottom|top)$/.test(patch.name);
-     if(round&&side){
-      // Generators/meridians and latitude rings: prominent and sparse.
-      const meridians=patch.name==='torus'?12:12;
-      for(let i=0;i<meridians;i++)plotCurve(patch,'u',i/meridians);
-      const levels=patch.name==='torus'?8:patch.name==='sphere'||patch.name==='ellipsoid'?7:5;
-      for(let i=0;i<=levels;i++)plotCurve(patch,'v',i/levels);
-     }else if(isCap&&round){
-      // Outer rim of both end caps, plus a few radial lines on circular disks.
-      plotCurve(patch,'v',1);
-      for(let i=0;i<8;i++)plotCurve(patch,'u',i/8,36);
+     if(/^cylinder-side$/.test(patch.name)){
+      for(const where of [0,0.2,0.4,0.6,0.8])plotCurve(patch,'u',where,56);
+     }else if(/^cylinder-(?:bottom|top)$/.test(patch.name)){
+      plotCurve(patch,'v',1,96);
+     }else if(/^cone-side$/.test(patch.name)){
+      for(const where of [0,0.25,0.5,0.75])plotCurve(patch,'u',where,56);
+     }else if(/^cone-bottom$/.test(patch.name)){
+      plotCurve(patch,'v',1,96);
+     }else if(/^frustum-side$/.test(patch.name)){
+      for(const where of [0,0.25,0.5,0.75])plotCurve(patch,'u',where,56);
+     }else if(/^frustum-(?:bottom|top)$/.test(patch.name)){
+      plotCurve(patch,'v',1,96);
+     }else if(/^(sphere|ellipsoid|hemi)$/.test(patch.name)){
+      for(const where of [0,0.2,0.4,0.6,0.8])plotCurve(patch,'u',where,72);
+      for(const where of [0.18,0.5,0.82])plotCurve(patch,'v',where,72);
+     }else if(/^torus$/.test(patch.name)){
+      for(const where of [0,0.25,0.5,0.75])plotCurve(patch,'u',where,96);
+      for(const where of [0,0.25,0.5,0.75])plotCurve(patch,'v',where,96);
+     }else if(/^paraboloid$/.test(patch.name)){
+      for(const where of [0,0.25,0.5,0.75])plotCurve(patch,'u',where,72);
+      for(const where of [0.3,0.6,1])plotCurve(patch,'v',where,72);
+     }else if(/^pyramid/.test(patch.name)||/^box/.test(patch.name)){
+      for(const fixed of ['u','v'])for(const where of [0,1])plotCurve(patch,fixed,where,20);
      }else{
-      // Polygonal faces: draw their true geometric edges.
       for(const fixed of ['u','v'])for(const where of [0,1])plotCurve(patch,fixed,where,20);
      }
     }
@@ -80,10 +90,10 @@ export class SurfaceRenderer {
        return w;
       });
       row.push(pair);vertices+=pair.length;
-      if(i>0&&j%Math.max(1,Math.ceil(nv/10))===0){const left=row[i-1];for(let branch=0;branch<Math.min(left.length,pair.length);branch++){
+      if(!sparseOnly&&i>0&&j%Math.max(1,Math.ceil(nv/10))===0){const left=row[i-1];for(let branch=0;branch<Math.min(left.length,pair.length);branch++){
        for(let k=0;k<2;k++)this.pushLine(lines[k],left[branch][k],pair[branch][k]);
       }}
-      if(previous&&i%Math.max(1,Math.ceil(nu/10))===0){const above=previous[i];for(let branch=0;branch<Math.min(above.length,pair.length);branch++){
+      if(!sparseOnly&&previous&&i%Math.max(1,Math.ceil(nu/10))===0){const above=previous[i];for(let branch=0;branch<Math.min(above.length,pair.length);branch++){
        for(let k=0;k<2;k++)this.pushLine(lines[k],above[branch][k],pair[branch][k]);
       }}
       if(previous&&i>0){const aa=previous[i-1],bb=previous[i],cc=row[i-1],dd=pair;

@@ -1,3 +1,4 @@
+import {sourceFormulaText,resultFormulaText,shiftVectorText} from './math.js';
 /* App-specific data controls. Core interface (flags, JSON, undo, view, editing) untouched. */
 const TXT={
  ru:{section:'Поверхность и построение',shape:'Поверхность',sphere:'Сфера · центр (0,0,0)',ellipsoid:'Эллипсоид',box:'Прямоугольный параллелепипед · вершина (0,0,0)',cylinder:'Цилиндр · основание XY',cone:'Конус · основание XY',pyramid:'Пирамида · основание XY',torus:'Тор',paraboloid:'Параболоид',frustum:'Усечённый конус',hemisphere:'Полусфера',explicit:'Явная z = f(x,y)',implicit:'Неявная F(x,y,z) = 0',expr:'Формула z=f(x,y)',imp:'Формула F(x,y,z)=0',range:'Диапазоны исходных координат',settings:'Установки',stepMode:'Шаг сетки',auto:'Авто · 40 интервалов',manual:'Вручную',dx:'ΔX (или Δu)',dy:'ΔY (или Δv)',delay:'Задержка, мс',parameter:'Параметры фигуры',a:'a · размер / радиус',b:'b · размер / радиус',c:'c · высота / размер',minor:'r · малый радиус тора',shift:'Смещение t (также перетаскивается чёрным маркером)',scales:'Шкалы изображения',linear:'Линейная',log:'Лог 10 (x>0)',symlog:'±Лог',selected:'Выделенная точка поверхности',u:'u / доля X',v:'v / доля Y',rebuild:'Построить заново',status:'Рисование',done:'Готово',error:'Ошибка',hint:'Масштабы меняют только изображение, не координаты для A·p+t. При логарифме неположительные координаты не отображаются. Для неявной формулы все найденные Z в диапазоне появляются сразу; шаги задают плотность сетки.',many:'Узлов по XY',rank:'Ранг',show:'Дополнительные параметры'},
@@ -32,6 +33,13 @@ export function installControls(app){const section=e('section','surface-controls
  settingsToggle.addEventListener('click',()=>{settingsPanel.hidden=!settingsPanel.hidden;settingsToggle.setAttribute('aria-expanded',String(!settingsPanel.hidden));settingsToggle.classList.toggle('active',!settingsPanel.hidden);});
  const actions=e('div','surface-actions'),rebuild=e('button'),progress=e('output','status-progress');progress.setAttribute('role','status');actions.append(rebuild,progress);section.append(actions);
  const hint=e('p','hint');section.append(hint);app.grid.before(section);
+ const banners={};
+ for(const id of ['input','transform','output']){
+  const pic=app.pictures?.get(id);if(!pic)continue;
+  const bar=e('div','surface-formula-banner');
+  if(id==='transform')bar.classList.add('compact');
+  pic.plotWrap?.before(bar);banners[id]=bar;
+ }
  function setValue(input,value){if(document.activeElement!==input)input.value=String(value);}
  function visibleFields(){const id=app.currentInputs().shape,custom=id==='explicit'||id==='implicit';eqRow.classList.toggle('hidden',!custom);
   explicit.parentElement.classList.toggle('hidden',id!=='explicit');implicit.parentElement.classList.toggle('hidden',id!=='implicit');
@@ -56,6 +64,12 @@ export function installControls(app){const section=e('section','surface-controls
  t.forEach((input,i)=>input.addEventListener('change',()=>change(s=>{s.t[i]=Number(input.value.replace(',','.'));})));
  scales.forEach((input,i)=>input.addEventListener('change',()=>change(s=>{s[['scaleX','scaleY','scaleZ'][i]]=input.value;})));
  rebuild.addEventListener('click',()=>app.startSurface?.());
+ function refreshAnnotations(){
+  const s=app.currentInputs();
+  if(banners.input)banners.input.textContent=sourceFormulaText(s);
+  if(banners.output)banners.output.textContent=resultFormulaText(s, app.matrixFactory?.getNumericMatrix('A',{x:0,y:0,z:0,t:0})||[[1,0,0],[0,1,0],[0,0,1]]);
+  if(banners.transform)banners.transform.textContent=shiftVectorText(s.t);
+ }
  function localize(){const lang=app.lang,dict=TXT[lang]||TXT.ru;title.textContent=dict.section;for(const node of section.querySelectorAll('[data-tr]')){
    const value=dict[node.dataset.tr]||node.dataset.tr;if(node.tagName==='OPTION')node.textContent=value;
    else if(node.tagName==='LABEL'){const txt=[...node.childNodes].find(n=>n.nodeType===3);if(txt)txt.textContent=value;else node.prepend(document.createTextNode(value));}
@@ -68,8 +82,8 @@ export function installControls(app){const section=e('section','surface-controls
   rebuild.textContent=dict.rebuild;settingsToggle.textContent='⚙ '+dict.settings;hint.textContent=dict.hint;
  }
  // Labels created without text nodes; localize() adds them before controls.
- localize();sync();
- return {sync,localize,report(p){const dict=TXT[app.lang]||TXT.ru;
+ localize();sync();refreshAnnotations();
+ return {sync,localize,refreshAnnotations,report(p){const dict=TXT[app.lang]||TXT.ru;
   if(p.error){progress.textContent=`${dict.error}: ${p.error}`;return;}
   progress.textContent=p.finished?`${dict.done}: ${p.vertices.toLocaleString()} точек`:
    `${dict.status}: ${p.done}/${p.expected} · ${p.vertices.toLocaleString()} точек`;
