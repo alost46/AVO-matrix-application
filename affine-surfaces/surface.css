@@ -61,3 +61,35 @@
 .picture-header .surface-formula-banner.surface-transform-note{
  padding-left:calc(10px + 2.5ch);
 }
+
+/* 01i layout correction: Matrix A and Vector t have matching header and field rows.
+   Moving the EXISTING Core title/table into an application-owned flex column
+   avoids offset hacks and remains responsive on phones and in RTL mode. */
+.picture[data-picture="transform"] .matrix-row.surface-transform-data-row{
+  display:flex;align-items:flex-start;gap:20px;flex-wrap:wrap;
+}
+.picture[data-picture="transform"] .surface-matrix-block,
+.picture[data-picture="transform"] .surface-shift-editor{
+  display:flex;flex-direction:column;align-items:flex-start;gap:0;
+  margin:0;padding:0;min-width:0;
+}
+.picture[data-picture="transform"] .surface-shift-editor{max-width:none;}
+.picture[data-picture="transform"] .surface-matrix-block>.data-title,
+.picture[data-picture="transform"] .surface-shift-editor>.surface-shift-title{
+  display:block;height:25px;min-height:25px;line-height:20px;
+  margin:0;padding:0;font:800 16px/20px system-ui,Arial,sans-serif;
+}
+.picture[data-picture="transform"] .surface-shift-editor>.surface-shift-fields{
+  display:flex;flex-direction:column;align-items:stretch;gap:4px;
+  padding-top:3px;margin:0;
+}
+.picture[data-picture="transform"] .surface-shift-fields label{
+  display:flex;flex-direction:row;align-items:center;gap:5px;margin:0;
+  min-width:0;font-size:14px;
+}
+.picture[data-picture="transform"] .surface-shift-fields input{width:83px;}
+@media(max-width:560px){
+ .picture[data-picture="transform"] .matrix-row.surface-transform-data-row{gap:12px;}
+ .picture[data-picture="transform"] .surface-shift-editor>.surface-shift-fields{flex-direction:column;}
+ .picture[data-picture="transform"] .surface-shift-fields label{flex:none;}
+}

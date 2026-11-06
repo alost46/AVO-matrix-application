@@ -52,7 +52,17 @@ export function installControls(app){const section=e('section','surface-controls
  const shiftFields=e('div','surface-shift-fields');
  for(const input of t)shiftFields.append(input.parentElement);
  shiftColumn.append(shiftFields);
- transformPic?.matrixRow?.append(shiftColumn);
+ // Keep the two captions in the same structural row, so the editable
+ // matrix and shift coordinates start at exactly matching vertical levels.
+ // This reorganizes existing nodes only; the Core Picture and its event
+ // handlers, refs, Save/Load and matrix editing are left unchanged.
+ if(transformPic?.matrixRow&&transformPic.dataTitle&&transformPic.matrixTable){
+  const matrixBlock=e('div','surface-matrix-block');
+  matrixBlock.append(transformPic.dataTitle,transformPic.matrixTable);
+  transformPic.matrixRow.prepend(matrixBlock);
+  transformPic.matrixRow.append(shiftColumn);
+  transformPic.matrixRow.classList.add('surface-transform-data-row');
+ }else transformPic?.matrixRow?.append(shiftColumn);
  shiftWrap.remove();
  function setValue(input,value){if(document.activeElement!==input)input.value=String(value);}
  function visibleFields(){const id=app.currentInputs().shape,custom=id==='explicit'||id==='implicit';eqRow.classList.toggle('hidden',!custom);
