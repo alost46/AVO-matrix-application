@@ -45,3 +45,17 @@
 @media(max-width:560px){.surface-shift-editor{max-width:none}.surface-shift-fields{flex-direction:row;flex-wrap:wrap}.surface-shift-fields label{flex:1 1 90px}}
 
 .surface-controls textarea{width:100%;min-height:68px;resize:vertical;font:700 16px/1.4 system-ui,Arial,sans-serif;background:#fff;color:#152b3d;border:1px solid #9ab3c4;border-radius:7px;padding:7px 8px;}
+
+/* 01h: origin sign remains readable at any zoom and angle, including t=0. */
+.picture .plot-wrap .surface-origin-cross{
+ position:absolute;z-index:8;transform:translate(-50%,-50%);
+ display:flex;align-items:center;justify-content:center;
+ width:20px;height:20px;box-sizing:border-box;
+ background:white;color:#111;border:2px solid #111;border-radius:50%;
+ font:bold 19px/1 Arial,sans-serif;box-shadow:0 0 0 2px #fff9;
+ pointer-events:none;user-select:none;
+}
+.picture .plot-wrap .surface-origin-cross[hidden]{display:none!important}
+.picture-header .surface-formula-banner.surface-transform-note{
+ padding-left:calc(10px + 2.5ch);
+}

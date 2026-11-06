@@ -1,7 +1,7 @@
 /* Progressively draw surface meshes in the EXISTING AVO Core Picture canvases.
    No changes to the common core and no replacement of its navigation/gestures. */
 import * as THREE from 'three';
-import {setupSurface,affine,display,visible,implicitEquationTexts,intersectionSlabs} from './math.js';
+import {setupSurface,affine,display,visible,implicitEquationTexts,intersectionSlabs,solveIsolatedPoints} from './math.js';
 const nextFrame=()=>new Promise(done=>requestAnimationFrame(done));
 const sleep=ms=>new Promise(done=>setTimeout(done,ms));
 export class SurfaceRenderer {
@@ -30,9 +30,10 @@ export class SurfaceRenderer {
  async start(){const stamp=++this.generation,app=this.app,s=app.currentInputs(),A=app.matrixFactory.getNumericMatrix('A',{x:0,y:0,z:0,t:0});
   this.clear();for(const layer of this.layers)layer.group.children[3].material.color.setHex(0xffffff);const positions=[[],[]],lines=[[],[]],faces=[[],[]];
   try{
-   if(s.shape==='implicit' && implicitEquationTexts(s.implicit).length===2){
-    await this.drawIntersection(stamp,s,A);
-    return;
+   if(s.shape==='implicit'){
+    const count=implicitEquationTexts(s.implicit).length;
+    if(count===3){this.drawIsolatedPoints(stamp,s,A);return;}
+    if(count===2){await this.drawIntersection(stamp,s,A);return;}
    }
    const patches=setupSurface(s),globalN=s.stepMode==='auto'?40:null;
    const sparseOnly=!['explicit','implicit'].includes(s.shape);
@@ -124,6 +125,20 @@ export class SurfaceRenderer {
    drawn();this.onProgress?.({done:expected,expected,vertices,finished:true});
   }catch(e){if(stamp===this.generation){console.error(e);this.onProgress?.({error:e.message});}}
  } 
+ // Three equations normally define isolated 3D points: draw their affine images
+ // as crisp red screen-size markers. Do not invent a surface or connect points.
+ drawIsolatedPoints(stamp,s,A){
+  const roots=solveIsolatedPoints(s);
+  if(stamp!==this.generation)return;
+  for(let i=0;i<2;i++){
+   const pp=roots.map(p=>display(i===0?p:affine(A,s.t,p),s)).filter(visible);
+   this.fill(pp.flat(),this.layers[i],'markGeom');
+   this.layers[i].view.render();
+  }
+  this.onProgress?.(roots.length?
+   {done:1,expected:1,vertices:roots.length,finished:true}:
+   {error:'No isolated solution found in bounds / Не найдена отдельная точка в заданном диапазоне'});
+ }
  // Render intersections as redrawn line segments rather than a falsely filled surface.
  // The slabs progress from low to high Z. Within a slab, cells are scanned X-first, Y-next.
  async drawIntersection(stamp,s,A){

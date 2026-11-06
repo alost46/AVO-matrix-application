@@ -1,4 +1,4 @@
-/* AVO affine surfaces 01g: mathematics, surface sampling and safe expression parser.
+/* AVO affine surfaces 01h: mathematics, surface sampling and safe expression parser.
    No core code is modified. All coordinates are transformed BEFORE display scales. */
 export const I=[[1,0,0],[0,1,0],[0,0,1]];
 export const initialInputs={matrices:{A:I},t:[0,0,0],shape:'sphere',expr:'sin(x)*cos(y)',implicit:'x^2+y^2+z^2-1',
@@ -69,7 +69,7 @@ export function implicitEquationTexts(source){
  raw=raw.replace(/\s+(?=[xyzXYZ](?:\s*\^\s*\d+)?\s*=)/g,';');
  const items=raw.split(/[;\n]+/).map(v=>v.trim()).filter(Boolean);
  if(items.length===0)throw Error('Enter an equation / Введите уравнение');
- if(items.length>2)throw Error('This version supports one or two equations / Поддерживаются одно или два уравнения');
+ if(items.length>3)throw Error('This version supports up to three equations / Поддерживаются до трёх уравнений');
  return items;
 }
 export function compileEquation(raw){
@@ -85,6 +85,80 @@ export function compileImplicitSystem(source){
  const expressions=implicitEquationTexts(source);
  return expressions.map(compileEquation);
 }
+// Solve three simultaneous equations F1=F2=F3=0 as isolated points.
+// A fast exact path handles three coordinate planes; otherwise use multistart
+// damped Newton with a finite-difference Jacobian and residual verification.
+export function solveIsolatedPoints(s){
+ const expressions=implicitEquationTexts(s.implicit);
+ if(expressions.length!==3)throw Error('Three equations required / Нужны три уравнения');
+ const axisValues={};
+ for(const text of expressions){
+  const m=text.trim().match(/^([xyz])\s*=\s*([+\-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+\-]?\d+)?)$/i);
+  if(m)axisValues[m[1].toLowerCase()]=Number(m[2]);
+ }
+ const lo=[s.bounds.xmin,s.bounds.ymin,s.bounds.zmin];
+ const hi=[s.bounds.xmax,s.bounds.ymax,s.bounds.zmax];
+ const inside=p=>p.every((v,k)=>Number.isFinite(v)&&v>=lo[k]-1e-7&&v<=hi[k]+1e-7);
+ if(Object.keys(axisValues).length===3){
+  const p=[axisValues.x,axisValues.y,axisValues.z];
+  return inside(p)?[p]:[];
+ }
+ const fns=expressions.map(compileEquation);
+ const evalAt=p=>fns.map(fn=>fn(...p));
+ const norm=v=>Math.max(...v.map(x=>Math.abs(x)));
+ function linearSolve(mat,rhs){
+  const rows=mat.map((v,i)=>[...v,rhs[i]]);
+  for(let k=0;k<3;k++){
+   let imax=k;for(let j=k+1;j<3;j++)if(Math.abs(rows[j][k])>Math.abs(rows[imax][k]))imax=j;
+   if(!Number.isFinite(rows[imax][k])||Math.abs(rows[imax][k])<1e-11)return null;
+   [rows[imax],rows[k]]=[rows[k],rows[imax]];
+   for(let j=k+1;j<3;j++){
+    const scale=rows[j][k]/rows[k][k];
+    for(let m=k;m<=3;m++)rows[j][m]-=scale*rows[k][m];
+   }
+  }
+  const x=[0,0,0];
+  for(let i=2;i>=0;i--){let d=rows[i][3];for(let j=i+1;j<3;j++)d-=rows[i][j]*x[j];x[i]=d/rows[i][i];}
+  return x.every(Number.isFinite)?x:null;
+ }
+ function newton(seed){
+  let p=seed.slice();
+  for(let it=0;it<25;it++){
+   const v=evalAt(p),old=norm(v);
+   if(!Number.isFinite(old))return null;
+   if(old<1e-8)return inside(p)?p:null;
+   const jac=[[],[],[]];
+   for(let j=0;j<3;j++){
+    const h=1e-5*Math.max(1,Math.abs(p[j]));
+    const up=p.slice(),down=p.slice();up[j]+=h;down[j]-=h;
+    const fu=evalAt(up),fd=evalAt(down);
+    for(let i=0;i<3;i++)jac[i][j]=(fu[i]-fd[i])/(2*h);
+   }
+   const step=linearSolve(jac,v);
+   if(!step)return null;
+   let accepted=false;
+   for(let fraction=1;fraction>=1/256;fraction/=2){
+    const trial=p.map((v,i)=>v-step[i]*fraction);
+    if(!trial.every(Number.isFinite))continue;
+    const r=norm(evalAt(trial));
+    if(Number.isFinite(r)&&r<old){p=trial;accepted=true;break;}
+   }
+   if(!accepted)return null;
+  }
+  return norm(evalAt(p))<1e-7&&inside(p)?p:null;
+ }
+ // Seven samples on each axis, plus a centered start point.
+ // This is a bounded approximation, not a proof that all roots were found.
+ const roots=[];
+ for(let ix=0;ix<=6;ix++)for(let iy=0;iy<=6;iy++)for(let iz=0;iz<=6;iz++){
+  const seed=[ix,iy,iz].map((v,j)=>lo[j]+(hi[j]-lo[j])*v/6),pt=newton(seed);
+  if(!pt)continue;
+  if(roots.some(q=>Math.hypot(...pt.map((v,k)=>v-q[k]))<1e-3))continue;
+  roots.push(pt);if(roots.length>=64)return roots;
+ }
+ return roots;
+}
+
 // Marching tetrahedra: first equation defines a triangulated implicit surface;
 // each triangle is then intersected with the second equation. This approach
 // handles curves with any orientation (including x=0;y=0 and circular sections),
@@ -158,7 +232,7 @@ export function setupSurface(s){
  }
  if(s.shape==='implicit'){
   const formulas=compileImplicitSystem(s.implicit);
-  if(formulas.length===2)return []; // The curve renderer handles both equations in 3D.
+  if(formulas.length>=2)return []; // Curves or isolated points are drawn by the dedicated renderer.
   const fn=formulas[0],nz=70,zlo=s.bounds.zmin,zhi=s.bounds.zmax;
   return [{name:'implicit',u0:s.bounds.xmin,u1:s.bounds.xmax,v0:s.bounds.ymin,v1:s.bounds.ymax,eval:(x,y)=>{
    const found=[];let prev=fn(x,y,zlo),zprev=zlo;
@@ -193,7 +267,7 @@ const vecText=v=>`(${v.map(nice).join(', ')})`;
 export function sourceFormulaText(s){
  const shape=s.shape;
  if(shape==='explicit')return `S: z = ${String(s.expr||'').trim().replace(/^z\s*=\s*/i,'')}`;
- if(shape==='implicit')return `S: ${String(s.implicit||'').trim()}`;
+ if(shape==='implicit'){try{return `S: ${implicitEquationTexts(s.implicit).join('; ')}`;}catch(_){return `S: ${String(s.implicit||'').trim()}`;}}
  if(shape==='sphere')return 'S: x² + y² + z² = 1';
  if(shape==='ellipsoid')return `S: (x/${nice(s.a)})² + (y/${nice(s.b)})² + (z/${nice(s.c)})² = 1`;
  if(shape==='box')return `S: 0≤x≤${nice(s.a)}, 0≤y≤${nice(s.b)}, 0≤z≤${nice(s.c)}`;
@@ -280,7 +354,7 @@ export function picturesForLayout(){return [
  {id:'transform',titleKey:'transformTitle',descriptionKey:'transformDescr',matrixId:'A',editable:true},
  {id:'output',titleKey:'outputTitle',descriptionKey:'outputDescr',editable:false}];}
 export const MSG={
- ru:{appTitle:'AVO · Аффинные преобразования поверхностей · 01g',lead:'Поверхность S → матрица A и смещение t → образ AS+t. Управление построением находится над картинками.',inputTitle:'Исходная поверхность S',transformTitle:'Матрица A и вектор t',outputTitle:'Результат AS+t',inputDescr:'Выберите поверхность и шаг сетки. Выбранная точка поверхности показана красным маркером.',transformDescr:'Редактируйте столбцы A числами или маркерами; перемещайте чёрный маркер ⊗ t. Начало вектора t отмечено крестиком.',outputDescr:'Построение идёт вслед за исходной поверхностью. Все подходящие Z отображаются сразу.',helpTitle:'Аффинные преобразования поверхностей',helpMath:'Одно неявное уравнение строит поверхность; два уравнения через ; или новую строку строят линию их пересечения. Например: x^2+y^2=1; z=0. Каждая точка p поверхности преобразуется в Ap+t. Для z=f(x,y) и F(x,y,z)=0: при фиксированном Y X растёт слева направо, затем Y увеличивается. Для неявного уравнения показываются все найденные корни Z в заданном диапазоне. Шаги DX и DY влияют на детализацию. Задержка 0 означает максимальную скорость. Логарифмический масштаб применяется только к показу, не к исходной математике. Обычный логарифм скрывает неположительные координаты; симметричный логарифм позволяет показывать и ноль, и отрицательные значения.'},
- en:{appTitle:'AVO · Affine Surface Transformations · 01g',lead:'Surface S → matrix A and shift t → image AS+t. Construction controls are above the panels.',inputTitle:'Original surface S',transformTitle:'Matrix A and shift t',outputTitle:'Result AS+t',inputDescr:'Choose a surface and mesh spacing. The selected surface point is shown in red.',transformDescr:'Edit columns of A with numbers or markers; drag the black ⊗ t marker. The tail of vector t is marked with a cross.',outputDescr:'The output is built alongside the input. Every matching Z is drawn immediately.',helpTitle:'Affine surface transformations',helpMath:'One implicit equation draws a surface; two equations separated by ; or a new line draw their intersection curve. For example: x^2+y^2=1; z=0. Each point p is transformed to Ap+t. For z=f(x,y) and F(x,y,z)=0, scan X at fixed Y, then advance Y. For implicit equations, find all Z roots in the chosen range. DX and DY determine mesh density. Delay 0 means full speed. Nonlinear axis scales change only the display, never the affine calculation. Standard log hides nonpositive coordinates; signed log includes zero and negatives.'},
- he:{appTitle:'AVO · טרנספורמציות אפיניות של משטחים · 01g',lead:'משטח S ← מטריצה A והזזה t ← התמונה AS+t. כלי הבנייה מעל האיורים.',inputTitle:'המשטח המקורי S',transformTitle:'מטריצה A ווקטור הזזה t',outputTitle:'התוצאה AS+t',inputDescr:'בחרו משטח ומרווח רשת. הנקודה הנבחרת על המשטח מסומנת באדום.',transformDescr:'ערכו את עמודות A במספרים או בסמנים; גררו את הסמן השחור ⊗ של t. תחילת הווקטור t מסומנת בצלב.',outputDescr:'התוצאה נבנית לצד המקור. כל ערכי Z האפשריים מוצגים מיד.',helpTitle:'טרנספורמציות אפיניות של משטחים',helpMath:'כל נקודה p עוברת אל Ap+t. עבור z=f(x,y) או F(x,y,z)=0 סורקים X עבור Y קבוע, ומתקדמים ל-Y הבא. עבור משוואה סתומה מוצאים את כל שורשי Z בטווח. המרווחים DX,DY קובעים את צפיפות הרשת. השהיה 0 פירושה מהירות מרבית. קנה מידה לוגריתמי משנה רק את התצוגה ולא את החישוב.'}
+ ru:{appTitle:'AVO · Аффинные преобразования поверхностей · 01h',lead:'Поверхность S → матрица A и смещение t → образ AS+t. Управление построением находится над картинками.',inputTitle:'Исходная поверхность S',transformTitle:'Матрица A и вектор t',outputTitle:'Результат AS+t',inputDescr:'Выберите поверхность и шаг сетки. Выбранная точка поверхности показана красным маркером.',transformDescr:'Редактируйте столбцы A числами или маркерами; перемещайте чёрный маркер ⊗ t. Начало вектора t отмечено крестиком.',outputDescr:'Построение идёт вслед за исходной поверхностью. Все подходящие Z отображаются сразу.',helpTitle:'Аффинные преобразования поверхностей',helpMath:'Одно неявное уравнение строит поверхность; два уравнения через ; или новую строку строят линию пересечения; три уравнения могут задавать отдельные точки. Например: x^2+y^2=1; z=0. Каждая точка p поверхности преобразуется в Ap+t. Для z=f(x,y) и F(x,y,z)=0: при фиксированном Y X растёт слева направо, затем Y увеличивается. Для неявного уравнения показываются все найденные корни Z в заданном диапазоне. Шаги DX и DY влияют на детализацию. Задержка 0 означает максимальную скорость. Логарифмический масштаб применяется только к показу, не к исходной математике. Обычный логарифм скрывает неположительные координаты; симметричный логарифм позволяет показывать и ноль, и отрицательные значения.'},
+ en:{appTitle:'AVO · Affine Surface Transformations · 01h',lead:'Surface S → matrix A and shift t → image AS+t. Construction controls are above the panels.',inputTitle:'Original surface S',transformTitle:'Matrix A and shift t',outputTitle:'Result AS+t',inputDescr:'Choose a surface and mesh spacing. The selected surface point is shown in red.',transformDescr:'Edit columns of A with numbers or markers; drag the black ⊗ t marker. The tail of vector t is marked with a cross.',outputDescr:'The output is built alongside the input. Every matching Z is drawn immediately.',helpTitle:'Affine surface transformations',helpMath:'One equation draws a surface; two equations draw an intersection curve; three equations can define isolated points. Separate equations with ; or a new line. For example: x^2+y^2=1; z=0. Each point p is transformed to Ap+t. For z=f(x,y) and F(x,y,z)=0, scan X at fixed Y, then advance Y. For implicit equations, find all Z roots in the chosen range. DX and DY determine mesh density. Delay 0 means full speed. Nonlinear axis scales change only the display, never the affine calculation. Standard log hides nonpositive coordinates; signed log includes zero and negatives.'},
+ he:{appTitle:'AVO · טרנספורמציות אפיניות של משטחים · 01h',lead:'משטח S ← מטריצה A והזזה t ← התמונה AS+t. כלי הבנייה מעל האיורים.',inputTitle:'המשטח המקורי S',transformTitle:'מטריצה A ווקטור הזזה t',outputTitle:'התוצאה AS+t',inputDescr:'בחרו משטח ומרווח רשת. הנקודה הנבחרת על המשטח מסומנת באדום.',transformDescr:'ערכו את עמודות A במספרים או בסמנים; גררו את הסמן השחור ⊗ של t. תחילת הווקטור t מסומנת בצלב.',outputDescr:'התוצאה נבנית לצד המקור. כל ערכי Z האפשריים מוצגים מיד.',helpTitle:'טרנספורמציות אפיניות של משטחים',helpMath:'משוואה אחת מגדירה משטח, שתי משוואות מגדירות עקומת חיתוך, ושלוש משוואות יכולות להגדיר נקודה בודדת. כל נקודה p עוברת אל Ap+t. עבור z=f(x,y) או F(x,y,z)=0 סורקים X עבור Y קבוע, ומתקדמים ל-Y הבא. עבור משוואה סתומה מוצאים את כל שורשי Z בטווח. המרווחים DX,DY קובעים את צפיפות הרשת. השהיה 0 פירושה מהירות מרבית. קנה מידה לוגריתמי משנה רק את התצוגה ולא את החישוב.'}
 };
