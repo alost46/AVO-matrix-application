@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light"><title>AVO · Аффинные преобразования поверхностей · 01a</title>
+<link rel="stylesheet" href="../avo-core/v2/core.css?core=01m"><link rel="stylesheet" href="./surface.css?v=01a">
+<link rel="icon" href="../favicon-32.png">
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js"}}</script></head>
+<body><div id="app"><noscript>Для работы нужен JavaScript.</noscript></div>
+<script type="module">
+import {createApp} from '../avo-core/v2/app.js?core=01m';
+import {initialInputs,mathModel,picturesForLayout,MSG} from './math.js';
+import {SurfaceRenderer} from './render.js';
+import {installControls} from './controls.js';
+try{
+ const app=createApp({appId:'affine-surfaces-01a',mountId:'app',initialInputs,mathModel,messages:MSG,picturesForLayout,layoutOptions:[3]});
+ const controls=installControls(app);
+ const painter=new SurfaceRenderer(app,progress=>controls.report(progress));
+ const compute=app.compute.bind(app);
+ app.compute=()=>{compute();controls.sync();painter.start();};
+ const setLanguage=app.setLanguage.bind(app);
+ app.setLanguage=lang=>{setLanguage(lang);controls.localize();};
+ app.startSurface=()=>painter.start();
+ painter.start();window.AVOSurfaces=app;
+}catch(error){console.error(error);const p=document.createElement('p');p.className='error';p.textContent='AVO 01a: '+error.message;document.getElementById('app').append(p);}
+</script></body></html>
