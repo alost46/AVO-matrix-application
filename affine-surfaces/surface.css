@@ -93,3 +93,10 @@
  .picture[data-picture="transform"] .surface-shift-editor>.surface-shift-fields{flex-direction:column;}
  .picture[data-picture="transform"] .surface-shift-fields label{flex:none;}
 }
+
+/* 01j: new app-specific parameter controls. Other modes stay uncluttered. */
+.surface-time-panel{margin:8px 0 12px;padding:11px 13px;border:1px solid #aac9dc;border-radius:9px;background:#e8f4fc}
+.surface-time-panel textarea{width:100%;box-sizing:border-box;min-height:75px;resize:vertical;background:#fff;border:1px solid #9ab3c4;border-radius:6px;padding:7px;font:700 16px/1.4 system-ui,Arial,sans-serif;color:#152b3d}
+.surface-time-panel .surface-row{align-items:start}
+.surface-time-panel .surface-row label{min-width:0;flex:1 1 135px}
+.surface-time-note{margin:5px 0;color:#36566d;font-weight:650;font-size:13px}

@@ -1,7 +1,7 @@
 /* Progressively draw surface meshes in the EXISTING AVO Core Picture canvases.
    No changes to the common core and no replacement of its navigation/gestures. */
 import * as THREE from 'three';
-import {setupSurface,affine,display,visible,implicitEquationTexts,intersectionSlabs,solveIsolatedPoints} from './math.js?v=01i';
+import {setupSurface,affine,display,visible,implicitEquationTexts,intersectionSlabs,solveIsolatedPoints,coordinateTimeEquations,parameterValues,timeImplicitAt} from './math.js?v=01j';
 const nextFrame=()=>new Promise(done=>requestAnimationFrame(done));
 const sleep=ms=>new Promise(done=>setTimeout(done,ms));
 export class SurfaceRenderer {
@@ -30,6 +30,7 @@ export class SurfaceRenderer {
  async start(){const stamp=++this.generation,app=this.app,s=app.currentInputs(),A=app.matrixFactory.getNumericMatrix('A',{x:0,y:0,z:0,t:0});
   this.clear();for(const layer of this.layers)layer.group.children[3].material.color.setHex(0xffffff);const positions=[[],[]],lines=[[],[]],faces=[[],[]];
   try{
+   if(s.shape==='time'){await this.drawParameterized(stamp,s,A);return;}
    if(s.shape==='implicit'){
     const count=implicitEquationTexts(s.implicit).length;
     if(count===3){this.drawIsolatedPoints(stamp,s,A);return;}
@@ -125,6 +126,84 @@ export class SurfaceRenderer {
    drawn();this.onProgress?.({done:expected,expected,vertices,finished:true});
   }catch(e){if(stamp===this.generation){console.error(e);this.onProgress?.({error:e.message});}}
  } 
+ // The parameter t is scalar and is NEVER the affine shift vector s.t.
+ // Coordinate equations trace a path; implicit equations animate snapshots at
+ // increasing time. Preserve the 01i redraw and delay behaviour everywhere else.
+ async drawParameterized(stamp,s,A){
+  const steps=parameterValues(s),total=steps.length,delay=Math.max(0,Math.min(2000,Number(s.delay)||0));
+  if(s.timeMode==='coordinates'){
+   const equations=coordinateTimeEquations(s.timeEquations),curves=[[],[]];
+   let previous=null;
+   for(let i=0;i<total;i++){
+    if(stamp!==this.generation)return;
+    const time=steps[i],p=equations.evaluate(time),q=affine(A,s.t,p);
+    const now=[display(p,s),display(q,s)];
+    if(previous)for(let k=0;k<2;k++)this.pushLine(curves[k],previous[k],now[k]);
+    previous=now.map(v=>visible(v)?v:null);
+    if(delay>0||i%10===0||i===total-1){
+     for(let k=0;k<2;k++){
+      const layer=this.layers[k];this.fill(curves[k],layer,'characteristic');
+      layer.group.children[3].material.color.setHex(k===0?0x1269ad:0x237e35);
+      this.fill(visible(now[k])?now[k]:[],layer,'markGeom');layer.view.render();
+     }
+     this.onProgress?.({done:i+1,expected:total,vertices:i+1,finished:i===total-1,time});
+     if(delay>0)await sleep(delay);else await nextFrame();
+    }
+   }
+   return;
+  }
+  if(s.timeMode!=='implicit')throw Error('Unknown parameter mode / Неизвестный режим t');
+  if(total>121)throw Error('Time-dependent implicit mode supports at most 120 intervals: increase Δt / Увеличьте шаг Δt (не более 120 интервалов)');
+  for(let i=0;i<total;i++){
+   if(stamp!==this.generation)return;
+   const time=steps[i],snapshot={...s,shape:'implicit',implicit:timeImplicitAt(s.dynamicEquations,time)};
+   const count=implicitEquationTexts(snapshot.implicit).length;
+   const meshes=[[],[]],curves=[[],[]],marks=[[],[]];
+   if(count===1){
+    // One equation: current 3D surface at this t, sampled via the
+    // established multiple-Z rule, with independent branches.
+    const patch=setupSurface(snapshot)[0],N=24;
+    let previous=null;
+    for(let j=0;j<=N;j++){
+     const yy=patch.v0+(patch.v1-patch.v0)*j/N,row=[];
+     for(let k=0;k<=N;k++){
+      const xx=patch.u0+(patch.u1-patch.u0)*k/N;
+      const roots=patch.eval(xx,yy).filter(visible),pair=roots.map(p=>{
+       const q=affine(A,s.t,p);return [display(p,s),display(q,s)];
+      });
+      row.push(pair);
+      if(previous&&k>0){
+       const aa=previous[k-1],bb=previous[k],cc=row[k-1],dd=pair;
+       if(aa.length===bb.length&&bb.length===cc.length&&cc.length===dd.length){
+        for(let branch=0;branch<dd.length;branch++)for(let u=0;u<2;u++){
+         const a=aa[branch][u],b=bb[branch][u],c=cc[branch][u],d=dd[branch][u];
+         this.pushTri(meshes[u],a,c,b);this.pushTri(meshes[u],b,c,d);
+        }
+       }
+      }
+     }
+     previous=row;
+    }
+   }else if(count===2){
+    // Two equations: show the instantaneous intersection curve, not the
+    // union of all curves from earlier times.
+    for(const slab of intersectionSlabs(snapshot,20))for(const [a,b] of slab.segments){
+     for(let k=0;k<2;k++)this.pushLine(curves[k],display(k===0?a:affine(A,s.t,a),s),display(k===0?b:affine(A,s.t,b),s));
+    }
+   }else if(count===3){
+    const pts=solveIsolatedPoints(snapshot);
+    for(let k=0;k<2;k++)marks[k]=pts.map(p=>display(k===0?p:affine(A,s.t,p),s)).filter(visible).flat();
+   }
+   for(let k=0;k<2;k++){
+    const layer=this.layers[k];
+    this.fill(meshes[k],layer,'surfaces');this.fill(curves[k],layer,'characteristic');
+    layer.group.children[3].material.color.setHex(k===0?0x1269ad:0x237e35);
+    this.fill(marks[k],layer,'markGeom');layer.view.render();
+   }
+   this.onProgress?.({done:i+1,expected:total,vertices:meshes[0].length/3+curves[0].length/3+marks[0].length/3,finished:i===total-1,time});
+   if(delay>0)await sleep(delay);else await nextFrame();
+  }
+ }
  // Three equations normally define isolated 3D points: draw their affine images
  // as crisp red screen-size markers. Do not invent a surface or connect points.
  drawIsolatedPoints(stamp,s,A){

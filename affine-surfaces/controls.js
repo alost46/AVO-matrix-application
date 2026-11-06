@@ -1,21 +1,36 @@
-import {sourceFormulaText,resultFormulaText} from './math.js?v=01i';
+import {sourceFormulaText,resultFormulaText} from './math.js?v=01j';
 /* App-specific data controls. Core interface (flags, JSON, undo, view, editing) untouched. */
 const TXT={
- ru:{section:'Поверхность и построение',shape:'Поверхность',sphere:'Сфера · центр (0,0,0)',ellipsoid:'Эллипсоид',box:'Прямоугольный параллелепипед · вершина (0,0,0)',cylinder:'Цилиндр · основание XY',cone:'Конус · основание XY',pyramid:'Пирамида · основание XY',torus:'Тор',paraboloid:'Параболоид',frustum:'Усечённый конус',hemisphere:'Полусфера',explicit:'Явная z = f(x,y)',implicit:'Неявная F(x,y,z) = 0',expr:'Формула z=f(x,y)',imp:'Уравнение или система (разделитель ; или новая строка)',range:'Диапазоны исходных координат',settings:'Установки',stepMode:'Шаг сетки',auto:'Авто · 40 интервалов',manual:'Вручную',dx:'ΔX (или Δu)',dy:'ΔY (или Δv)',delay:'Задержка, мс',parameter:'Параметры фигуры',a:'a · размер / радиус',b:'b · размер / радиус',c:'c · высота / размер',minor:'r · малый радиус тора',shift:'Смещение t (также перетаскивается чёрным маркером)',scales:'Шкалы изображения',linear:'Линейная',log:'Лог 10 (x>0)',symlog:'±Лог',selected:'Выбранная точка поверхности',u:'u / доля X',v:'v / доля Y',rebuild:'Построить заново',status:'Рисование',done:'Готово',error:'Ошибка',hint:'Масштабы меняют только изображение, не координаты для A·p+t. При логарифме неположительные координаты не отображаются. Одно уравнение задаёт поверхность, два линию пересечения, три отдельные точки. Разделите уравнения знаком ; или новой строкой.',many:'Узлов по XY',rank:'Ранг',show:'Дополнительные параметры'},
- en:{section:'Surface and construction',shape:'Surface',sphere:'Sphere · center (0,0,0)',ellipsoid:'Ellipsoid',box:'Rectangular box · corner (0,0,0)',cylinder:'Cylinder · base XY',cone:'Cone · base XY',pyramid:'Pyramid · base XY',torus:'Torus',paraboloid:'Paraboloid',frustum:'Frustum',hemisphere:'Hemisphere',explicit:'Explicit z=f(x,y)',implicit:'Implicit F(x,y,z)=0',expr:'Formula z=f(x,y)',imp:'Equation or system (; or new line)',range:'Input coordinate bounds',settings:'Settings',stepMode:'Mesh spacing',auto:'Auto · 40 intervals',manual:'Manual',dx:'ΔX (or Δu)',dy:'ΔY (or Δv)',delay:'Delay, ms',parameter:'Shape parameters',a:'a · size / radius',b:'b · size / radius',c:'c · height / size',minor:'r · torus tube radius',shift:'Offset t (also drag the black handle)',scales:'Display axis scales',linear:'Linear',log:'Log 10 (x>0)',symlog:'Signed log',selected:'Highlighted surface point',u:'u / X fraction',v:'v / Y fraction',rebuild:'Rebuild',status:'Drawing',done:'Finished',error:'Error',hint:'Scales alter display only, not the coordinates sent to A·p+t. Standard log hides nonpositive coordinates. One equation draws a surface; two equations draw a curve; three can define isolated points. Separate equations with ; or a new line.',many:'XY nodes',rank:'Rank',show:'Additional parameters'},
- he:{section:'משטח ובנייה',shape:'משטח',sphere:'כדור · מרכז (0,0,0)',ellipsoid:'אליפסואיד',box:'תיבה מלבנית · קודקוד (0,0,0)',cylinder:'גליל · בסיס XY',cone:'חרוט · בסיס XY',pyramid:'פירמידה · בסיס XY',torus:'טורוס',paraboloid:'פרבולואיד',frustum:'חרוט קטום',hemisphere:'חצי כדור',explicit:'מפורש z=f(x,y)',implicit:'סתום F(x,y,z)=0',expr:'נוסחה z=f(x,y)',imp:'משוואה או מערכת (; או שורה חדשה)',range:'תחומי קואורדינטות',settings:'הגדרות',stepMode:'מרווח רשת',auto:'אוטומטי · 40 מרווחים',manual:'ידני',dx:'ΔX (או Δu)',dy:'ΔY (או Δv)',delay:'השהיה, ms',parameter:'פרמטרי צורה',a:'a · גודל / רדיוס',b:'b · גודל / רדיוס',c:'c · גובה / גודל',minor:'r · רדיוס קטן של טורוס',shift:'הזזה t (אפשר לגרור סמן שחור)',scales:'קני מידה לתצוגה',linear:'ליניארי',log:'לוג 10 (x>0)',symlog:'לוג סימטרי',selected:'נקודה מסומנת',u:'u / יחס X',v:'v / יחס Y',rebuild:'בנה מחדש',status:'בניית משטח',done:'הושלם',error:'שגיאה',hint:'קני המידה משנים רק את התצוגה ולא את החישוב A·p+t. לוג רגיל מסתיר ערכים לא חיוביים. משוואה אחת מגדירה משטח, שתיים עקומה ושלוש יכולות להגדיר נקודה יחידה.',many:'נקודות XY',rank:'דרגה',show:'פרמטרים נוספים'}
+ ru:{section:'Поверхность и построение',shape:'Поверхность',sphere:'Сфера · центр (0,0,0)',ellipsoid:'Эллипсоид',box:'Прямоугольный параллелепипед · вершина (0,0,0)',cylinder:'Цилиндр · основание XY',cone:'Конус · основание XY',pyramid:'Пирамида · основание XY',torus:'Тор',paraboloid:'Параболоид',frustum:'Усечённый конус',hemisphere:'Полусфера',explicit:'Явная z = f(x,y)',implicit:'Неявная F(x,y,z) = 0',time:'С параметром t: x(t), y(t), z(t) / F(x,y,z,t)=0',timeCoordinates:'Координаты x(t), y(t), z(t)',timeImplicit:'Неявная F(x,y,z,t)=0 (1–3 уравнения)',timeKind:'Способ задания с параметром t',timeExpr:'Формулы координат (1–3, через ; или новую строку)',timeImplicitExpr:'Зависимые от t уравнения (1–3)',timeFrom:'t: начало',timeTo:'t: конец',timeStep:'Шаг Δt',timeTip:'Параметр t скалярный (например, время). Он независим от вектора смещения t на средней картинке.',expr:'Формула z=f(x,y)',imp:'Уравнение или система (разделитель ; или новая строка)',range:'Диапазоны исходных координат',settings:'Установки',stepMode:'Шаг сетки',auto:'Авто · 40 интервалов',manual:'Вручную',dx:'ΔX (или Δu)',dy:'ΔY (или Δv)',delay:'Задержка, мс',parameter:'Параметры фигуры',a:'a · размер / радиус',b:'b · размер / радиус',c:'c · высота / размер',minor:'r · малый радиус тора',shift:'Смещение t (также перетаскивается чёрным маркером)',scales:'Шкалы изображения',linear:'Линейная',log:'Лог 10 (x>0)',symlog:'±Лог',selected:'Выбранная точка поверхности',u:'u / доля X',v:'v / доля Y',rebuild:'Построить заново',status:'Рисование',done:'Готово',error:'Ошибка',hint:'Масштабы меняют только изображение, не координаты для A·p+t. При логарифме неположительные координаты не отображаются. Одно уравнение задаёт поверхность, два линию пересечения, три отдельные точки. Разделите уравнения знаком ; или новой строкой.',many:'Узлов по XY',rank:'Ранг',show:'Дополнительные параметры'},
+ en:{section:'Surface and construction',shape:'Surface',sphere:'Sphere · center (0,0,0)',ellipsoid:'Ellipsoid',box:'Rectangular box · corner (0,0,0)',cylinder:'Cylinder · base XY',cone:'Cone · base XY',pyramid:'Pyramid · base XY',torus:'Torus',paraboloid:'Paraboloid',frustum:'Frustum',hemisphere:'Hemisphere',explicit:'Explicit z=f(x,y)',implicit:'Implicit F(x,y,z)=0',time:'Parameter t: x(t), y(t), z(t) / F(x,y,z,t)=0',timeCoordinates:'Coordinate functions x(t), y(t), z(t)',timeImplicit:'Implicit F(x,y,z,t)=0 (1–3 equations)',timeKind:'Parameter t definition',timeExpr:'Coordinate formulas (1–3; separate with ; or newline)',timeImplicitExpr:'Time-dependent equations (1–3)',timeFrom:'t: start',timeTo:'t: end',timeStep:'Step Δt',timeTip:'Scalar t (e.g. time) is independent of the displacement vector t in the middle panel.',expr:'Formula z=f(x,y)',imp:'Equation or system (; or new line)',range:'Input coordinate bounds',settings:'Settings',stepMode:'Mesh spacing',auto:'Auto · 40 intervals',manual:'Manual',dx:'ΔX (or Δu)',dy:'ΔY (or Δv)',delay:'Delay, ms',parameter:'Shape parameters',a:'a · size / radius',b:'b · size / radius',c:'c · height / size',minor:'r · torus tube radius',shift:'Offset t (also drag the black handle)',scales:'Display axis scales',linear:'Linear',log:'Log 10 (x>0)',symlog:'Signed log',selected:'Highlighted surface point',u:'u / X fraction',v:'v / Y fraction',rebuild:'Rebuild',status:'Drawing',done:'Finished',error:'Error',hint:'Scales alter display only, not the coordinates sent to A·p+t. Standard log hides nonpositive coordinates. One equation draws a surface; two equations draw a curve; three can define isolated points. Separate equations with ; or a new line.',many:'XY nodes',rank:'Rank',show:'Additional parameters'},
+ he:{section:'משטח ובנייה',shape:'משטח',sphere:'כדור · מרכז (0,0,0)',ellipsoid:'אליפסואיד',box:'תיבה מלבנית · קודקוד (0,0,0)',cylinder:'גליל · בסיס XY',cone:'חרוט · בסיס XY',pyramid:'פירמידה · בסיס XY',torus:'טורוס',paraboloid:'פרבולואיד',frustum:'חרוט קטום',hemisphere:'חצי כדור',explicit:'מפורש z=f(x,y)',implicit:'סתום F(x,y,z)=0',time:'פרמטר t: x(t), y(t), z(t) / F(x,y,z,t)=0',timeCoordinates:'פונקציות x(t), y(t), z(t)',timeImplicit:'משוואה סתומה F(x,y,z,t)=0 (1–3)',timeKind:'שיטת פרמטר t',timeExpr:'נוסחאות הקואורדינטות (1–3)',timeImplicitExpr:'משוואות תלויות בזמן (1–3)',timeFrom:'t: התחלה',timeTo:'t: סוף',timeStep:'צעד Δt',timeTip:'הפרמטר הסקלרי t בלתי תלוי בווקטור ההזזה t.',expr:'נוסחה z=f(x,y)',imp:'משוואה או מערכת (; או שורה חדשה)',range:'תחומי קואורדינטות',settings:'הגדרות',stepMode:'מרווח רשת',auto:'אוטומטי · 40 מרווחים',manual:'ידני',dx:'ΔX (או Δu)',dy:'ΔY (או Δv)',delay:'השהיה, ms',parameter:'פרמטרי צורה',a:'a · גודל / רדיוס',b:'b · גודל / רדיוס',c:'c · גובה / גודל',minor:'r · רדיוס קטן של טורוס',shift:'הזזה t (אפשר לגרור סמן שחור)',scales:'קני מידה לתצוגה',linear:'ליניארי',log:'לוג 10 (x>0)',symlog:'לוג סימטרי',selected:'נקודה מסומנת',u:'u / יחס X',v:'v / יחס Y',rebuild:'בנה מחדש',status:'בניית משטח',done:'הושלם',error:'שגיאה',hint:'קני המידה משנים רק את התצוגה ולא את החישוב A·p+t. לוג רגיל מסתיר ערכים לא חיוביים. משוואה אחת מגדירה משטח, שתיים עקומה ושלוש יכולות להגדיר נקודה יחידה.',many:'נקודות XY',rank:'דרגה',show:'פרמטרים נוספים'}
 };
 const e=(tag,cls)=>{const d=document.createElement(tag);if(cls)d.className=cls;return d;};
 export function installControls(app){const section=e('section','surface-controls');section.id='surface-controls';
  const title=e('h2');section.append(title);
  const shapeRow=e('div','surface-row'),shapeLabel=e('label');shapeRow.append(shapeLabel);section.append(shapeRow);
  const shape=e('select');shapeLabel.append(shape);
- const shapes=['sphere','ellipsoid','box','cylinder','cone','pyramid','torus','paraboloid','frustum','hemisphere','explicit','implicit'];
+ const shapes=['sphere','ellipsoid','box','cylinder','cone','pyramid','torus','paraboloid','frustum','hemisphere','explicit','implicit','time'];
  for(const id of shapes){const opt=e('option');opt.value=id;opt.dataset.tr=id;shape.append(opt);}
  function labelWrap(row,key,wide=false){const l=e('label',wide?'wide':'');l.dataset.tr=key;row.append(l);return l;}
  function field(row,key,val='',kind='number',wide=false){const l=labelWrap(row,key,wide),input=e('input');input.type=kind;input.dataset.key=key;input.autocomplete='off';if(kind==='number'){input.step='any';input.inputMode='decimal';}input.value=val;l.append(input);return input;}
  const eqRow=e('div','surface-row'),explicit=field(eqRow,'expr','','text',true),implicit=field(eqRow,'imp','','text',true);
  const implicitArea=e('textarea');implicitArea.rows=2;implicitArea.dataset.key='imp';implicitArea.autocomplete='off';implicitArea.spellcheck=false;implicit.replaceWith(implicitArea);section.append(eqRow);
+ // Parameter-dependent shapes: either a trajectory x(t),y(t),z(t) or a
+ // time-varying implicit set F(x,y,z,t)=0. These are application-level controls.
+ const timePanel=e('div','surface-time-panel');
+ const timeModeRow=e('div','surface-row'),timeModeLabel=labelWrap(timeModeRow,'timeKind'),timeMode=e('select');
+ for(const [value,key] of [['coordinates','timeCoordinates'],['implicit','timeImplicit']]){
+  const option=e('option');option.value=value;option.dataset.tr=key;timeMode.append(option);
+ }
+ timeModeLabel.append(timeMode);timePanel.append(timeModeRow);
+ const timeEqRow=e('div','surface-row'),timeEqLabel=labelWrap(timeEqRow,'timeExpr',true),timeEq=e('textarea');
+ timeEq.rows=2;timeEq.spellcheck=false;timeEqLabel.append(timeEq);timePanel.append(timeEqRow);
+ const dynamicEqRow=e('div','surface-row'),dynamicEqLabel=labelWrap(dynamicEqRow,'timeImplicitExpr',true),dynamicEq=e('textarea');
+ dynamicEq.rows=2;dynamicEq.spellcheck=false;dynamicEqLabel.append(dynamicEq);timePanel.append(dynamicEqRow);
+ const timeRange=e('div','surface-row');
+ const timeMin=field(timeRange,'timeFrom'),timeMax=field(timeRange,'timeTo'),timeStep=field(timeRange,'timeStep');
+ timePanel.append(timeRange);const timeNote=e('p','surface-time-note');timePanel.append(timeNote);section.append(timePanel);
  const paramRow=e('div','surface-row');const params={};for(const key of ['a','b','c','minor'])params[key]=field(paramRow,key);section.append(paramRow);
  const settingsToggle=e('button','surface-settings-toggle');settingsToggle.type='button';settingsToggle.setAttribute('aria-expanded','false');const settingsPanel=e('div','surface-settings-panel');settingsPanel.hidden=true;
  const accuracy=e('fieldset');const legend=e('legend');legend.dataset.tr='stepMode';accuracy.append(legend);
@@ -65,22 +80,30 @@ export function installControls(app){const section=e('section','surface-controls
  }else transformPic?.matrixRow?.append(shiftColumn);
  shiftWrap.remove();
  function setValue(input,value){if(document.activeElement!==input)input.value=String(value);}
- function visibleFields(){const id=app.currentInputs().shape,custom=id==='explicit'||id==='implicit';eqRow.classList.toggle('hidden',!custom);
+ function visibleFields(){const id=app.currentInputs().shape,custom=id==='explicit'||id==='implicit'||id==='time';eqRow.classList.toggle('hidden',!['explicit','implicit'].includes(id));
   explicit.parentElement.classList.toggle('hidden',id!=='explicit');implicitArea.parentElement.classList.toggle('hidden',id!=='implicit');
-  paramRow.classList.toggle('hidden',custom);dx.parentElement.classList.toggle('hidden',mode.value==='auto');dy.parentElement.classList.toggle('hidden',mode.value==='auto');
+  paramRow.classList.toggle('hidden',custom);timePanel.classList.toggle('hidden',id!=='time');
+  timeEqRow.classList.toggle('hidden',timeMode.value!=='coordinates');dynamicEqRow.classList.toggle('hidden',timeMode.value!=='implicit');
+  dx.parentElement.classList.toggle('hidden',mode.value==='auto');dy.parentElement.classList.toggle('hidden',mode.value==='auto');
  }
  function sync(){const s=app.currentInputs();shape.value=s.shape;explicit.value=document.activeElement===explicit?explicit.value:s.expr;if(document.activeElement!==implicitArea)implicitArea.value=s.implicit;
-  mode.value=s.stepMode;setValue(dx,s.dx);setValue(dy,s.dy);setValue(delay,s.delay);
+  mode.value=s.stepMode;timeMode.value=s.timeMode;if(document.activeElement!==timeEq)timeEq.value=s.timeEquations;if(document.activeElement!==dynamicEq)dynamicEq.value=s.dynamicEquations;
+  setValue(timeMin,s.timeMin);setValue(timeMax,s.timeMax);setValue(timeStep,s.timeStep);setValue(dx,s.dx);setValue(dy,s.dy);setValue(delay,s.delay);
   for(const [key,input] of Object.entries(params))setValue(input,s[key]);for(const [key,input] of Object.entries(bounds))setValue(input,s.bounds[key]);
   t.forEach((input,i)=>setValue(input,Number(s.t[i].toFixed(5))));scales.forEach((input,i)=>input.value=s[['scaleX','scaleY','scaleZ'][i]]);
   setValue(u,s.selectedU);setValue(v,s.selectedV);visibleFields();}
  function valid(s){const b=s.bounds;if(['xmin','xmax','ymin','ymax','zmin','zmax'].some(k=>!Number.isFinite(b[k])))return false;
   if(b.xmin>=b.xmax||b.ymin>=b.ymax||b.zmin>=b.zmax)return false;
   if(!(s.dx>0&&s.dy>0&&s.dx<1e4&&s.dy<1e4&&s.delay>=0&&s.delay<=2000))return false;
-  if(!(s.a>0&&s.b>0&&s.c>0&&s.minor>0))return false;return true;}
+  if(!(s.a>0&&s.b>0&&s.c>0&&s.minor>0))return false;
+  if(!Number.isFinite(s.timeMin)||!Number.isFinite(s.timeMax)||!Number.isFinite(s.timeStep)||s.timeMin>=s.timeMax||s.timeStep<=0||s.timeStep>100000)return false;return true;}
  function change(mutator){const s=structuredClone(app.currentInputs());mutator(s);if(!valid(s)){progress.textContent='Invalid values / Неверные значения';return;}
   app.applyChange(()=>{Object.assign(app.currentData,s);});}
- shape.addEventListener('change',()=>change(s=>{s.shape=shape.value;}));mode.addEventListener('change',()=>change(s=>{s.stepMode=mode.value;}));
+ shape.addEventListener('change',()=>change(s=>{s.shape=shape.value;}));
+ timeMode.addEventListener('change',()=>change(s=>{s.timeMode=timeMode.value;}));
+ timeEq.addEventListener('change',()=>change(s=>{s.timeEquations=timeEq.value;}));
+ dynamicEq.addEventListener('change',()=>change(s=>{s.dynamicEquations=dynamicEq.value;}));
+ for(const [key,input] of [['timeMin',timeMin],['timeMax',timeMax],['timeStep',timeStep]])input.addEventListener('change',()=>change(s=>{s[key]=Number(input.value.replace(',','.'));}));mode.addEventListener('change',()=>change(s=>{s.stepMode=mode.value;}));
  const props={...params,dx,dy,delay,u,v};const propNames={u:'selectedU',v:'selectedV'};
  for(const [key,input] of Object.entries(props))input.addEventListener('change',()=>change(s=>{s[propNames[key]||key]=Number(input.value.replace(',','.'));}));
  explicit.addEventListener('change',()=>change(s=>{s.expr=explicit.value;}));implicitArea.addEventListener('change',()=>change(s=>{s.implicit=implicitArea.value;}));
@@ -93,6 +116,11 @@ export function installControls(app){const section=e('section','surface-controls
   if(banners.input)banners.input.textContent=sourceFormulaText(s);
   if(banners.output)banners.output.textContent=resultFormulaText(s, app.matrixFactory?.getNumericMatrix('A',{x:0,y:0,z:0,t:0})||[[1,0,0],[0,1,0],[0,0,1]]);
   if(banners.transform)banners.transform.textContent=app.lang==='ru'?'Изменяйте A числами или маркерами; перетаскивайте ⊗ на конце t (начало в 0)' :app.lang==='he'?'ערכו את A במספרים או בסמנים; גררו את ⊗ בקצה t (ההתחלה ב־0)' :'Edit A numerically or by handles; drag ⊗ at the tip of t (tail fixed at 0)' ;
+  if(s.shape==='time'){
+   const translations={ru:['При изменении t строится траектория или текущее множество решений.','На третьей картинке показан образ при той же величине t.'],en:['The trajectory or solution set changes with scalar t.','The third panel shows its affine image at the same t.'],he:['העקומה או קבוצת הפתרונות משתנה לפי הפרמטר t.','התמונה השלישית מציגה את ההעתקה האפינית באותו t.']};
+   const [left,right]=translations[app.lang]||translations.ru;
+   const a=app.pictures.get('input'),b=app.pictures.get('output');if(a)a.endInfo.textContent=left;if(b)b.endInfo.textContent=right;
+  }
  }
  function localize(){const lang=app.lang,dict=TXT[lang]||TXT.ru;title.textContent=dict.section;for(const node of section.querySelectorAll('[data-tr]')){
    const value=dict[node.dataset.tr]||node.dataset.tr;if(node.tagName==='OPTION')node.textContent=value;
@@ -105,14 +133,15 @@ export function installControls(app){const section=e('section','surface-controls
   {let n=[...shapeLabel.childNodes].find(n=>n.nodeType===3);if(!n){n=document.createTextNode('');shapeLabel.prepend(n);}n.textContent=dict.shape;}
   const shiftTitle=shiftColumn.querySelector('.surface-shift-title');
   if(shiftTitle)shiftTitle.textContent=app.lang==='ru'?'Вектор t':app.lang==='he'?'וקטור t':'Vector t';
-  rebuild.textContent=dict.rebuild;settingsToggle.textContent='⚙ '+dict.settings;hint.textContent=dict.hint;
+  rebuild.textContent=dict.rebuild;settingsToggle.textContent='⚙ '+dict.settings;hint.textContent=dict.hint;timeNote.textContent=dict.timeTip;
   refreshAnnotations();
  }
  // Labels created without text nodes; localize() adds them before controls.
  localize();sync();refreshAnnotations();
  return {sync,localize,refreshAnnotations,report(p){const dict=TXT[app.lang]||TXT.ru;
   if(p.error){progress.textContent=`${dict.error}: ${p.error}`;return;}
-  progress.textContent=p.finished?`${dict.done}: ${p.vertices.toLocaleString()} точек`:
-   `${dict.status}: ${p.done}/${p.expected} · ${p.vertices.toLocaleString()} точек`;
+  const stamp=Number.isFinite(p.time)?` · t=${Number(p.time.toFixed(5))}`:'';
+  progress.textContent=p.finished?`${dict.done}: ${p.vertices.toLocaleString()} точек${stamp}`:
+   `${dict.status}: ${p.done}/${p.expected} · ${p.vertices.toLocaleString()} точек${stamp}`;
  }};
 }
