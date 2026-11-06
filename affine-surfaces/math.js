@@ -1,4 +1,4 @@
-/* AVO affine surfaces 01c: mathematics, surface sampling and safe expression parser.
+/* AVO affine surfaces 01e: mathematics, surface sampling and safe expression parser.
    No core code is modified. All coordinates are transformed BEFORE display scales. */
 export const I=[[1,0,0],[0,1,0],[0,0,1]];
 export const initialInputs={matrices:{A:I},t:[0,0,0],shape:'sphere',expr:'sin(x)*cos(y)',implicit:'x^2+y^2+z^2-1',
@@ -108,8 +108,45 @@ export function sourceFormulaText(s){
  if(shape==='hemisphere')return 'S: x² + y² + z² = 1, z ≥ 0';
  return 'S';
 }
+// Express the transformed surface in the DISPLAYED coordinates (X,Y,Z).
+// For invertible A, the original coordinates are u = A^{-1}((X,Y,Z)-t).
+// This gives a true transformed equation for each source formula, including caps.
 export function resultFormulaText(s,A){
- return `S′ = { A·p + t | p ∈ S }, ${sourceFormulaText(s).replace(/^S:\s*/,'')}`;
+ const t=s.t||[0,0,0],d=
+ A[0][0]*(A[1][1]*A[2][2]-A[1][2]*A[2][1])
+ -A[0][1]*(A[1][0]*A[2][2]-A[1][2]*A[2][0])
+ +A[0][2]*(A[1][0]*A[2][1]-A[1][1]*A[2][0]);
+ const coords=['X','Y','Z'];
+ const terms=row=>{
+  const parts=[];
+  for(let j=0;j<3;j++){
+   const v=row[j];if(Math.abs(v)<1e-10)continue;
+   const coef=Math.abs(v),variable=coords[j];
+   const item=(Math.abs(coef-1)<1e-9?'':nice(coef)+'·')+variable;
+   parts.push((v<0?'-':parts.length?'+':'')+item);
+  }
+  const offset=-row.reduce((sum,v,i)=>sum+v*t[i],0);
+  if(Math.abs(offset)>1e-9)parts.push((offset<0?'-':parts.length?'+':'')+nice(Math.abs(offset)));
+  return parts.join(' ')||'0';
+ };
+ const source=sourceFormulaText(s).replace(/^S:\s*/,'');
+ if(!Number.isFinite(d)||Math.abs(d)<1e-9){
+  const rows=A.map((row,i)=>terms(row.map(Number))+
+    (Math.abs(t[i])>1e-10?` ${t[i]<0?'-':'+'} ${nice(Math.abs(t[i]))}`:''));
+  // Exact parametric image, valid even when A is singular.
+  return `S′: X=${nice(A[0][0])}·x + ${nice(A[0][1])}·y + ${nice(A[0][2])}·z ${t[0]<0?'-':'+'} ${nice(Math.abs(t[0]))}; `+
+    `Y=${nice(A[1][0])}·x + ${nice(A[1][1])}·y + ${nice(A[1][2])}·z ${t[1]<0?'-':'+'} ${nice(Math.abs(t[1]))}; `+
+    `Z=${nice(A[2][0])}·x + ${nice(A[2][1])}·y + ${nice(A[2][2])}·z ${t[2]<0?'-':'+'} ${nice(Math.abs(t[2]))}; ${source} (вырожденная A)`;
+ }
+ const B=[
+  [(A[1][1]*A[2][2]-A[1][2]*A[2][1])/d,(A[0][2]*A[2][1]-A[0][1]*A[2][2])/d,(A[0][1]*A[1][2]-A[0][2]*A[1][1])/d],
+  [(A[1][2]*A[2][0]-A[1][0]*A[2][2])/d,(A[0][0]*A[2][2]-A[0][2]*A[2][0])/d,(A[0][2]*A[1][0]-A[0][0]*A[1][2])/d],
+  [(A[1][0]*A[2][1]-A[1][1]*A[2][0])/d,(A[0][1]*A[2][0]-A[0][0]*A[2][1])/d,(A[0][0]*A[1][1]-A[0][1]*A[1][0])/d]
+ ];
+ const sourceInU=source.replace(/\b([xyz])\b/g,(_,axis)=>({x:'u₁',y:'u₂',z:'u₃'})[axis]);
+ // Always display calculated numeric inverse substitutions: changing any matrix
+ // entry or shift changes the actual equation shown, not merely the geometry.
+ return `S′: ${sourceInU};  u₁=${terms(B[0])}; u₂=${terms(B[1])}; u₃=${terms(B[2])}`;
 }
 export function shiftVectorText(t){return `t = ${vecText(t||[0,0,0])}`;}
 export function cubeGeometry(A,t){const E=[[0,0,0],[1,0,0],[0,1,0],[0,0,1],[1,1,0],[1,0,1],[0,1,1],[1,1,1]].map(p=>mul(A,p));
@@ -128,9 +165,9 @@ export const mathModel={
   const base=p?display(p,s):null,end=q?display(q,s):null;
   const marked=(point)=>point&&visible(point)?{lines:[line([0,0,0],point,0x212b37)],points:[{id:'selected',xyz:point,color:0xe44e3d}]}:{};
   return {pictures:{
-   input:{geometry:marked(base),label:'S',formula:sourceFormulaText(s)},
-   transform:{geometry:cubeGeometry(A,s.t),matrix:A,label:'A',metrics:[{key:'rank',value:String(rank(A))}],formulas:[shiftVectorText(s.t)]},
-   output:{geometry:marked(end),label:'AS+t',formula:resultFormulaText(s,A)}
+   input:{geometry:marked(base),label:'S'},
+   transform:{geometry:cubeGeometry(A,s.t),matrix:A,label:'A',metrics:[{key:'rank',value:String(rank(A))}]},
+   output:{geometry:marked(end),label:'AS+t'}
   }};
  },
  moveHandle({inputs,binding,position}){if(binding.type!=='shift')return false;inputs.t=position.map(v=>Math.max(-10000,Math.min(10000,v)));return true;},
@@ -142,7 +179,7 @@ export function picturesForLayout(){return [
  {id:'transform',titleKey:'transformTitle',descriptionKey:'transformDescr',matrixId:'A',editable:true},
  {id:'output',titleKey:'outputTitle',descriptionKey:'outputDescr',editable:false}];}
 export const MSG={
- ru:{appTitle:'AVO · Аффинные преобразования поверхностей · 01c',lead:'Поверхность S → матрица A и смещение t → образ AS+t. Управление построением находится над картинками.',inputTitle:'Исходная поверхность S',transformTitle:'Матрица A и вектор t',outputTitle:'Результат AS+t',inputDescr:'Выберите поверхность и шаг сетки. Точка на поверхности выделена.',transformDescr:'Редактируйте столбцы A числами или маркерами; перемещайте чёрный маркер t.',outputDescr:'Построение идёт вслед за исходной поверхностью. Все подходящие Z отображаются сразу.',helpTitle:'Аффинные преобразования поверхностей',helpMath:'Каждая точка p поверхности преобразуется в Ap+t. Для z=f(x,y) и F(x,y,z)=0: при фиксированном Y X растёт слева направо, затем Y увеличивается. Для неявного уравнения показываются все найденные корни Z в заданном диапазоне. Шаги DX и DY влияют на детализацию. Задержка 0 означает максимальную скорость. Логарифмический масштаб применяется только к показу, не к исходной математике. Обычный логарифм скрывает неположительные координаты; симметричный логарифм позволяет показывать и ноль, и отрицательные значения.'},
- en:{appTitle:'AVO · Affine Surface Transformations · 01c',lead:'Surface S → matrix A and shift t → image AS+t. Construction controls are above the panels.',inputTitle:'Original surface S',transformTitle:'Matrix A and shift t',outputTitle:'Result AS+t',inputDescr:'Choose a surface and mesh spacing. A point is highlighted.',transformDescr:'Edit columns of A with numbers or markers; drag the black t marker.',outputDescr:'The output is built alongside the input. Every matching Z is drawn immediately.',helpTitle:'Affine surface transformations',helpMath:'Each point p is transformed to Ap+t. For z=f(x,y) and F(x,y,z)=0, scan X at fixed Y, then advance Y. For implicit equations, find all Z roots in the chosen range. DX and DY determine mesh density. Delay 0 means full speed. Nonlinear axis scales change only the display, never the affine calculation. Standard log hides nonpositive coordinates; signed log includes zero and negatives.'},
- he:{appTitle:'AVO · טרנספורמציות אפיניות של משטחים · 01c',lead:'משטח S ← מטריצה A והזזה t ← התמונה AS+t. כלי הבנייה מעל האיורים.',inputTitle:'המשטח המקורי S',transformTitle:'מטריצה A ווקטור הזזה t',outputTitle:'התוצאה AS+t',inputDescr:'בחרו משטח ומרווח רשת. נקודה על המשטח מסומנת.',transformDescr:'ערכו את עמודות A במספרים או בסמנים; גררו את הסמן השחור של t.',outputDescr:'התוצאה נבנית לצד המקור. כל ערכי Z האפשריים מוצגים מיד.',helpTitle:'טרנספורמציות אפיניות של משטחים',helpMath:'כל נקודה p עוברת אל Ap+t. עבור z=f(x,y) או F(x,y,z)=0 סורקים X עבור Y קבוע, ומתקדמים ל-Y הבא. עבור משוואה סתומה מוצאים את כל שורשי Z בטווח. המרווחים DX,DY קובעים את צפיפות הרשת. השהיה 0 פירושה מהירות מרבית. קנה מידה לוגריתמי משנה רק את התצוגה ולא את החישוב.'}
+ ru:{appTitle:'AVO · Аффинные преобразования поверхностей · 01e',lead:'Поверхность S → матрица A и смещение t → образ AS+t. Управление построением находится над картинками.',inputTitle:'Исходная поверхность S',transformTitle:'Матрица A и вектор t',outputTitle:'Результат AS+t',inputDescr:'Выберите поверхность и шаг сетки. Точка на поверхности выделена.',transformDescr:'Редактируйте столбцы A числами или маркерами; перемещайте чёрный маркер t.',outputDescr:'Построение идёт вслед за исходной поверхностью. Все подходящие Z отображаются сразу.',helpTitle:'Аффинные преобразования поверхностей',helpMath:'Каждая точка p поверхности преобразуется в Ap+t. Для z=f(x,y) и F(x,y,z)=0: при фиксированном Y X растёт слева направо, затем Y увеличивается. Для неявного уравнения показываются все найденные корни Z в заданном диапазоне. Шаги DX и DY влияют на детализацию. Задержка 0 означает максимальную скорость. Логарифмический масштаб применяется только к показу, не к исходной математике. Обычный логарифм скрывает неположительные координаты; симметричный логарифм позволяет показывать и ноль, и отрицательные значения.'},
+ en:{appTitle:'AVO · Affine Surface Transformations · 01e',lead:'Surface S → matrix A and shift t → image AS+t. Construction controls are above the panels.',inputTitle:'Original surface S',transformTitle:'Matrix A and shift t',outputTitle:'Result AS+t',inputDescr:'Choose a surface and mesh spacing. A point is highlighted.',transformDescr:'Edit columns of A with numbers or markers; drag the black t marker.',outputDescr:'The output is built alongside the input. Every matching Z is drawn immediately.',helpTitle:'Affine surface transformations',helpMath:'Each point p is transformed to Ap+t. For z=f(x,y) and F(x,y,z)=0, scan X at fixed Y, then advance Y. For implicit equations, find all Z roots in the chosen range. DX and DY determine mesh density. Delay 0 means full speed. Nonlinear axis scales change only the display, never the affine calculation. Standard log hides nonpositive coordinates; signed log includes zero and negatives.'},
+ he:{appTitle:'AVO · טרנספורמציות אפיניות של משטחים · 01e',lead:'משטח S ← מטריצה A והזזה t ← התמונה AS+t. כלי הבנייה מעל האיורים.',inputTitle:'המשטח המקורי S',transformTitle:'מטריצה A ווקטור הזזה t',outputTitle:'התוצאה AS+t',inputDescr:'בחרו משטח ומרווח רשת. נקודה על המשטח מסומנת.',transformDescr:'ערכו את עמודות A במספרים או בסמנים; גררו את הסמן השחור של t.',outputDescr:'התוצאה נבנית לצד המקור. כל ערכי Z האפשריים מוצגים מיד.',helpTitle:'טרנספורמציות אפיניות של משטחים',helpMath:'כל נקודה p עוברת אל Ap+t. עבור z=f(x,y) או F(x,y,z)=0 סורקים X עבור Y קבוע, ומתקדמים ל-Y הבא. עבור משוואה סתומה מוצאים את כל שורשי Z בטווח. המרווחים DX,DY קובעים את צפיפות הרשת. השהיה 0 פירושה מהירות מרבית. קנה מידה לוגריתמי משנה רק את התצוגה ולא את החישוב.'}
 };

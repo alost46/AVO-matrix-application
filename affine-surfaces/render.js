@@ -9,12 +9,12 @@ export class SurfaceRenderer {
   for(const id of ['input','output']){
    const view=app.pictures.get(id).view,group=new THREE.Group();view.scene.add(group);
    const surfaces=new THREE.BufferGeometry(),wires=new THREE.BufferGeometry(),dots=new THREE.BufferGeometry();
-   const face=new THREE.Mesh(surfaces,new THREE.MeshBasicMaterial({color:id==='input'?0x5bafd1:0x87c879,side:THREE.DoubleSide,transparent:true,opacity:.28,depthWrite:true,depthTest:true}));
-   const wire=new THREE.LineSegments(wires,new THREE.LineBasicMaterial({color:id==='input'?0xb1d8e8:0xbce7ae,transparent:true,opacity:.45,depthTest:true}));
-   const point=new THREE.Points(dots,new THREE.PointsMaterial({color:id==='input'?0x126395:0x266c32,size:1.4,sizeAttenuation:false,transparent:true,opacity:.30,depthTest:true}));
+   const face=new THREE.Mesh(surfaces,new THREE.MeshBasicMaterial({color:id==='input'?0x137ca9:0x278a36,side:THREE.DoubleSide,transparent:true,opacity:.78,depthWrite:true,depthTest:true,polygonOffset:true,polygonOffsetFactor:1,polygonOffsetUnits:1}));
+   const wire=new THREE.LineSegments(wires,new THREE.LineBasicMaterial({color:id==='input'?0xb1d8e8:0xbce7ae,transparent:true,opacity:.3,depthTest:true}));
+   const point=new THREE.Points(dots,new THREE.PointsMaterial({color:id==='input'?0x126395:0x266c32,size:1.4,sizeAttenuation:false,transparent:true,opacity:.16,depthTest:true}));
    // Independent characteristic lines: silhouettes, cylinder generators / circular rims, etc.
    const characteristic=new THREE.BufferGeometry();
-   const ink=new THREE.LineSegments(characteristic,new THREE.LineBasicMaterial({color:id==='input'?0xf8ffff:0xf7fff7,transparent:true,opacity:.98,depthTest:true}));
+   const ink=new THREE.LineSegments(characteristic,new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:.98,depthTest:true}));
    ink.renderOrder=9;
    group.add(face,wire,point,ink);this.layers.push({id,view,group,surfaces,wires,dots,characteristic});
   }
