@@ -1,4 +1,4 @@
-import {sourceFormulaText,resultFormulaText} from './math.js';
+import {sourceFormulaText,resultFormulaText} from './math.js?v=01i';
 /* App-specific data controls. Core interface (flags, JSON, undo, view, editing) untouched. */
 const TXT={
  ru:{section:'Поверхность и построение',shape:'Поверхность',sphere:'Сфера · центр (0,0,0)',ellipsoid:'Эллипсоид',box:'Прямоугольный параллелепипед · вершина (0,0,0)',cylinder:'Цилиндр · основание XY',cone:'Конус · основание XY',pyramid:'Пирамида · основание XY',torus:'Тор',paraboloid:'Параболоид',frustum:'Усечённый конус',hemisphere:'Полусфера',explicit:'Явная z = f(x,y)',implicit:'Неявная F(x,y,z) = 0',expr:'Формула z=f(x,y)',imp:'Уравнение или система (разделитель ; или новая строка)',range:'Диапазоны исходных координат',settings:'Установки',stepMode:'Шаг сетки',auto:'Авто · 40 интервалов',manual:'Вручную',dx:'ΔX (или Δu)',dy:'ΔY (или Δv)',delay:'Задержка, мс',parameter:'Параметры фигуры',a:'a · размер / радиус',b:'b · размер / радиус',c:'c · высота / размер',minor:'r · малый радиус тора',shift:'Смещение t (также перетаскивается чёрным маркером)',scales:'Шкалы изображения',linear:'Линейная',log:'Лог 10 (x>0)',symlog:'±Лог',selected:'Выбранная точка поверхности',u:'u / доля X',v:'v / доля Y',rebuild:'Построить заново',status:'Рисование',done:'Готово',error:'Ошибка',hint:'Масштабы меняют только изображение, не координаты для A·p+t. При логарифме неположительные координаты не отображаются. Одно уравнение задаёт поверхность, два линию пересечения, три отдельные точки. Разделите уравнения знаком ; или новой строкой.',many:'Узлов по XY',rank:'Ранг',show:'Дополнительные параметры'},
@@ -44,21 +44,9 @@ export function installControls(app){const section=e('section','surface-controls
  }
  // The shift vector is edited alongside A, not hidden inside Settings.
  const transformPic=app.pictures?.get('transform');
- // A fixed-pixel origin marker is layered above the WebGL geometry. Ordinary
- // 3D lines were obscured by the editable t handle whenever t=(0,0,0).
- if(transformPic?.view?.screenPosition){
-  const badge=e('span','surface-origin-cross');
-  badge.textContent='×';badge.setAttribute('aria-hidden','true');
-  transformPic.plotWrap.append(badge);
-  const view=transformPic.view,render=view.render.bind(view);
-  const positionBadge=()=>{
-   const p=view.screenPosition([0,0,0]);
-   badge.hidden=!p||p[0]<0||p[1]<0||p[0]>view.root.clientWidth||p[1]>view.root.clientHeight;
-   if(!badge.hidden){badge.style.left=p[0]+'px';badge.style.top=p[1]+'px';}
-  };
-  view.render=(...args)=>{render(...args);positionBadge();};
-  positionBadge();
- }
+ // The built-in Core handle with data-handle="t" is the only cross marker.
+ // Its position is already tracked by the Core in screen space, and the Core's
+ // hit test drags it instead of rotating the camera. Only its CSS appearance is customized.
  const shiftColumn=e('div','surface-shift-editor');
  shiftColumn.append(e('strong','surface-shift-title'));
  const shiftFields=e('div','surface-shift-fields');
@@ -94,7 +82,7 @@ export function installControls(app){const section=e('section','surface-controls
   const s=app.currentInputs();
   if(banners.input)banners.input.textContent=sourceFormulaText(s);
   if(banners.output)banners.output.textContent=resultFormulaText(s, app.matrixFactory?.getNumericMatrix('A',{x:0,y:0,z:0,t:0})||[[1,0,0],[0,1,0],[0,0,1]]);
-  if(banners.transform)banners.transform.textContent=app.lang==='ru'?'Изменяйте A и t числами или маркерами; начало t отмечено ⊗':app.lang==='he'?'ערכו את A ואת t באמצעות מספרים או סמנים; תחילת t מסומנת בסימן ⊗':'Edit A and t with numbers or handles; origin of t: ⊗';
+  if(banners.transform)banners.transform.textContent=app.lang==='ru'?'Изменяйте A числами или маркерами; перетаскивайте ⊗ на конце t (начало в 0)' :app.lang==='he'?'ערכו את A במספרים או בסמנים; גררו את ⊗ בקצה t (ההתחלה ב־0)' :'Edit A numerically or by handles; drag ⊗ at the tip of t (tail fixed at 0)' ;
  }
  function localize(){const lang=app.lang,dict=TXT[lang]||TXT.ru;title.textContent=dict.section;for(const node of section.querySelectorAll('[data-tr]')){
    const value=dict[node.dataset.tr]||node.dataset.tr;if(node.tagName==='OPTION')node.textContent=value;
