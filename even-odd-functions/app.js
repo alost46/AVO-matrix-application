@@ -1,5 +1,5 @@
 'use strict';
-// AVO Even/Odd 01f: independent 2D app. No modification of AVO Core.
+// AVO Even/Odd 01h: independent 2D app. No modification of AVO Core.
 const $=id=>document.getElementById(id);
 const ALLOWED_FUNCS={sin:Math.sin,cos:Math.cos,tan:Math.tan,asin:Math.asin,acos:Math.acos,atan:Math.atan,sinh:Math.sinh,cosh:Math.cosh,tanh:Math.tanh,exp:Math.exp,ln:Math.log,log:Math.log10,sqrt:Math.sqrt,abs:Math.abs,floor:Math.floor,ceil:Math.ceil,round:Math.round,sign:Math.sign};
 function tokenize(s){s=s.replace(/π/g,'pi').replace(/−/g,'-').replace(/²/g,'^2').replace(/³/g,'^3').replace(/\s+/g,'');const result=[];let i=0;while(i<s.length){let rem=s.slice(i);let m=rem.match(/^(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?/);if(m){result.push({type:'num',value:Number(m[0])});i+=m[0].length;continue;}m=rem.match(/^[a-zA-Z_][a-zA-Z_0-9]*/);if(m){result.push({type:'name',value:m[0].toLowerCase()});i+=m[0].length;continue;}let c=s[i];if('+-*/^(),'.includes(c)){result.push({type:c,value:c});i++;continue;}throw Error('Недопустимый символ «'+c+'»');}
@@ -97,7 +97,7 @@ function graph(canvas,data,kind){
  draw(kind===0?data.ys:kind===1?data.evens:data.odds,kind===0?'#225bb5':kind===1?'#bd6a0a':'#7CFC00',2.8);ctx.restore();
 }
 // Numbers in the fields are the actual coordinate of the view centre.
-function coordinateLabel(v){if(!Number.isFinite(v))return '';if(Math.abs(v)<1e-11)return '0';return String(Number(v.toPrecision(9)));}
+function coordinateLabel(v){if(!Number.isFinite(v))return '';if(Math.abs(v)<0.005)return '0';return v.toFixed(2);}
 function syncCenterInputs(k){
  const v=chartViews[k];
  for(const axis of ['x','y']){
