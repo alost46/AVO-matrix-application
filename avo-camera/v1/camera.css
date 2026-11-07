@@ -1,0 +1,24 @@
+/* Camera UI is app-independent and does not override Core v2 styles. */
+.avo-camera{position:fixed;right:10px;bottom:10px;z-index:2147483600;width:min(420px,calc(100vw - 20px));max-height:55vh;overflow:auto;box-sizing:border-box;border:2px solid #1c678a;border-radius:12px;background:rgba(244,250,255,.96);box-shadow:0 2px 18px #071d3060;color:#12364a;padding:8px 10px;font:700 13px/1.4 system-ui,Arial,sans-serif;direction:ltr}
+.avo-camera *{box-sizing:border-box}.avo-camera .cam-heading{display:flex;align-items:center;justify-content:space-between;gap:9px;font-size:15px}
+.avo-camera button{cursor:pointer;border-radius:7px;border:1px solid #739fb5;background:#d8eaf8;padding:5px 7px;font:800 13px system-ui;color:#174260}
+.avo-camera button:disabled{opacity:.45;cursor:default}
+.avo-camera .cam-body{padding-top:5px}.avo-camera.collapsed .cam-body{display:none}
+.avo-camera .cam-row{display:flex;align-items:end;flex-wrap:wrap;gap:5px;margin-bottom:7px}
+.avo-camera label{display:flex;flex-direction:column;flex:1 1 70px;min-width:65px;gap:3px;font-weight:700}
+.avo-camera label:has([data-cam=mode]){flex:3 1 170px}
+.avo-camera label[hidden]{display:none}
+.avo-camera select,.avo-camera input{font:650 13px system-ui,Arial,sans-serif;background:white;border:1px solid #9db9c8;border-radius:5px;min-width:0;width:100%;height:29px;padding:2px 5px;color:#12364a}
+.avo-camera .cam-buttons{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
+.avo-camera [data-cam=start]{background:#b9eed0;border-color:#50aa79}
+.avo-camera [data-cam=stop]{background:#ffd5d5;border-color:#d98c8c}
+.avo-camera .cam-status{font-weight:750;flex:1 1 120px;word-break:break-word}
+.avo-camera .cam-help{font-weight:600;color:#3c6273;margin:5px 0 1px;font-size:11px}
+.avo-camera .cam-result{display:flex;flex-direction:column;gap:5px;margin-top:6px}.avo-camera .cam-result[hidden]{display:none}
+.avo-camera .cam-result a{font-weight:850;color:#08669b;text-decoration:underline}
+.avo-camera video{max-height:125px;max-width:100%;background:#111;align-self:center}
+@media(max-width:600px){.avo-camera{width:min(380px,calc(100vw - 12px));right:6px;bottom:6px;padding:6px;max-height:60vh}}
+
+/* During capture, keep only a compact stop control, not a panel over the mathematics. */
+.avo-camera.recording{width:min(300px,calc(100vw - 20px));max-height:115px}
+.avo-camera.recording .cam-row,.avo-camera.recording .cam-help,.avo-camera.recording [data-cam=start],.avo-camera.recording .cam-result{display:none!important}
