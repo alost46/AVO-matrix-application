@@ -1,15 +1,17 @@
 <!doctype html>
 <html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="color-scheme" content="light"><title>AVO · Аффинные преобразования поверхностей · 01k</title>
-<link rel="stylesheet" href="../avo-core/v2/core.css?core=01m"><link rel="stylesheet" href="./surface.css?v=01k">
+<meta name="color-scheme" content="light"><title>AVO · Аффинные преобразования поверхностей · 01n</title>
+<link rel="stylesheet" href="../avo-core/v2/core.css?core=01m"><link rel="stylesheet" href="./surface.css?v=01n">
+<link rel="stylesheet" href="../avo-camera/v1/camera.css?v=01a">
 <link rel="icon" href="../favicon-32.png">
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js"}}</script></head>
 <body><div id="app"><noscript>Для работы нужен JavaScript.</noscript></div>
 <script type="module">
 import {createApp} from '../avo-core/v2/app.js?core=01m';
-import {initialInputs,mathModel,picturesForLayout,MSG} from './math.js?v=01k';
-import {SurfaceRenderer} from './render.js?v=01k';
-import {installControls} from './controls.js?v=01k';
+import {initialInputs,mathModel,picturesForLayout,MSG} from './math.js?v=01n';
+import {SurfaceRenderer} from './render.js?v=01n';
+import {installControls} from './controls.js?v=01n';
+import {installCamera} from '../avo-camera/v1/camera.js?v=01a';
 // Compatible extension of 01i state: old JSON and saved inputs omitted time keys.
 const extendInputs = data => {
  if(!data||typeof data!=='object'||Array.isArray(data))return;
@@ -44,5 +46,40 @@ try{
  app.startSurface=()=>painter.start();
  controls.refreshAnnotations?.();
  painter.start();window.AVOSurfaces=app;
-}catch(error){console.error(error);const p=document.createElement('p');p.className='error';p.textContent='AVO 01k: '+error.message;document.getElementById('app').append(p);}
+ const adapter={async captureFrames({mode,to,step,onFrame,cancelled}){
+  if(mode==='t'){
+   if(app.currentInputs().shape!=='time')throw Error('Для t выберите форму «С параметром t» / Choose time-dependent surface mode');
+   const {parameterValues}=await import('./math.js?v=01n');
+   if(parameterValues(app.currentInputs()).length>240)throw Error('Для записи уменьшите число шагов t до 240 / At most 240 frames');
+   painter.cameraStep=async info=>{if(cancelled())throw Error('AVO_CAMERA_CANCELLED');await onFrame(info);};
+   try{await painter.start();if(painter.lastError)throw painter.lastError;}
+   finally{painter.cameraStep=null;}
+  }else{
+   const idx={tx:0,ty:1,tz:2}[mode];if(idx===undefined)throw Error('Unknown animation parameter');
+   const original=app.currentData.t.slice();const from=original[idx];
+   const n=Math.ceil(Math.abs(to-from)/step);
+   if(n>239)throw Error('Слишком много кадров: максимум 240 / Max 240 frames');
+   try{
+    for(let i=0;i<=n;i++){
+     if(cancelled())throw Error('AVO_CAMERA_CANCELLED');
+     const v=i===n?to:from+Math.sign(to-from)*Math.min(i*step,Math.abs(to-from));
+     app.currentData.t[idx]=v;
+     controls.sync();controls.refreshAnnotations?.();
+     await painter.start();if(painter.lastError)throw painter.lastError;
+     if(cancelled())throw Error('AVO_CAMERA_CANCELLED');
+     await onFrame({index:i,total:n+1,time:v});
+    }
+   }finally{
+    app.currentData.t=original;
+    controls.sync();controls.refreshAnnotations?.();
+    await painter.start();
+   }
+  }
+ }};
+ const camera=installCamera({app,adapter});
+ const oldLanguage=app.setLanguage.bind(app);
+ app.setLanguage=lang=>{oldLanguage(lang);camera.localize();};
+ window.AVOCamera=camera;
+
+}catch(error){console.error(error);const p=document.createElement('p');p.className='error';p.textContent='AVO 01n: '+error.message;document.getElementById('app').append(p);}
 </script></body></html>

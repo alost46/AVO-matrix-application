@@ -4,7 +4,7 @@
    Manual mode applies the SAME symmetric coordinate extents to all panels.
    Input bounds used for numerical sampling remain independent. */
 import * as THREE from 'three';
-import {setupSurface,affine,display,visible,implicitEquationTexts,solveIsolatedPoints,coordinateTimeEquations,parameterValues} from './math.js?v=01m';
+import {setupSurface,affine,display,visible,implicitEquationTexts,solveIsolatedPoints,coordinateTimeEquations,parameterValues} from './math.js?v=01n';
 const EPS=1e-8;
 const axes=['X','Y','Z'];
 const near=(a,b)=>Math.abs(a-b)<1e-8;

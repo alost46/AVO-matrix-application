@@ -1,12 +1,12 @@
 /* Progressively draw surface meshes in the EXISTING AVO Core Picture canvases.
    No changes to the common core and no replacement of its navigation/gestures. */
 import * as THREE from 'three';
-import {AdaptiveGrids} from './grid-scale.js?v=01m';
-import {setupSurface,affine,display,visible,implicitEquationTexts,intersectionSlabs,solveIsolatedPoints,coordinateTimeEquations,parameterValues,timeImplicitAt} from './math.js?v=01m';
+import {AdaptiveGrids} from './grid-scale.js?v=01n';
+import {setupSurface,affine,display,visible,implicitEquationTexts,intersectionSlabs,solveIsolatedPoints,coordinateTimeEquations,parameterValues,timeImplicitAt} from './math.js?v=01n';
 const nextFrame=()=>new Promise(done=>requestAnimationFrame(done));
 const sleep=ms=>new Promise(done=>setTimeout(done,ms));
 export class SurfaceRenderer {
- constructor(app,onProgress){this.app=app;this.onProgress=onProgress;this.generation=0;this.layers=[];this.grids=new AdaptiveGrids(app);this.clickStart=null;this.pickRaycaster=new THREE.Raycaster();
+ constructor(app,onProgress){this.app=app;this.onProgress=onProgress;this.generation=0;this.layers=[];this.cameraStep=null;this.lastError=null;this.grids=new AdaptiveGrids(app);this.clickStart=null;this.pickRaycaster=new THREE.Raycaster();
   for(const id of ['input','output']){
    const view=app.pictures.get(id).view,group=new THREE.Group();view.scene.add(group);
    const surfaces=new THREE.BufferGeometry(),wires=new THREE.BufferGeometry(),dots=new THREE.BufferGeometry();
@@ -110,7 +110,7 @@ export class SurfaceRenderer {
    if(hit){this.selectSourcePoint(hit,false);return;}
   }
  }
- async start(){const stamp=++this.generation,app=this.app,s=app.currentInputs(),A=app.matrixFactory.getNumericMatrix('A',{x:0,y:0,z:0,t:0});
+ async start(){this.lastError=null;const stamp=++this.generation,app=this.app,s=app.currentInputs(),A=app.matrixFactory.getNumericMatrix('A',{x:0,y:0,z:0,t:0});
   this.clear();for(const layer of this.layers)layer.group.children[3].material.color.setHex(0xffffff);const positions=[[],[]],lines=[[],[]],faces=[[],[]];
   try{
    this.grids.apply(s,A);
@@ -208,7 +208,7 @@ export class SurfaceRenderer {
    }
    if(stamp!==this.generation)return;
    drawn();this.chooseVisiblePoint();this.onProgress?.({done:expected,expected,vertices,finished:true});
-  }catch(e){if(stamp===this.generation){console.error(e);this.onProgress?.({error:e.message});}}
+  }catch(e){if(stamp===this.generation){this.lastError=e;console.error(e);this.onProgress?.({error:e.message});}}
  } 
  // The parameter t is scalar and is NEVER the affine shift vector s.t.
  // Coordinate equations trace a path; implicit equations animate snapshots at
@@ -224,14 +224,15 @@ export class SurfaceRenderer {
     const now=[display(p,s),display(q,s)];
     if(previous)for(let k=0;k<2;k++)this.pushLine(curves[k],previous[k],now[k]);
     previous=now.map(v=>visible(v)?v:null);
-    if(delay>0||i%10===0||i===total-1){
+    if(this.cameraStep||delay>0||i%10===0||i===total-1){
      for(let k=0;k<2;k++){
       const layer=this.layers[k];this.fill(curves[k],layer,'characteristic');
       layer.group.children[3].material.color.setHex(k===0?0x1269ad:0x237e35);
       this.fill(visible(now[k])?now[k]:[],layer,'markGeom');layer.view.render();
      }
      this.onProgress?.({done:i+1,expected:total,vertices:i+1,finished:i===total-1,time});
-     if(delay>0)await sleep(delay);else await nextFrame();
+     if(this.cameraStep)await this.cameraStep({index:i,total,time});
+     else if(delay>0)await sleep(delay);else await nextFrame();
     }
    }
    return;
@@ -285,7 +286,8 @@ export class SurfaceRenderer {
     this.fill(marks[k],layer,'markGeom');layer.view.render();
    }
    this.onProgress?.({done:i+1,expected:total,vertices:meshes[0].length/3+curves[0].length/3+marks[0].length/3,finished:i===total-1,time});
-   if(delay>0)await sleep(delay);else await nextFrame();
+   if(this.cameraStep)await this.cameraStep({index:i,total,time});
+   else if(delay>0)await sleep(delay);else await nextFrame();
   }
  }
  // Three equations normally define isolated 3D points: draw their affine images
