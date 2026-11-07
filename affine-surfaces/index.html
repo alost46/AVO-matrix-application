@@ -1,16 +1,17 @@
 <!doctype html>
 <html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="color-scheme" content="light"><title>AVO · Аффинные преобразования поверхностей · 01n</title>
-<link rel="stylesheet" href="../avo-core/v2/core.css?core=01m"><link rel="stylesheet" href="./surface.css?v=01n">
+<meta name="color-scheme" content="light"><title>AVO · Аффинные преобразования поверхностей · 01p</title>
+<link rel="stylesheet" href="../avo-core/v2/core.css?core=01m"><link rel="stylesheet" href="./surface.css?v=01p">
 <link rel="stylesheet" href="../avo-camera/v1/camera.css?v=01a">
+
 <link rel="icon" href="../favicon-32.png">
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js"}}</script></head>
 <body><div id="app"><noscript>Для работы нужен JavaScript.</noscript></div>
 <script type="module">
 import {createApp} from '../avo-core/v2/app.js?core=01m';
-import {initialInputs,mathModel,picturesForLayout,MSG} from './math.js?v=01n';
-import {SurfaceRenderer} from './render.js?v=01n';
-import {installControls} from './controls.js?v=01n';
+import {initialInputs,mathModel,picturesForLayout,MSG} from './math.js?v=01p';
+import {SurfaceRenderer} from './render.js?v=01p';
+import {installControls} from './controls.js?v=01p';
 import {installCamera} from '../avo-camera/v1/camera.js?v=01a';
 // Compatible extension of 01i state: old JSON and saved inputs omitted time keys.
 const extendInputs = data => {
@@ -49,7 +50,7 @@ try{
  const adapter={async captureFrames({mode,to,step,onFrame,cancelled}){
   if(mode==='t'){
    if(app.currentInputs().shape!=='time')throw Error('Для t выберите форму «С параметром t» / Choose time-dependent surface mode');
-   const {parameterValues}=await import('./math.js?v=01n');
+   const {parameterValues}=await import('./math.js?v=01p');
    if(parameterValues(app.currentInputs()).length>240)throw Error('Для записи уменьшите число шагов t до 240 / At most 240 frames');
    painter.cameraStep=async info=>{if(cancelled())throw Error('AVO_CAMERA_CANCELLED');await onFrame(info);};
    try{await painter.start();if(painter.lastError)throw painter.lastError;}
@@ -76,10 +77,34 @@ try{
    }
   }
  }};
- const camera=installCamera({app,adapter});
+ // AVO Camera 01a is unchanged. App 01p only relocates its existing panel.
+ const top=app.root.querySelector('.top');
+ const topActions=app.root.querySelector('.top-actions');
+ const panelMount=document.createElement('div');
+ panelMount.className='surface-camera-panel';
+ top.insertAdjacentElement('afterend',panelMount);
+ const cameraButton=document.createElement('button');
+ cameraButton.className='surface-camera-button';
+ cameraButton.type='button';
+ cameraButton.setAttribute('aria-controls','avo-camera');
+ cameraButton.setAttribute('aria-expanded','false');
+ topActions.prepend(cameraButton);
+ const camera=installCamera({app,adapter,mount:panelMount});
+ camera.root.hidden=true;
+ const cameraLabels={ru:'🎥 Кинокамера',en:'🎥 Camera',he:'🎥 מצלמה'};
+ const updateCameraButton=()=>{
+  cameraButton.textContent=cameraLabels[app.lang]||cameraLabels.ru;
+  cameraButton.setAttribute('aria-expanded',String(!camera.root.hidden));
+  cameraButton.classList.toggle('active',!camera.root.hidden);
+ };
+ cameraButton.addEventListener('click',()=>{
+  camera.root.hidden=!camera.root.hidden;
+  updateCameraButton();
+ });
+ updateCameraButton();
  const oldLanguage=app.setLanguage.bind(app);
- app.setLanguage=lang=>{oldLanguage(lang);camera.localize();};
+ app.setLanguage=lang=>{oldLanguage(lang);camera.localize();updateCameraButton();};
  window.AVOCamera=camera;
 
-}catch(error){console.error(error);const p=document.createElement('p');p.className='error';p.textContent='AVO 01n: '+error.message;document.getElementById('app').append(p);}
+}catch(error){console.error(error);const p=document.createElement('p');p.className='error';p.textContent='AVO 01p: '+error.message;document.getElementById('app').append(p);}
 </script></body></html>
