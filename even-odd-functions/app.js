@@ -51,7 +51,7 @@ function bounds(arrays){let vals=arrays.flatMap(a=>a).filter(Number.isFinite).so
 // Symmetric logarithm has a linear neighbourhood of zero and retains both signs.
 const axisTransform=(v,mode)=>mode==='symlog'?Math.sign(v)*Math.log10(1+Math.abs(v)):v;
 const axisInverse=(u,mode)=>mode==='symlog'?Math.sign(u)*(Math.pow(10,Math.min(Math.abs(u),300))-1):u;
-const chartViews=Array.from({length:3},()=>({xMode:'linear',yMode:'linear',zoom:1,dx:0,dy:0,zoomEnabled:false}));
+const chartViews=Array.from({length:3},()=>({xMode:'linear',yMode:'linear',zoom:1,dx:0,dy:0,zoomEnabled:false,navAxis:null}));
 const redraw=()=>{if(current)for(let k=0;k<3;k++)graph($('graph'+k),current,k);};
 function graph(canvas,data,kind){
  const view=chartViews[kind],w=canvas.clientWidth||450,h=canvas.clientHeight||390,dpr=Math.min(window.devicePixelRatio||1,2);
@@ -67,13 +67,15 @@ function graph(canvas,data,kind){
  let ty1=baseTransformedY.length?baseTransformedY[Math.floor(baseTransformedY.length*.99)]:axisTransform(baseY1,view.yMode);
  if(!(ty1>ty0)){let delta=Math.max(.1,Math.abs(ty0)*.2);ty0-=delta;ty1+=delta;}else{let d=(ty1-ty0)*.12;ty0-=d;ty1+=d;}
  const spanX=(baseX1-baseX0)/view.zoom,spanY=(ty1-ty0)/view.zoom;
- const midX=(baseX0+baseX1)/2+view.dx,midY=(ty0+ty1)/2+view.dy;
+ view.lastBaseX=(baseX0+baseX1)/2;view.lastBaseY=(ty0+ty1)/2;
+ const midX=view.lastBaseX+view.dx,midY=view.lastBaseY+view.dy;
  const x0=midX-spanX/2,x1=midX+spanX/2,y0=midY-spanY/2,y1=midY+spanY/2;
  const pw=w-pad.l-pad.r,ph=h-pad.t-pad.b;
  const px=x=>pad.l+(axisTransform(x,view.xMode)-x0)/(x1-x0)*pw;
  const py=y=>h-pad.b-(axisTransform(y,view.yMode)-y0)/(y1-y0)*ph;
  // Store geometry for mouse/touch panning.
  view.lastSpanX=spanX;view.lastSpanY=spanY;view.lastW=pw;view.lastH=ph;
+ syncCenterInputs(kind);
  ctx.font='600 12px Arial';ctx.fillStyle='#56677e';ctx.strokeStyle='#e5ebf2';ctx.lineWidth=1;
  function label(v){if(Math.abs(v)<1e-12)return '0';const abs=Math.abs(v);return abs>=1e5||(abs<.001&&abs>0)?v.toExponential(1):Number(v.toPrecision(3)).toString();}
  for(let i=0;i<=5;i++){const u=x0+(x1-x0)*i/5,p=pad.l+pw*i/5;ctx.beginPath();ctx.moveTo(p,pad.t);ctx.lineTo(p,h-pad.b);ctx.stroke();ctx.textAlign='center';ctx.fillText(label(axisInverse(u,view.xMode)),p,h-23);}
@@ -94,9 +96,42 @@ function graph(canvas,data,kind){
  if(kind===0&&data.implicit){const max=Math.max(0,...data.all.map(a=>a.length));for(let j=0;j<Math.min(max,12);j++)draw(data.all.map(r=>r[j]??NaN),'#bdc5d0',1.3);}
  draw(kind===0?data.ys:kind===1?data.evens:data.odds,kind===0?'#225bb5':kind===1?'#bd6a0a':'#7CFC00',2.8);ctx.restore();
 }
+// Numbers in the fields are the actual coordinate of the view centre.
+function coordinateLabel(v){if(!Number.isFinite(v))return '';if(Math.abs(v)<1e-11)return '0';return String(Number(v.toPrecision(9)));}
+function syncCenterInputs(k){
+ const v=chartViews[k];
+ for(const axis of ['x','y']){
+  const el=document.querySelector('.pan-coordinate[data-chart="'+k+'"][data-axis="'+axis+'"]');
+  if(!el||document.activeElement===el)continue;
+  const base=axis==='x'?v.lastBaseX:v.lastBaseY;
+  const offset=axis==='x'?v.dx:v.dy;
+  const mode=axis==='x'?v.xMode:v.yMode;
+  if(Number.isFinite(base))el.value=coordinateLabel(axisInverse(base+offset,mode));
+ }
+}
+function chooseCenter(k,axis,raw){
+ const v=chartViews[k],value=Number(raw);
+ if(!String(raw).trim()||!Number.isFinite(value)) {syncCenterInputs(k);return;}
+ const mode=axis==='x'?v.xMode:v.yMode;
+ const base=axis==='x'?v.lastBaseX:v.lastBaseY;
+ const transformed=axisTransform(value,mode);
+ if(!Number.isFinite(base)||!Number.isFinite(transformed))return;
+ if(axis==='x')v.dx=transformed-base;else v.dy=transformed-base;
+ redraw();
+}
+function stepOrZoom(k,direction){
+ const v=chartViews[k];
+ if(v.navAxis){
+  // One press moves one fifth of the CURRENT visible span on the chosen axis.
+  const amount=(v.navAxis==='x'?v.lastSpanX:v.lastSpanY)*0.2*direction;
+  if(!Number.isFinite(amount))return;
+  if(v.navAxis==='x')v.dx+=amount;else v.dy+=amount;
+  redraw();
+ }else zoomChart(k,direction>0?1.5:1/1.5);
+}
 function zoomChart(k,factor){const v=chartViews[k];if(!v.zoomEnabled)return;v.zoom=Math.max(.1,Math.min(500,v.zoom*factor));redraw();}
 function resetChart(k,resetAxes=false){
- const v=chartViews[k];v.zoom=1;v.dx=0;v.dy=0;
+ const v=chartViews[k];v.zoom=1;v.dx=0;v.dy=0;v.navAxis=null;
  if(resetAxes){
   v.xMode='linear';v.yMode='linear';
   for(const cls of ['axis-x','axis-y']){
@@ -104,20 +139,37 @@ function resetChart(k,resetAxes=false){
    if(el)el.value='linear';
   }
  }
+ setZoomEnabled(k,false);
  redraw();
 }
-function setZoomEnabled(k,enabled){
- const v=chartViews[k];v.zoomEnabled=enabled;
+function updateControlState(k){
+ const v=chartViews[k];
+ for(const b of document.querySelectorAll('.pan-axis[data-chart="'+k+'"]'))b.setAttribute('aria-pressed',String(b.dataset.axis===v.navAxis));
  const btn=document.querySelector('.zoom-reset[data-chart="'+k+'"]');
- if(btn){btn.setAttribute('aria-pressed',String(enabled));btn.title=enabled?'Выключить масштабирование':'Включить масштабирование';btn.setAttribute('aria-label',btn.title);}
- document.querySelectorAll('.zoom-in[data-chart="'+k+'"],.zoom-out[data-chart="'+k+'"]').forEach(b=>{b.disabled=!enabled;});
- const cvs=$('graph'+k);cvs.classList.toggle('zoom-enabled',enabled);cvs.classList.toggle('zoom-disabled',!enabled);
- if(!enabled)cvs.dispatchEvent(new Event('avo-zoom-disabled'));
+ if(btn){btn.setAttribute('aria-pressed',String(v.zoomEnabled));btn.title=v.zoomEnabled?'Выключить масштабирование':'Включить масштабирование';btn.setAttribute('aria-label',btn.title);}
+ for(const b of document.querySelectorAll('.zoom-in[data-chart="'+k+'"],.zoom-out[data-chart="'+k+'"]')){
+  b.disabled=!v.zoomEnabled&&!v.navAxis;
+  b.title=v.navAxis?('Сдвинуть центр по '+v.navAxis.toUpperCase()+' ('+(b.classList.contains('zoom-in')?'+':'−')+')'):(b.classList.contains('zoom-in')?'Увеличить':'Уменьшить');
+ }
+ const cvs=$('graph'+k);cvs.classList.toggle('zoom-enabled',v.zoomEnabled);cvs.classList.toggle('zoom-disabled',!v.zoomEnabled);
 }
-function resetAllCharts(){for(let k=0;k<3;k++){resetChart(k,true);setZoomEnabled(k,false);}}
+function setZoomEnabled(k,enabled){
+ const v=chartViews[k];v.zoomEnabled=enabled;if(enabled)v.navAxis=null;
+ updateControlState(k);
+ if(!enabled)$('graph'+k).dispatchEvent(new Event('avo-zoom-disabled'));
+}
+function selectPanAxis(k,axis){
+ const v=chartViews[k];v.navAxis=v.navAxis===axis?null:axis;
+ if(v.navAxis)v.zoomEnabled=false;
+ updateControlState(k);
+ if(v.navAxis)$('graph'+k).dispatchEvent(new Event('avo-zoom-disabled'));
+}
+function resetAllCharts(){for(let k=0;k<3;k++)resetChart(k,true);}
 function installChartControls(){
- document.querySelectorAll('.zoom-in').forEach(b=>b.addEventListener('click',()=>zoomChart(Number(b.dataset.chart),1.5)));
- document.querySelectorAll('.zoom-out').forEach(b=>b.addEventListener('click',()=>zoomChart(Number(b.dataset.chart),1/1.5)));
+ document.querySelectorAll('.zoom-in').forEach(b=>b.addEventListener('click',()=>stepOrZoom(Number(b.dataset.chart),+1)));
+ document.querySelectorAll('.zoom-out').forEach(b=>b.addEventListener('click',()=>stepOrZoom(Number(b.dataset.chart),-1)));
+ document.querySelectorAll('.pan-axis').forEach(b=>b.addEventListener('click',()=>selectPanAxis(Number(b.dataset.chart),b.dataset.axis)));
+ document.querySelectorAll('.pan-coordinate').forEach(el=>{el.addEventListener('change',()=>chooseCenter(Number(el.dataset.chart),el.dataset.axis,el.value));el.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();el.blur();}});});
  document.querySelectorAll('.zoom-reset').forEach(b=>b.addEventListener('click',()=>{const k=Number(b.dataset.chart);setZoomEnabled(k,!chartViews[k].zoomEnabled);}));
  document.querySelectorAll('.axis-x,.axis-y').forEach(el=>el.addEventListener('change',()=>{const k=Number(el.dataset.chart),v=chartViews[k];if(el.classList.contains('axis-x'))v.xMode=el.value;else v.yMode=el.value;resetChart(k); }));
  document.querySelectorAll('.fullscreen-toggle').forEach(b=>b.addEventListener('click',async()=>{
@@ -214,4 +266,4 @@ $('labelOriginal').textContent=$('formula').value;updateExpressionLabels();const
 requestAnimationFrame(()=>{for(let k=0;k<3;k++)graph($('graph'+k),data,k);});}catch(err){$('status').classList.add('error');$('status').textContent='Ошибка: '+err.message;}}
 function example(which){const set={poly:['y = x^3 - 2*x^2 + x',-4,4,-8,8],sin:['y = sin(x) + x^2/4',-7,7,-8,8],circle:['x^2 + y^2 = 9',-3.5,3.5,-4,4],cubic:['y^3 - 3*y + x = 0',-3,3,-4,4],parabola:['x = y^2 - 1',-2,6,-4,4]};const v=set[which]||set.poly;$('formula').value=v[0];$('xmin').value=v[1];$('xmax').value=v[2];$('ymin').value=v[3];$('ymax').value=v[4];$('branch').value='upper';plot();}
 $('plot').addEventListener('click',()=>{resetAllCharts();plot();});$('reset').addEventListener('click',()=>{resetAllCharts();$('examples').value='poly';example('poly');});$('examples').addEventListener('change',e=>{if(e.target.value){resetAllCharts();example(e.target.value);}});$('branch').addEventListener('change',plot);$('ymin').addEventListener('change',plot);$('ymax').addEventListener('change',plot);window.addEventListener('resize',()=>{if(current)requestAnimationFrame(()=>{for(let k=0;k<3;k++)graph($('graph'+k),current,k);});});
-window.AVO_EVEN_ODD_TEST={compile,parseEquation,rootsAt,derive,axisTransform,axisInverse,chartViews,polynomialCoefficients,formatPolynomial,expressionParts,setZoomEnabled};installChartControls();for(let k=0;k<3;k++)setZoomEnabled(k,false);example('poly');
+window.AVO_EVEN_ODD_TEST={compile,parseEquation,rootsAt,derive,axisTransform,axisInverse,chartViews,polynomialCoefficients,formatPolynomial,expressionParts,setZoomEnabled,chooseCenter,stepOrZoom,selectPanAxis};installChartControls();for(let k=0;k<3;k++)setZoomEnabled(k,false);example('poly');

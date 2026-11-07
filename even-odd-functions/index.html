@@ -12,6 +12,16 @@ canvas{width:100%;height:390px;display:block;cursor:default;touch-action:pan-y}
 .chart:fullscreen canvas,.chart.fullscreen-fallback canvas{flex:1;min-height:0;height:auto}
 .chart:fullscreen .legend,.chart.fullscreen-fallback .legend{margin-top:auto}
 body:has(.fullscreen-fallback){overflow:hidden}.legend{font-size:14px;color:var(--muted);padding:8px 0}.math{padding:13px 16px;background:white;border:1px solid var(--border);border-radius:12px;margin-top:12px;font-size:16px}.math p{margin:5px 0}.footer{font-size:12px;font-weight:400;color:#7d8795;text-align:center;padding:18px}.hint{font-size:14px;font-weight:500;color:var(--muted)}.row{display:flex;gap:9px;flex-wrap:wrap;align-items:end}.hide{display:none!important}@media(max-width:900px){.grid{grid-template-columns:1fr}.chart canvas{height:330px}h1{font-size:21px}main{padding:9px}.top{padding:10px}.field{flex:1 1 auto}#formula{width:100%;min-width:200px}}@media(max-width:470px){.chart canvas{height:285px}input[type=number]{width:100px}button{font-size:15px}.chart-toolbar{gap:4px}.chart-toolbar select{font-size:13px;max-width:120px}.chart-toolbar label{font-size:13px}}
+
+/* Навигация к координатам: управляет только окном обзора, не изменяя f(x). */
+.chart-pan-controls{display:flex;align-items:center;flex-wrap:wrap;gap:8px 13px;margin:0 0 8px;padding:7px 0;border-top:1px solid #d9e4ee}
+.pan-group{display:inline-flex;align-items:center;gap:5px;min-width:0}
+.chart-pan-controls .pan-axis{min-height:35px;min-width:39px;padding:3px 8px;font-size:23px;line-height:1.1;background:#edf4ff}
+.chart-pan-controls .pan-axis[aria-pressed="true"]{background:#1d5fbd;border-color:#1d5fbd;color:#fff}
+.pan-group label{font-size:14px;font-weight:700}
+.pan-group input.pan-coordinate{width:92px;min-height:35px;font:700 15px Arial;padding:5px 6px;border:1px solid #9cacc4;border-radius:6px;color:var(--ink)}
+.pan-hint{font-size:12px;color:#61718a;font-weight:600;white-space:nowrap}
+@media(max-width:470px){.chart-pan-controls{gap:6px 9px}.pan-group input.pan-coordinate{width:75px}.pan-hint{flex-basis:100%;font-size:12px}}
 </style></head><body>
 <header><div class="brand"><img src="avo-logo.png" alt="OA" class="brand-logo"><h1>AVO · Чётная и нечётная части функции</h1></div><span style="font-size:14px;font-weight:600">Три графика · Явная и неявная запись</span></header>
 <main><section class="top">
@@ -34,6 +44,10 @@ body:has(.fullscreen-fallback){overflow:hidden}.legend{font-size:14px;color:var(
 <label>X <select class="axis-x" data-chart="0" aria-label="Масштаб оси X"><option value="linear">Линейный</option><option value="symlog">Логарифм. ±</option></select></label>
 <label>Y <select class="axis-y" data-chart="0" aria-label="Масштаб оси Y"><option value="linear">Линейный</option><option value="symlog">Логарифм. ±</option></select></label>
 <span class="push"></span><button type="button" class="fullscreen-toggle" data-chart="0" title="На весь экран" aria-label="На весь экран">⛶</button>
+</div><div class="chart-pan-controls" aria-label="Перемещение области графика 1">
+<div class="pan-group"><button type="button" class="pan-axis" data-axis="y" data-chart="0" aria-pressed="false" title="Выбрать вертикальное перемещение (+/− по Y)">↑</button><label for="pan-y-0">Y</label><input id="pan-y-0" class="pan-coordinate" data-axis="y" data-chart="0" type="number" step="any" inputmode="decimal" value="0" aria-label="Координата Y центра графика 1" title="Установить координату Y центра области обзора"></div>
+<div class="pan-group"><button type="button" class="pan-axis" data-axis="x" data-chart="0" aria-pressed="false" title="Выбрать горизонтальное перемещение (+/− по X)">→</button><label for="pan-x-0">X</label><input id="pan-x-0" class="pan-coordinate" data-axis="x" data-chart="0" type="number" step="any" inputmode="decimal" value="0" aria-label="Координата X центра графика 1" title="Установить координату X центра области обзора"></div>
+<span class="pan-hint">X, Y: центр обзора</span>
 </div><canvas id="graph0" aria-label="График 1"></canvas><div class="legend">Синий: выбранная функция или ветвь · Серый: другие ветви</div></article><article class="chart"><h2>Чётная часть</h2><p>fₑ(x) = [f(x) + f(−x)] / 2</p><p id="evenFormula" class="derived-formula"> </p><div class="chart-toolbar" aria-label="Управление графиком 2">
 <button type="button" class="zoom-in" data-chart="1" title="Увеличить">＋</button>
 <button type="button" class="zoom-out" data-chart="1" title="Уменьшить">−</button>
@@ -41,6 +55,10 @@ body:has(.fullscreen-fallback){overflow:hidden}.legend{font-size:14px;color:var(
 <label>X <select class="axis-x" data-chart="1" aria-label="Масштаб оси X"><option value="linear">Линейный</option><option value="symlog">Логарифм. ±</option></select></label>
 <label>Y <select class="axis-y" data-chart="1" aria-label="Масштаб оси Y"><option value="linear">Линейный</option><option value="symlog">Логарифм. ±</option></select></label>
 <span class="push"></span><button type="button" class="fullscreen-toggle" data-chart="1" title="На весь экран" aria-label="На весь экран">⛶</button>
+</div><div class="chart-pan-controls" aria-label="Перемещение области графика 2">
+<div class="pan-group"><button type="button" class="pan-axis" data-axis="y" data-chart="1" aria-pressed="false" title="Выбрать вертикальное перемещение (+/− по Y)">↑</button><label for="pan-y-1">Y</label><input id="pan-y-1" class="pan-coordinate" data-axis="y" data-chart="1" type="number" step="any" inputmode="decimal" value="0" aria-label="Координата Y центра графика 2" title="Установить координату Y центра области обзора"></div>
+<div class="pan-group"><button type="button" class="pan-axis" data-axis="x" data-chart="1" aria-pressed="false" title="Выбрать горизонтальное перемещение (+/− по X)">→</button><label for="pan-x-1">X</label><input id="pan-x-1" class="pan-coordinate" data-axis="x" data-chart="1" type="number" step="any" inputmode="decimal" value="0" aria-label="Координата X центра графика 2" title="Установить координату X центра области обзора"></div>
+<span class="pan-hint">X, Y: центр обзора</span>
 </div><canvas id="graph1" aria-label="График 2"></canvas><div class="legend">Оранжевый · Симметрия относительно оси Y</div></article><article class="chart"><h2>Нечётная часть</h2><p>fₒ(x) = [f(x) − f(−x)] / 2</p><p id="oddFormula" class="derived-formula"> </p><div class="chart-toolbar" aria-label="Управление графиком 3">
 <button type="button" class="zoom-in" data-chart="2" title="Увеличить">＋</button>
 <button type="button" class="zoom-out" data-chart="2" title="Уменьшить">−</button>
@@ -48,6 +66,10 @@ body:has(.fullscreen-fallback){overflow:hidden}.legend{font-size:14px;color:var(
 <label>X <select class="axis-x" data-chart="2" aria-label="Масштаб оси X"><option value="linear">Линейный</option><option value="symlog">Логарифм. ±</option></select></label>
 <label>Y <select class="axis-y" data-chart="2" aria-label="Масштаб оси Y"><option value="linear">Линейный</option><option value="symlog">Логарифм. ±</option></select></label>
 <span class="push"></span><button type="button" class="fullscreen-toggle" data-chart="2" title="На весь экран" aria-label="На весь экран">⛶</button>
+</div><div class="chart-pan-controls" aria-label="Перемещение области графика 3">
+<div class="pan-group"><button type="button" class="pan-axis" data-axis="y" data-chart="2" aria-pressed="false" title="Выбрать вертикальное перемещение (+/− по Y)">↑</button><label for="pan-y-2">Y</label><input id="pan-y-2" class="pan-coordinate" data-axis="y" data-chart="2" type="number" step="any" inputmode="decimal" value="0" aria-label="Координата Y центра графика 3" title="Установить координату Y центра области обзора"></div>
+<div class="pan-group"><button type="button" class="pan-axis" data-axis="x" data-chart="2" aria-pressed="false" title="Выбрать горизонтальное перемещение (+/− по X)">→</button><label for="pan-x-2">X</label><input id="pan-x-2" class="pan-coordinate" data-axis="x" data-chart="2" type="number" step="any" inputmode="decimal" value="0" aria-label="Координата X центра графика 3" title="Установить координату X центра области обзора"></div>
+<span class="pan-hint">X, Y: центр обзора</span>
 </div><canvas id="graph2" aria-label="График 3"></canvas><div class="legend">Салатовый · Симметрия относительно начала координат</div></article></div>
-<section class="math"><p><strong>Масштаб:</strong> «Линейный» или «Логарифм. ±» можно выбирать отдельно по X и Y для каждого графика. Симметричная логарифмическая шкала сохраняет ноль и отрицательные значения. Лупа включает и выключает режим масштабирования. Когда она подсвечена, работают ＋/−, колёсико мыши, масштабирование двумя пальцами и перемещение графика. Когда выключена, эти действия недоступны. Масштаб осей X/Y выбирается отдельно.</p><p><strong>Правило разложения:</strong> f(x) = fₑ(x) + fₒ(x), если одновременно существуют f(x) и f(−x).</p><p id="note">Для неявного уравнения F(x,y)=0 сначала выбирают ветвь y(x). Разные ветви могут давать разные разложения.</p></section><div class="footer">AVO · Чётная и нечётная части · приложение 01f · автономная двумерная визуализация</div></main>
-<script src="app.js?v=01f-20261105" defer></script></body></html>
+<section class="math"><p><strong>Масштаб:</strong> «Линейный» или «Логарифм. ±» можно выбирать отдельно по X и Y для каждого графика. Симметричная логарифмическая шкала сохраняет ноль и отрицательные значения. Лупа включает масштабирование: тогда ＋/− изменяют размер, работают колёсико мыши, масштабирование двумя пальцами и перетаскивание графика. Стрелки ↑ и → переключают ＋/− на перемещение области просмотра по Y или X соответственно; повторное нажатие стрелки отключает её. Числа X и Y справа от стрелок задают центр области просмотра (можно ввести сразу обе координаты). Сами функции при перемещении не изменяются. Масштаб осей X/Y выбирается отдельно.</p><p><strong>Правило разложения:</strong> f(x) = fₑ(x) + fₒ(x), если одновременно существуют f(x) и f(−x).</p><p id="note">Для неявного уравнения F(x,y)=0 сначала выбирают ветвь y(x). Разные ветви могут давать разные разложения.</p></section><div class="footer">AVO · Чётная и нечётная части · приложение 01g · автономная двумерная визуализация</div></main>
+<script src="app.js?v=01g-20261107" defer></script></body></html>
