@@ -1,8 +1,8 @@
-/* AVO surfaces 01t. Progressively draw meshes in the EXISTING AVO Core Picture canvases.
+/* AVO surfaces 01u. Progressively draw meshes in the EXISTING AVO Core Picture canvases.
    No changes to the common core and no replacement of its navigation/gestures. */
 import * as THREE from 'three';
-import {AdaptiveGrids} from './grid-scale.js?v=01t';
-import {setupSurface,affine,display,visible,implicitEquationTexts,intersectionSlabs,solveIsolatedPoints,coordinateTimeEquations,parameterValues,timeImplicitAt} from './math.js?v=01t';
+import {AdaptiveGrids} from './grid-scale.js?v=01u';
+import {setupSurface,affine,display,visible,implicitEquationTexts,intersectionSlabs,solveIsolatedPoints,coordinateTimeEquations,parameterValues,timeImplicitAt} from './math.js?v=01u';
 const nextFrame=()=>new Promise(done=>requestAnimationFrame(done));
 const sleep=ms=>new Promise(done=>setTimeout(done,ms));
 export class SurfaceRenderer {
@@ -37,7 +37,12 @@ export class SurfaceRenderer {
    const redTube=new THREE.Mesh(new THREE.BufferGeometry(),new THREE.MeshBasicMaterial({color:0xe71724,depthTest:false,depthWrite:false,side:THREE.DoubleSide}));
    halo.renderOrder=13;redTube.renderOrder=14;
    group.add(face,wire,point,ink,marker,trail,halo,redTube,chosen);
-   this.layers.push({id,view,group,surfaces,wires,dots,characteristic,markGeom,chosenGeom,trailGeom,face,ink,marker,halo,redTube});
+   const layer={id,view,group,surfaces,wires,dots,characteristic,markGeom,chosenGeom,trailGeom,face,ink,marker,halo,redTube,history:[]};
+   this.layers.push(layer);
+   // SVG is a view-only overlay attached to the Picture canvas, not the
+   // application screen. It records EXACT projected mathematical positions
+   // and is included in both normal and browser-tab/fullscreen video capture.
+   this.initTraceOverlay(layer);
   }
   const canvas=this.layers[0].view.renderer.domElement;
   // Observe a short click/tap, but never hijack drag gestures, which belong to AVO Core.
@@ -50,6 +55,58 @@ export class SurfaceRenderer {
    if(hit)this.selectSourcePoint(hit,true);
   });
  }
+ initTraceOverlay(layer){
+  const ns='http://www.w3.org/2000/svg';
+  const canvas=layer.view.renderer.domElement,parent=canvas.parentElement;
+  if(!parent)return;
+  if(getComputedStyle(parent).position==='static')parent.style.position='relative';
+  const svg=document.createElementNS(ns,'svg');
+  svg.classList.add('avo-motion-trace');
+  svg.setAttribute('aria-hidden','true');
+  svg.style.cssText='position:absolute;pointer-events:none;overflow:hidden;z-index:15;display:none;';
+  const outline=document.createElementNS(ns,'path'),red=document.createElementNS(ns,'path'),first=document.createElementNS(ns,'circle');
+  for(const path of [outline,red]){
+   path.setAttribute('fill','none');path.setAttribute('stroke-linecap','round');path.setAttribute('stroke-linejoin','round');
+  }
+  outline.setAttribute('stroke','#ffffff');outline.setAttribute('stroke-width','7');
+  red.setAttribute('stroke','#e71921');red.setAttribute('stroke-width','4');
+  first.setAttribute('fill','#e71921');first.setAttribute('stroke','#ffffff');first.setAttribute('stroke-width','2');first.setAttribute('r','4');
+  svg.append(outline,red,first);parent.append(svg);
+  layer.overlay={svg,outline,red,first};
+  const originalRender=layer.view.render.bind(layer.view);
+  layer.view.render=(...args)=>{const result=originalRender(...args);this.paintTraceOverlay(layer);return result;};
+ }
+ paintTraceOverlay(layer){
+  const el=layer.overlay;
+  if(!el)return;
+  const pts=layer.history;
+  if(pts.length<2){el.svg.style.display='none';return;}
+  const canvas=layer.view.renderer.domElement,rect=canvas.getBoundingClientRect(),parentRect=canvas.parentElement.getBoundingClientRect();
+  if(!rect.width||!rect.height)return;
+  el.svg.style.display='block';
+  el.svg.style.left=(rect.left-parentRect.left)+'px';
+  el.svg.style.top=(rect.top-parentRect.top)+'px';
+  el.svg.style.width=canvas.offsetWidth+'px';el.svg.style.height=canvas.offsetHeight+'px';
+  const w=canvas.offsetWidth,h=canvas.offsetHeight;
+  el.svg.setAttribute('viewBox',`0 0 ${w} ${h}`);
+  const projected=[];
+  for(const p of pts){
+   if(!p||!p.every(Number.isFinite)){projected.push(null);continue;}
+   const v=new THREE.Vector3(p[0],p[1],p[2]).project(layer.view.camera);
+   if(!Number.isFinite(v.x+v.y+v.z)||v.z< -1||v.z>1){projected.push(null);continue;}
+   projected.push([(v.x+1)*w/2,(1-v.y)*h/2]);
+  }
+  let d='',beg=null,penUp=true;
+  for(const v of projected){
+   if(!v){penUp=true;continue;}
+   if(!beg)beg=v;
+   d+=(penUp?'M':'L')+v[0].toFixed(2)+' '+v[1].toFixed(2)+' ';
+   penUp=false;
+  }
+  el.outline.setAttribute('d',d);el.red.setAttribute('d',d);
+  el.first.style.display=beg?'':'none';
+  if(beg){el.first.setAttribute('cx',beg[0]);el.first.setAttribute('cy',beg[1]);}
+ }
  markerTexture(){
   if(this.selectedTexture)return this.selectedTexture;
   const canvas=document.createElement('canvas');canvas.width=64;canvas.height=64;
@@ -59,7 +116,7 @@ export class SurfaceRenderer {
   ctx.beginPath();ctx.arc(32,32,20,0,Math.PI*2);ctx.strokeStyle='#7a0b10';ctx.lineWidth=2;ctx.stroke();
   this.selectedTexture=new THREE.CanvasTexture(canvas);return this.selectedTexture;
  }
- clear(){for(const l of this.layers){for(const g of [l.surfaces,l.wires,l.dots,l.characteristic,l.markGeom,l.chosenGeom,l.trailGeom])g.setAttribute('position',new THREE.Float32BufferAttribute([],3));
+ clear(){for(const l of this.layers){l.history=[];if(l.overlay)l.overlay.svg.style.display='none';for(const g of [l.surfaces,l.wires,l.dots,l.characteristic,l.markGeom,l.chosenGeom,l.trailGeom])g.setAttribute('position',new THREE.Float32BufferAttribute([],3));
    for(const mesh of [l.halo,l.redTube]){mesh.geometry.dispose();mesh.geometry=new THREE.BufferGeometry();mesh.visible=false;}
    l.view.render();}}
  fill(arr,spec,data){const g=spec[data];g.setAttribute('position',new THREE.Float32BufferAttribute(new Float32Array(arr),3));g.computeBoundingSphere();}
@@ -286,6 +343,12 @@ export class SurfaceRenderer {
    this.fill(visible(v)?v:[],layer,'chosenGeom');
    if(visible(v)&&visible(track.previous[k]))this.pushLine(track.trails[k],track.previous[k],v);
    track.previous[k]=visible(v)?v:null;
+   // The projected track is retained per mathematical frame, not guessed
+   // from the final rendered surface. The overlay is updated after EVERY
+   // camera/view render and remains visible even if the next expanding
+   // surface encloses earlier positions.
+   if(visible(v))layer.history.push([...v]);
+   else if(layer.history.length)layer.history.push(null);
    this.fill(track.trails[k],layer,'trailGeom');
    this.updateTrackTube(layer,track.trails[k]);
   }
