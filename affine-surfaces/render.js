@@ -1,8 +1,8 @@
-/* AVO surfaces 01r. Progressively draw meshes in the EXISTING AVO Core Picture canvases.
+/* AVO surfaces 01s. Progressively draw meshes in the EXISTING AVO Core Picture canvases.
    No changes to the common core and no replacement of its navigation/gestures. */
 import * as THREE from 'three';
-import {AdaptiveGrids} from './grid-scale.js?v=01r';
-import {setupSurface,affine,display,visible,implicitEquationTexts,intersectionSlabs,solveIsolatedPoints,coordinateTimeEquations,parameterValues,timeImplicitAt} from './math.js?v=01r';
+import {AdaptiveGrids} from './grid-scale.js?v=01s';
+import {setupSurface,affine,display,visible,implicitEquationTexts,intersectionSlabs,solveIsolatedPoints,coordinateTimeEquations,parameterValues,timeImplicitAt} from './math.js?v=01s';
 const nextFrame=()=>new Promise(done=>requestAnimationFrame(done));
 const sleep=ms=>new Promise(done=>setTimeout(done,ms));
 export class SurfaceRenderer {
@@ -21,7 +21,7 @@ export class SurfaceRenderer {
    const marker=new THREE.Points(markGeom,new THREE.PointsMaterial({color:0xef2424,size:10,sizeAttenuation:false,depthTest:false,depthWrite:false}));
    marker.renderOrder=20; // Legacy red endpoints of parametric paths.
    const chosenGeom=new THREE.BufferGeometry();
-   const chosenMaterial=new THREE.PointsMaterial({map:this.markerTexture(),size:20,sizeAttenuation:false,transparent:true,alphaTest:.2,depthTest:true,depthWrite:false});
+   const chosenMaterial=new THREE.PointsMaterial({map:this.markerTexture(),size:24,sizeAttenuation:false,transparent:true,alphaTest:.2,depthTest:true,depthWrite:false});
    const chosen=new THREE.Points(chosenGeom,chosenMaterial);chosen.renderOrder=21;
    // Dynamic experiments: the moving point and its completed path are
    // geometry in the same 3-D coordinate system as the original object.
@@ -29,8 +29,14 @@ export class SurfaceRenderer {
    const trailGeom=new THREE.BufferGeometry();
    const trail=new THREE.LineSegments(trailGeom,new THREE.LineBasicMaterial({color:0xe71921,transparent:false,depthTest:true,depthWrite:false}));
    trail.renderOrder=12;
-   group.add(face,wire,point,ink,marker,trail,chosen);
-   this.layers.push({id,view,group,surfaces,wires,dots,characteristic,markGeom,chosenGeom,trailGeom,face,ink,marker});
+   // Two depth-tested tubes give the moving red trajectory a crisp white
+   // outline. Unlike WebGL's linewidth (usually fixed at one pixel), real
+   // meshes stay readable on Chrome/Edge and under 3-D rotation.
+   const halo=new THREE.Mesh(new THREE.BufferGeometry(),new THREE.MeshBasicMaterial({color:0xffffff,depthTest:true,depthWrite:false,transparent:true,opacity:.96,side:THREE.DoubleSide}));
+   const redTube=new THREE.Mesh(new THREE.BufferGeometry(),new THREE.MeshBasicMaterial({color:0xe71724,depthTest:true,depthWrite:false,side:THREE.DoubleSide}));
+   halo.renderOrder=13;redTube.renderOrder=14;
+   group.add(face,wire,point,ink,marker,trail,halo,redTube,chosen);
+   this.layers.push({id,view,group,surfaces,wires,dots,characteristic,markGeom,chosenGeom,trailGeom,face,ink,marker,halo,redTube});
   }
   const canvas=this.layers[0].view.renderer.domElement;
   // Observe a short click/tap, but never hijack drag gestures, which belong to AVO Core.
@@ -52,7 +58,9 @@ export class SurfaceRenderer {
   ctx.beginPath();ctx.arc(32,32,20,0,Math.PI*2);ctx.strokeStyle='#7a0b10';ctx.lineWidth=2;ctx.stroke();
   this.selectedTexture=new THREE.CanvasTexture(canvas);return this.selectedTexture;
  }
- clear(){for(const l of this.layers){for(const g of [l.surfaces,l.wires,l.dots,l.characteristic,l.markGeom,l.chosenGeom,l.trailGeom])g.setAttribute('position',new THREE.Float32BufferAttribute([],3));l.view.render();}}
+ clear(){for(const l of this.layers){for(const g of [l.surfaces,l.wires,l.dots,l.characteristic,l.markGeom,l.chosenGeom,l.trailGeom])g.setAttribute('position',new THREE.Float32BufferAttribute([],3));
+   for(const mesh of [l.halo,l.redTube]){mesh.geometry.dispose();mesh.geometry=new THREE.BufferGeometry();mesh.visible=false;}
+   l.view.render();}}
  fill(arr,spec,data){const g=spec[data];g.setAttribute('position',new THREE.Float32BufferAttribute(new Float32Array(arr),3));g.computeBoundingSphere();}
  pushLine(list,a,b){if(visible(a)&&visible(b))list.push(...a,...b);}
  pushTri(list,a,b,c){if(visible(a)&&visible(b)&&visible(c))list.push(...a,...b,...c);}
@@ -250,6 +258,26 @@ export class SurfaceRenderer {
   }
   best=best||candidates[0];track.direction=norm(best);return best;
  }
+ // Refresh actual 3-D tube geometry for every computed frame; unlike
+ // WebGL LineBasicMaterial, this is visibly wider than one physical pixel.
+ updateTrackTube(layer,segments){
+  const points=[];
+  for(let i=0;i+5<segments.length;i+=6){
+   const a=new THREE.Vector3(segments[i],segments[i+1],segments[i+2]);
+   const b=new THREE.Vector3(segments[i+3],segments[i+4],segments[i+5]);
+   if(!points.length)points.push(a);
+   if(b.distanceTo(points[points.length-1])>1e-7)points.push(b);
+  }
+  for(const mesh of [layer.halo,layer.redTube]){
+   mesh.geometry.dispose();mesh.geometry=new THREE.BufferGeometry();mesh.visible=false;
+  }
+  if(points.length<2)return;
+  const curve=new THREE.CatmullRomCurve3(points,false,'centripetal');
+  const divisions=Math.min(720,Math.max(8,(points.length-1)*3));
+  for(const [mesh,radius] of [[layer.halo,.064],[layer.redTube,.039]]){
+   mesh.geometry.dispose();mesh.geometry=new THREE.TubeGeometry(curve,divisions,radius,6,false);mesh.visible=true;
+  }
+ }
  drawTrack(p,s,A,track){
   const pts=p?[p,affine(A,s.t,p)]:[];
   for(let k=0;k<2;k++){
@@ -258,6 +286,7 @@ export class SurfaceRenderer {
    if(visible(v)&&visible(track.previous[k]))this.pushLine(track.trails[k],track.previous[k],v);
    track.previous[k]=visible(v)?v:null;
    this.fill(track.trails[k],layer,'trailGeom');
+   this.updateTrackTube(layer,track.trails[k]);
   }
  }
  // The parameter t is scalar and is NEVER the affine shift vector s.t.

@@ -131,3 +131,17 @@
 
 /* Keep the camera accessible in an enlarged result picture. */
 .picture-full .surface-camera-panel{flex:0 0 auto;max-height:45vh;overflow:auto;}
+
+/* 01s: the SAME camera panel is moved into the currently enlarged picture.
+ * In normal mode it stays below the right-hand description. All controls
+ * remain operable in the enlarged picture; no change to core or encoder. */
+.picture-full>.surface-camera-panel{display:block!important;flex:0 0 auto;max-height:min(40vh,350px);overflow:auto;z-index:2;border-top:2px solid #a8c6d9;}
+.picture-full>.surface-camera-panel>.avo-camera{max-height:28vh;overflow:auto;}
+.picture-full>.surface-camera-panel>.surface-camera-button{margin:0 0 3px auto;}
+.picture-full>.surface-camera-panel>.avo-camera.recording{max-height:65px;overflow:hidden;}
+/* Keep a small stop button and live status, not the settings, in recorded frames. */
+.picture-full>.surface-camera-panel>.avo-camera.recording .cam-row,
+.picture-full>.surface-camera-panel>.avo-camera.recording .cam-help,
+.picture-full>.surface-camera-panel>.avo-camera.recording [data-cam=start],
+.picture-full>.surface-camera-panel>.avo-camera.recording .cam-result{display:none!important;}
+@media(max-width:650px){.picture-full>.surface-camera-panel{max-height:42vh;padding:5px}.picture-full>.surface-camera-panel>.avo-camera{max-height:35vh}}
