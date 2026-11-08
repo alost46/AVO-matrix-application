@@ -1,5 +1,5 @@
 'use strict';
-// AVO Even/Odd 01h: independent 2D app. No modification of AVO Core.
+// AVO Even/Odd 01i: independent 2D app. No modification of AVO Core.
 const $=id=>document.getElementById(id);
 const ALLOWED_FUNCS={sin:Math.sin,cos:Math.cos,tan:Math.tan,asin:Math.asin,acos:Math.acos,atan:Math.atan,sinh:Math.sinh,cosh:Math.cosh,tanh:Math.tanh,exp:Math.exp,ln:Math.log,log:Math.log10,sqrt:Math.sqrt,abs:Math.abs,floor:Math.floor,ceil:Math.ceil,round:Math.round,sign:Math.sign};
 function tokenize(s){s=s.replace(/π/g,'pi').replace(/−/g,'-').replace(/²/g,'^2').replace(/³/g,'^3').replace(/\s+/g,'');const result=[];let i=0;while(i<s.length){let rem=s.slice(i);let m=rem.match(/^(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?/);if(m){result.push({type:'num',value:Number(m[0])});i+=m[0].length;continue;}m=rem.match(/^[a-zA-Z_][a-zA-Z_0-9]*/);if(m){result.push({type:'name',value:m[0].toLowerCase()});i+=m[0].length;continue;}let c=s[i];if('+-*/^(),'.includes(c)){result.push({type:c,value:c});i++;continue;}throw Error('Недопустимый символ «'+c+'»');}
@@ -25,11 +25,42 @@ if(right==='y'&&!/\by\b/.test(left)){const fn=compile(left);return {implicit:fal
 const l=compile(left),r=compile(right);return {implicit:true,func:(x,y)=>l(x,y)-r(x,y)};}
 function finite(v){return typeof v==='number'&&Number.isFinite(v)?v:NaN;}
 function bisect(f,x,a,b,fa,fb){for(let n=0;n<38;n++){let m=(a+b)/2,vm=f(x,m);if(!Number.isFinite(vm))return NaN;if(Math.abs(vm)<1e-11)return m;if((vm>0)===(fa>0)){a=m;fa=vm;}else{b=m;fb=vm;}}return (a+b)/2;}
-function rootsAt(f,x,ymin,ymax,stepCount=440){const roots=[];const h=(ymax-ymin)/stepCount;let prevY=ymin,prev=f(x,prevY);for(let i=1;i<=stepCount;i++){const y=ymin+i*h,v=f(x,y);if(Number.isFinite(prev)&&Number.isFinite(v)){if(prev===0)roots.push(prevY);if(v===0||prev*v<0){const root=v===0?y:bisect(f,x,prevY,y,prev,v);if(Number.isFinite(root))roots.push(root);}
-// A tangent root may not change sign. Probe midpoint near local minimum.
-if(i>1&&Math.abs(v)<0.000002&&Math.abs(v)<Math.abs(prev))roots.push(y);
-}prevY=y;prev=v;}
-roots.sort((a,b)=>a-b);return roots.filter((v,i)=>i===0||Math.abs(v-roots[i-1])>h*.4).slice(0,12);}
+// Scan for simple roots and tangencies. A double root does not change sign,
+// so sign-change bisection alone cannot detect it.
+function rootsAt(f,x,ymin,ymax,stepCount=440){
+ const roots=[],h=(ymax-ymin)/stepCount;
+ const vals=Array.from({length:stepCount+1},(_,i)=>finite(f(x,ymin+i*h)));
+ function add(y){if(Number.isFinite(y)&&y>=ymin-1e-9&&y<=ymax+1e-9)roots.push(y);}
+ for(let i=0;i<=stepCount;i++){
+  const y=ymin+i*h,v=vals[i];
+  if(Number.isFinite(v)&&Math.abs(v)<1e-10)add(y);
+  if(i===0)continue;
+  const prev=vals[i-1];
+  if(Number.isFinite(prev)&&Number.isFinite(v)&&prev*v<0){
+   const root=bisect(f,x,y-h,y,prev,v);add(root);
+  }
+ }
+ // A local minimum of |F| can represent a tangent / multiple root.
+ // Refine it and accept only a tiny equation residual, preventing near misses.
+ for(let i=1;i<stepCount;i++){
+  const a=vals[i-1],b=vals[i],c=vals[i+1];
+  if(![a,b,c].every(Number.isFinite)||!(Math.abs(b)<=Math.abs(a)&&Math.abs(b)<=Math.abs(c)))continue;
+  let lo=ymin+(i-1)*h,hi=ymin+(i+1)*h;
+  const phi=(Math.sqrt(5)-1)/2;
+  for(let j=0;j<36;j++){
+   const u=hi-(hi-lo)*phi,v=lo+(hi-lo)*phi;
+   const fu=Math.abs(f(x,u)),fv=Math.abs(f(x,v));
+   if(!Number.isFinite(fu)||!Number.isFinite(fv))break;
+   if(fu<fv)hi=v;else lo=u;
+  }
+  const y=(lo+hi)/2,res=Math.abs(f(x,y));
+  const localScale=Math.max(1,Math.abs(a),Math.abs(c));
+  if(Number.isFinite(res)&&res<1e-9*localScale)add(y);
+ }
+ roots.sort((a,b)=>a-b);
+ const unique=[];for(const y of roots){if(!unique.length||Math.abs(y-unique[unique.length-1])>h*.25)unique.push(y);}
+ return unique.slice(0,12);
+}
 const N=641;let current=null;
 function selectedRoot(roots,key){if(!roots.length)return NaN;if(key==='upper')return roots[roots.length-1];if(key==='lower')return roots[0];const i=Number(key);return roots[i]??NaN;}
 function derive(){const eq=parseEquation($('formula').value);let a=Number($('xmin').value),b=Number($('xmax').value);if(!Number.isFinite(a)||!Number.isFinite(b)||b<=a)throw Error('Укажите диапазон x: левый предел меньше правого');if(!Number.isFinite(b-a))throw Error('Диапазон x слишком велик для численных вычислений');const implicit=eq.implicit;$('implicitOpts').classList.toggle('hide',!implicit);let ya=Number($('ymin').value),yb=Number($('ymax').value);if(implicit&&(!Number.isFinite(ya)||!Number.isFinite(yb)||yb<=ya))throw Error('Неверный диапазон поиска y');const branch=$('branch').value;
@@ -261,9 +292,9 @@ function updateExpressionLabels(){const [even,odd]=expressionParts();$('evenForm
 
 function plot(){try{const data=derive();current=data;const eCount=data.evens.filter(Number.isFinite).length;const status=$('status');status.classList.remove('error');if(!data.found)status.textContent='В заданной области не найдено точек графика. Для неявного уравнения попробуйте увеличить диапазон поиска y или выбрать другую ветвь.';
 else if(!eCount)status.textContent='Исходная ветвь найдена, но f(x) и f(−x) не определены одновременно в заданном интервале. Разложение здесь не отображается.';
-else status.textContent=(data.implicit?'Неявное уравнение: показана выбранная ветвь и другие найденные ветви. ':'Явная функция. ')+`Точек исходного графика: ${data.found} из ${data.xs.length}. Точек разложения: ${eCount}.`;
+else status.textContent=(data.implicit?'Неявное уравнение F(x,y)=0: синяя линия — выбранная ветвь, серые — другие ветви. ':'Явная функция y=f(x). ')+`Точек исходного графика: ${data.found} из ${data.xs.length}. Точек разложения: ${eCount}.`;
 $('labelOriginal').textContent=$('formula').value;updateExpressionLabels();const symmetry=Math.min(data.b,-data.a)-Math.max(data.a,-data.b);$('note').textContent=(data.implicit?'Для неявного уравнения чётная и нечётная части определяются для выбранной ветви y(x), а не для всего множества решений. ':'')+(symmetry<=0?'Заданный интервал не содержит ненулевого симметричного отрезка. ':'Разложение вычисляется там, где одновременно определены f(x) и f(−x). ')+ 'Для неявного случая численное нахождение корней может пропускать касания и сложные ветвления.';
 requestAnimationFrame(()=>{for(let k=0;k<3;k++)graph($('graph'+k),data,k);});}catch(err){$('status').classList.add('error');$('status').textContent='Ошибка: '+err.message;}}
-function example(which){const set={poly:['y = x^3 - 2*x^2 + x',-4,4,-8,8],sin:['y = sin(x) + x^2/4',-7,7,-8,8],circle:['x^2 + y^2 = 9',-3.5,3.5,-4,4],cubic:['y^3 - 3*y + x = 0',-3,3,-4,4],parabola:['x = y^2 - 1',-2,6,-4,4]};const v=set[which]||set.poly;$('formula').value=v[0];$('xmin').value=v[1];$('xmax').value=v[2];$('ymin').value=v[3];$('ymax').value=v[4];$('branch').value='upper';plot();}
+function example(which){const set={poly:['y = x^3 - 2*x^2 + x',-4,4,-8,8],sin:['y = sin(x) + x^2/4',-7,7,-8,8],circle:['x^2 + y^2 = 9',-3.5,3.5,-4,4],cubic:['y^3 - 3*y + x = 0',-3,3,-4,4],parabola:['x = y^2 - 1',-2,6,-4,4],tangent:['y^2 = x^2',-3,3,-4,4]};const v=set[which]||set.poly;$('formula').value=v[0];$('xmin').value=v[1];$('xmax').value=v[2];$('ymin').value=v[3];$('ymax').value=v[4];$('branch').value='upper';plot();}
 $('plot').addEventListener('click',()=>{resetAllCharts();plot();});$('reset').addEventListener('click',()=>{resetAllCharts();$('examples').value='poly';example('poly');});$('examples').addEventListener('change',e=>{if(e.target.value){resetAllCharts();example(e.target.value);}});$('branch').addEventListener('change',plot);$('ymin').addEventListener('change',plot);$('ymax').addEventListener('change',plot);window.addEventListener('resize',()=>{if(current)requestAnimationFrame(()=>{for(let k=0;k<3;k++)graph($('graph'+k),current,k);});});
 window.AVO_EVEN_ODD_TEST={compile,parseEquation,rootsAt,derive,axisTransform,axisInverse,chartViews,polynomialCoefficients,formatPolynomial,expressionParts,setZoomEnabled,chooseCenter,stepOrZoom,selectPanAxis};installChartControls();for(let k=0;k<3;k++)setZoomEnabled(k,false);example('poly');
