@@ -1,5 +1,5 @@
 'use strict';
-// AVO Even/Odd 01i: independent 2D app. No modification of AVO Core.
+// AVO Even/Odd 01j: independent 2D app. No modification of AVO Core.
 const $=id=>document.getElementById(id);
 const ALLOWED_FUNCS={sin:Math.sin,cos:Math.cos,tan:Math.tan,asin:Math.asin,acos:Math.acos,atan:Math.atan,sinh:Math.sinh,cosh:Math.cosh,tanh:Math.tanh,exp:Math.exp,ln:Math.log,log:Math.log10,sqrt:Math.sqrt,abs:Math.abs,floor:Math.floor,ceil:Math.ceil,round:Math.round,sign:Math.sign};
 function tokenize(s){s=s.replace(/π/g,'pi').replace(/−/g,'-').replace(/²/g,'^2').replace(/³/g,'^3').replace(/\s+/g,'');const result=[];let i=0;while(i<s.length){let rem=s.slice(i);let m=rem.match(/^(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?/);if(m){result.push({type:'num',value:Number(m[0])});i+=m[0].length;continue;}m=rem.match(/^[a-zA-Z_][a-zA-Z_0-9]*/);if(m){result.push({type:'name',value:m[0].toLowerCase()});i+=m[0].length;continue;}let c=s[i];if('+-*/^(),'.includes(c)){result.push({type:c,value:c});i++;continue;}throw Error('Недопустимый символ «'+c+'»');}
@@ -111,17 +111,26 @@ function graph(canvas,data,kind){
  function label(v){if(Math.abs(v)<1e-12)return '0';const abs=Math.abs(v);return abs>=1e5||(abs<.001&&abs>0)?v.toExponential(1):Number(v.toPrecision(3)).toString();}
  for(let i=0;i<=5;i++){const u=x0+(x1-x0)*i/5,p=pad.l+pw*i/5;ctx.beginPath();ctx.moveTo(p,pad.t);ctx.lineTo(p,h-pad.b);ctx.stroke();ctx.textAlign='center';ctx.fillText(label(axisInverse(u,view.xMode)),p,h-23);}
  for(let i=0;i<=5;i++){const u=y0+(y1-y0)*i/5,p=h-pad.b-ph*i/5;ctx.beginPath();ctx.moveTo(pad.l,p);ctx.lineTo(w-pad.r,p);ctx.stroke();ctx.textAlign='right';ctx.fillText(label(axisInverse(u,view.yMode)),pad.l-7,p+4);}
- ctx.strokeStyle='#8699af';ctx.lineWidth=1.25;
+ // Coordinate axes: dark, with arrowheads and X/Y beside the actual axes.
  const zeroX=axisTransform(0,view.xMode),zeroY=axisTransform(0,view.yMode);
- if(x0<=zeroX&&x1>=zeroX){ctx.beginPath();ctx.moveTo(px(0),pad.t);ctx.lineTo(px(0),h-pad.b);ctx.stroke();}
- if(y0<=zeroY&&y1>=zeroY){ctx.beginPath();ctx.moveTo(pad.l,py(0));ctx.lineTo(w-pad.r,py(0));ctx.stroke();}
- ctx.font='700 15px Arial';ctx.fillStyle='#17283d';ctx.textAlign='right';ctx.fillText('X',w-pad.r,h-5);
- ctx.textAlign='left';ctx.fillText('Y',Math.max(4,pad.l-19),15);
+ const visibleYaxis=x0<=zeroX&&x1>=zeroX;
+ const visibleXaxis=y0<=zeroY&&y1>=zeroY;
+ const axisXP=visibleYaxis?px(0):pad.l;
+ const axisYP=visibleXaxis?py(0):h-pad.b;
+ ctx.strokeStyle='#526b8b';ctx.fillStyle='#203650';ctx.lineWidth=1.8;
+ function arrow(x1,y1,x2,y2){ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();}
+ if(visibleYaxis){arrow(axisXP,h-pad.b,axisXP,pad.t+5);arrow(axisXP-5,pad.t+12,axisXP,pad.t+5);arrow(axisXP+5,pad.t+12,axisXP,pad.t+5);}
+ if(visibleXaxis){arrow(pad.l,axisYP,w-pad.r-5,axisYP);arrow(w-pad.r-12,axisYP-5,w-pad.r-5,axisYP);arrow(w-pad.r-12,axisYP+5,w-pad.r-5,axisYP);}
+ // Axes names remain visible even when the origin is outside the window.
+ // The X label sits next to the positive arrow; Y at the top of its axis.
+ ctx.font='700 17px Arial';ctx.fillStyle='#17283d';
+ ctx.textAlign='right';ctx.fillText('X',w-pad.r-5,Math.min(h-5,Math.max(pad.t+20,axisYP-11)));
+ ctx.textAlign='left';ctx.fillText('Y',Math.min(w-pad.r-15,axisXP+9),pad.t+14);
  ctx.save();ctx.beginPath();ctx.rect(pad.l,pad.t,pw,ph);ctx.clip();
  function draw(ys,color,width){ctx.strokeStyle=color;ctx.lineWidth=width;ctx.beginPath();let started=false,prev=null;
  for(let i=0;i<data.xs.length;i++){let x=data.xs[i],y=ys[i];if(!Number.isFinite(y)||!Number.isFinite(x)){started=false;prev=null;continue;}
  const xp=px(x),yp=py(y);if(!Number.isFinite(xp)||!Number.isFinite(yp)||Math.abs(yp)>1e6){started=false;prev=null;continue;}
- if(prev!==null&&Math.abs(yp-prev)>ph*.85)started=false;
+ if(prev!==null&&Math.abs(yp-prev)>ph*.19)started=false;
  if(!started){ctx.moveTo(xp,yp);started=true;}else ctx.lineTo(xp,yp);prev=yp;
  }ctx.stroke();}
  if(kind===0&&data.implicit){const max=Math.max(0,...data.all.map(a=>a.length));for(let j=0;j<Math.min(max,12);j++)draw(data.all.map(r=>r[j]??NaN),'#bdc5d0',1.3);}
@@ -293,8 +302,8 @@ function updateExpressionLabels(){const [even,odd]=expressionParts();$('evenForm
 function plot(){try{const data=derive();current=data;const eCount=data.evens.filter(Number.isFinite).length;const status=$('status');status.classList.remove('error');if(!data.found)status.textContent='В заданной области не найдено точек графика. Для неявного уравнения попробуйте увеличить диапазон поиска y или выбрать другую ветвь.';
 else if(!eCount)status.textContent='Исходная ветвь найдена, но f(x) и f(−x) не определены одновременно в заданном интервале. Разложение здесь не отображается.';
 else status.textContent=(data.implicit?'Неявное уравнение F(x,y)=0: синяя линия — выбранная ветвь, серые — другие ветви. ':'Явная функция y=f(x). ')+`Точек исходного графика: ${data.found} из ${data.xs.length}. Точек разложения: ${eCount}.`;
-$('labelOriginal').textContent=$('formula').value;updateExpressionLabels();const symmetry=Math.min(data.b,-data.a)-Math.max(data.a,-data.b);$('note').textContent=(data.implicit?'Для неявного уравнения чётная и нечётная части определяются для выбранной ветви y(x), а не для всего множества решений. ':'')+(symmetry<=0?'Заданный интервал не содержит ненулевого симметричного отрезка. ':'Разложение вычисляется там, где одновременно определены f(x) и f(−x). ')+ 'Для неявного случая численное нахождение корней может пропускать касания и сложные ветвления.';
+$('labelOriginal').textContent=$('formula').value;updateExpressionLabels();const symmetry=Math.min(data.b,-data.a)-Math.max(data.a,-data.b);$('note').textContent=(data.implicit?'Для неявного уравнения чётная и нечётная части определяются для выбранной ветви y(x), а не для всего множества решений. ':'')+(symmetry<=0?'Заданный интервал не содержит ненулевого симметричного отрезка. ':'Разложение вычисляется там, где одновременно определены f(x) и f(−x). ')+ 'Если уравнение имеет много ветвей (например, sin(x)+sin(y)=0), выбор «Верхняя» означает наибольший корень в заданном диапазоне Y. Такая ветвь может иметь разрывы при смене корня. Линии в местах резких переходов разделяются; для непрерывной ветви следует задать подходящий диапазон Y. Численный поиск может пропускать сложные касания.';
 requestAnimationFrame(()=>{for(let k=0;k<3;k++)graph($('graph'+k),data,k);});}catch(err){$('status').classList.add('error');$('status').textContent='Ошибка: '+err.message;}}
-function example(which){const set={poly:['y = x^3 - 2*x^2 + x',-4,4,-8,8],sin:['y = sin(x) + x^2/4',-7,7,-8,8],circle:['x^2 + y^2 = 9',-3.5,3.5,-4,4],cubic:['y^3 - 3*y + x = 0',-3,3,-4,4],parabola:['x = y^2 - 1',-2,6,-4,4],tangent:['y^2 = x^2',-3,3,-4,4]};const v=set[which]||set.poly;$('formula').value=v[0];$('xmin').value=v[1];$('xmax').value=v[2];$('ymin').value=v[3];$('ymax').value=v[4];$('branch').value='upper';plot();}
+function example(which){const set={poly:['y = x^3 - 2*x^2 + x',-4,4,-8,8],sin:['y = sin(x) + x^2/4',-7,7,-8,8],circle:['x^2 + y^2 = 9',-3.5,3.5,-4,4],cubic:['y^3 - 3*y + x = 0',-3,3,-4,4],parabola:['x = y^2 - 1',-2,6,-4,4],tangent:['y^2 = x^2',-3,3,-4,4],periodic:['sin(x)+sin(y)=0',-4,4,-8,8]};const v=set[which]||set.poly;$('formula').value=v[0];$('xmin').value=v[1];$('xmax').value=v[2];$('ymin').value=v[3];$('ymax').value=v[4];$('branch').value='upper';plot();}
 $('plot').addEventListener('click',()=>{resetAllCharts();plot();});$('reset').addEventListener('click',()=>{resetAllCharts();$('examples').value='poly';example('poly');});$('examples').addEventListener('change',e=>{if(e.target.value){resetAllCharts();example(e.target.value);}});$('branch').addEventListener('change',plot);$('ymin').addEventListener('change',plot);$('ymax').addEventListener('change',plot);window.addEventListener('resize',()=>{if(current)requestAnimationFrame(()=>{for(let k=0;k<3;k++)graph($('graph'+k),current,k);});});
 window.AVO_EVEN_ODD_TEST={compile,parseEquation,rootsAt,derive,axisTransform,axisInverse,chartViews,polynomialCoefficients,formatPolynomial,expressionParts,setZoomEnabled,chooseCenter,stepOrZoom,selectPanAxis};installChartControls();for(let k=0;k<3;k++)setZoomEnabled(k,false);example('poly');
