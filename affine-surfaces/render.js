@@ -1,8 +1,8 @@
-/* Progressively draw surface meshes in the EXISTING AVO Core Picture canvases.
+/* AVO surfaces 01r. Progressively draw meshes in the EXISTING AVO Core Picture canvases.
    No changes to the common core and no replacement of its navigation/gestures. */
 import * as THREE from 'three';
-import {AdaptiveGrids} from './grid-scale.js?v=01n';
-import {setupSurface,affine,display,visible,implicitEquationTexts,intersectionSlabs,solveIsolatedPoints,coordinateTimeEquations,parameterValues,timeImplicitAt} from './math.js?v=01n';
+import {AdaptiveGrids} from './grid-scale.js?v=01r';
+import {setupSurface,affine,display,visible,implicitEquationTexts,intersectionSlabs,solveIsolatedPoints,coordinateTimeEquations,parameterValues,timeImplicitAt} from './math.js?v=01r';
 const nextFrame=()=>new Promise(done=>requestAnimationFrame(done));
 const sleep=ms=>new Promise(done=>setTimeout(done,ms));
 export class SurfaceRenderer {
@@ -23,8 +23,14 @@ export class SurfaceRenderer {
    const chosenGeom=new THREE.BufferGeometry();
    const chosenMaterial=new THREE.PointsMaterial({map:this.markerTexture(),size:20,sizeAttenuation:false,transparent:true,alphaTest:.2,depthTest:true,depthWrite:false});
    const chosen=new THREE.Points(chosenGeom,chosenMaterial);chosen.renderOrder=21;
-   group.add(face,wire,point,ink,marker,chosen);
-   this.layers.push({id,view,group,surfaces,wires,dots,characteristic,markGeom,chosenGeom,face,ink,marker});
+   // Dynamic experiments: the moving point and its completed path are
+   // geometry in the same 3-D coordinate system as the original object.
+   // They keep depth testing, so a back-side point can be occluded.
+   const trailGeom=new THREE.BufferGeometry();
+   const trail=new THREE.LineSegments(trailGeom,new THREE.LineBasicMaterial({color:0xe71921,transparent:false,depthTest:true,depthWrite:false}));
+   trail.renderOrder=12;
+   group.add(face,wire,point,ink,marker,trail,chosen);
+   this.layers.push({id,view,group,surfaces,wires,dots,characteristic,markGeom,chosenGeom,trailGeom,face,ink,marker});
   }
   const canvas=this.layers[0].view.renderer.domElement;
   // Observe a short click/tap, but never hijack drag gestures, which belong to AVO Core.
@@ -46,7 +52,7 @@ export class SurfaceRenderer {
   ctx.beginPath();ctx.arc(32,32,20,0,Math.PI*2);ctx.strokeStyle='#7a0b10';ctx.lineWidth=2;ctx.stroke();
   this.selectedTexture=new THREE.CanvasTexture(canvas);return this.selectedTexture;
  }
- clear(){for(const l of this.layers){for(const g of [l.surfaces,l.wires,l.dots,l.characteristic,l.markGeom,l.chosenGeom])g.setAttribute('position',new THREE.Float32BufferAttribute([],3));l.view.render();}}
+ clear(){for(const l of this.layers){for(const g of [l.surfaces,l.wires,l.dots,l.characteristic,l.markGeom,l.chosenGeom,l.trailGeom])g.setAttribute('position',new THREE.Float32BufferAttribute([],3));l.view.render();}}
  fill(arr,spec,data){const g=spec[data];g.setAttribute('position',new THREE.Float32BufferAttribute(new Float32Array(arr),3));g.computeBoundingSphere();}
  pushLine(list,a,b){if(visible(a)&&visible(b))list.push(...a,...b);}
  pushTri(list,a,b,c){if(visible(a)&&visible(b)&&visible(c))list.push(...a,...b,...c);}
@@ -210,11 +216,57 @@ export class SurfaceRenderer {
    drawn();this.chooseVisiblePoint();this.onProgress?.({done:expected,expected,vertices,finished:true});
   }catch(e){if(stamp===this.generation){this.lastError=e;console.error(e);this.onProgress?.({error:e.message});}}
  } 
+ // Pick a consistent material point from the current solution set. A
+ // normalized position is used to follow shrinking/expanding intersections:
+ // on a spherical slice it preserves the selected angular location instead
+ // of hopping to the nearest point in absolute 3-D space.
+ trackPoint(candidates,track){
+  if(!candidates.length)return null;
+  const lo=[Infinity,Infinity,Infinity],hi=[-Infinity,-Infinity,-Infinity];
+  for(const p of candidates)for(let j=0;j<3;j++){lo[j]=Math.min(lo[j],p[j]);hi[j]=Math.max(hi[j],p[j]);}
+  const center=lo.map((v,j)=>(v+hi[j])/2);
+  const radius=lo.map((v,j)=>Math.max((hi[j]-v)/2,1e-6));
+  const norm=p=>p.map((v,j)=>(v-center[j])/radius[j]);
+  if(track.direction){
+   let best=null,score=Infinity;
+   for(const p of candidates){const z=norm(p);const d=z.reduce((acc,v,j)=>acc+(v-track.direction[j])**2,0);
+    if(d<score){score=d;best=p;}}
+   if(best){track.direction=norm(best);return best;}
+  }
+  if(track.initial){
+   let best=null,score=Infinity;
+   for(const p of candidates){const d=p.reduce((acc,v,j)=>acc+(v-track.initial[j])**2,0);
+    if(d<score){score=d;best=p;}}
+   if(best){track.direction=norm(best);return best;}
+  }
+  // First visible location: prefer the viewport center and camera-facing
+  // candidates; the user can still rotate after the initial selection.
+  const view=this.layers[0].view;let best=null,score=Infinity;
+  for(const p of candidates){
+   const v=new THREE.Vector3(...p).project(view.camera);
+   if(!Number.isFinite(v.x+v.y+v.z)||v.z>1||v.z< -1)continue;
+   const d=v.x*v.x+v.y*v.y+.05*v.z;
+   if(d<score){score=d;best=p;}
+  }
+  best=best||candidates[0];track.direction=norm(best);return best;
+ }
+ drawTrack(p,s,A,track){
+  const pts=p?[p,affine(A,s.t,p)]:[];
+  for(let k=0;k<2;k++){
+   const layer=this.layers[k],v=pts[k]?display(pts[k],s):null;
+   this.fill(visible(v)?v:[],layer,'chosenGeom');
+   if(visible(v)&&visible(track.previous[k]))this.pushLine(track.trails[k],track.previous[k],v);
+   track.previous[k]=visible(v)?v:null;
+   this.fill(track.trails[k],layer,'trailGeom');
+  }
+ }
  // The parameter t is scalar and is NEVER the affine shift vector s.t.
  // Coordinate equations trace a path; implicit equations animate snapshots at
  // increasing time. Preserve the 01i redraw and delay behaviour everywhere else.
  async drawParameterized(stamp,s,A){
   const steps=parameterValues(s),total=steps.length,delay=Math.max(0,Math.min(2000,Number(s.delay)||0));
+  const track={initial:s.selectedActive&&Array.isArray(s.selectedPoint)?s.selectedPoint:null,
+   direction:null,previous:[null,null],trails:[[],[]]};
   if(s.timeMode==='coordinates'){
    const equations=coordinateTimeEquations(s.timeEquations),curves=[[],[]];
    let previous=null;
@@ -224,11 +276,14 @@ export class SurfaceRenderer {
     const now=[display(p,s),display(q,s)];
     if(previous)for(let k=0;k<2;k++)this.pushLine(curves[k],previous[k],now[k]);
     previous=now.map(v=>visible(v)?v:null);
+    this.drawTrack(p,s,A,track);
     if(this.cameraStep||delay>0||i%10===0||i===total-1){
      for(let k=0;k<2;k++){
       const layer=this.layers[k];this.fill(curves[k],layer,'characteristic');
       layer.group.children[3].material.color.setHex(k===0?0x1269ad:0x237e35);
-      this.fill(visible(now[k])?now[k]:[],layer,'markGeom');layer.view.render();
+      this.fill([],layer,'markGeom');
+      // A parametric curve already defines the unique moving endpoint.
+      layer.view.render();
      }
      this.onProgress?.({done:i+1,expected:total,vertices:i+1,finished:i===total-1,time});
      if(this.cameraStep)await this.cameraStep({index:i,total,time});
@@ -243,7 +298,7 @@ export class SurfaceRenderer {
    if(stamp!==this.generation)return;
    const time=steps[i],snapshot={...s,shape:'implicit',implicit:timeImplicitAt(s.dynamicEquations,time)};
    const count=implicitEquationTexts(snapshot.implicit).length;
-   const meshes=[[],[]],curves=[[],[]],marks=[[],[]];
+   const meshes=[[],[]],curves=[[],[]],marks=[[],[]],candidates=[];
    if(count===1){
     // One equation: current 3D surface at this t, sampled via the
     // established multiple-Z rule, with independent branches.
@@ -254,6 +309,7 @@ export class SurfaceRenderer {
      for(let k=0;k<=N;k++){
       const xx=patch.u0+(patch.u1-patch.u0)*k/N;
       const roots=patch.eval(xx,yy).filter(visible),pair=roots.map(p=>{
+       if(Number.isFinite(p[0]+p[1]+p[2]))candidates.push(p);
        const q=affine(A,s.t,p);return [display(p,s),display(q,s)];
       });
       row.push(pair);
@@ -273,12 +329,18 @@ export class SurfaceRenderer {
     // Two equations: show the instantaneous intersection curve, not the
     // union of all curves from earlier times.
     for(const slab of intersectionSlabs(snapshot,20))for(const [a,b] of slab.segments){
+     candidates.push(a.map((v,j)=>(v+b[j])/2));
      for(let k=0;k<2;k++)this.pushLine(curves[k],display(k===0?a:affine(A,s.t,a),s),display(k===0?b:affine(A,s.t,b),s));
     }
    }else if(count===3){
-    const pts=solveIsolatedPoints(snapshot);
+    const pts=solveIsolatedPoints(snapshot);candidates.push(...pts);
     for(let k=0;k<2;k++)marks[k]=pts.map(p=>display(k===0?p:affine(A,s.t,p),s)).filter(visible).flat();
    }
+   // Select one point belonging to the current instantaneous solution set.
+   // Keep its normalized position across t steps; append the transformed
+   // pair to separate red tracks, once per completed mathematical state.
+   const selected=this.trackPoint(candidates,track);
+   this.drawTrack(selected,s,A,track);
    for(let k=0;k<2;k++){
     const layer=this.layers[k];
     this.fill(meshes[k],layer,'surfaces');this.fill(curves[k],layer,'characteristic');
