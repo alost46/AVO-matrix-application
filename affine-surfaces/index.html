@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="color-scheme" content="light"><title>AVO · Аффинные преобразования поверхностей · 01s</title>
-<link rel="stylesheet" href="../avo-core/v2/core.css?core=01m"><link rel="stylesheet" href="./surface.css?v=01s">
+<meta name="color-scheme" content="light"><title>AVO · Аффинные преобразования поверхностей · 01t</title>
+<link rel="stylesheet" href="../avo-core/v2/core.css?core=01m"><link rel="stylesheet" href="./surface.css?v=01t">
 <link rel="stylesheet" href="../avo-camera/v1/camera.css?v=01a">
 
 <link rel="icon" href="../favicon-32.png">
@@ -9,9 +9,9 @@
 <body><div id="app"><noscript>Для работы нужен JavaScript.</noscript></div>
 <script type="module">
 import {createApp} from '../avo-core/v2/app.js?core=01m';
-import {initialInputs,mathModel,picturesForLayout,MSG} from './math.js?v=01s';
-import {SurfaceRenderer} from './render.js?v=01s';
-import {installControls} from './controls.js?v=01s';
+import {initialInputs,mathModel,picturesForLayout,MSG} from './math.js?v=01t';
+import {SurfaceRenderer} from './render.js?v=01t';
+import {installControls} from './controls.js?v=01t';
 import {installCamera} from '../avo-camera/v1/camera.js?v=01a';
 // Compatible extension of 01i state: old JSON and saved inputs omitted time keys.
 const extendInputs = data => {
@@ -50,7 +50,7 @@ try{
  const adapter={async captureFrames({mode,to,step,onFrame,cancelled}){
   if(mode==='t'){
    if(app.currentInputs().shape!=='time')throw Error('Для t выберите форму «С параметром t» / Choose time-dependent surface mode');
-   const {parameterValues}=await import('./math.js?v=01s');
+   const {parameterValues}=await import('./math.js?v=01t');
    if(parameterValues(app.currentInputs()).length>240)throw Error('Для записи уменьшите число шагов t до 240 / At most 240 frames');
    painter.cameraStep=async info=>{if(cancelled())throw Error('AVO_CAMERA_CANCELLED');await onFrame(info);};
    try{await painter.start();if(painter.lastError)throw painter.lastError;}
@@ -77,7 +77,7 @@ try{
    }
   }
  }};
- // AVO Camera 01a is unchanged. App 01s only relocates its existing panel.
+ // AVO Camera 01a is unchanged. App 01t only relocates its existing panel.
  // Put the camera control AFTER the right-hand result picture description.
  // No change to the generic Camera module or Core v2 presentation.
  const outputPicture=app.pictures.get('output');
@@ -129,5 +129,5 @@ try{
  app.setLanguage=lang=>{oldLanguage(lang);camera.localize();updateCameraButton();};
  window.AVOCamera=camera;
 
-}catch(error){console.error(error);const p=document.createElement('p');p.className='error';p.textContent='AVO 01s: '+error.message;document.getElementById('app').append(p);}
+}catch(error){console.error(error);const p=document.createElement('p');p.className='error';p.textContent='AVO 01t: '+error.message;document.getElementById('app').append(p);}
 </script></body></html>

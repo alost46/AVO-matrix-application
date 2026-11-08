@@ -1,8 +1,8 @@
-/* AVO surfaces 01s. Progressively draw meshes in the EXISTING AVO Core Picture canvases.
+/* AVO surfaces 01t. Progressively draw meshes in the EXISTING AVO Core Picture canvases.
    No changes to the common core and no replacement of its navigation/gestures. */
 import * as THREE from 'three';
-import {AdaptiveGrids} from './grid-scale.js?v=01s';
-import {setupSurface,affine,display,visible,implicitEquationTexts,intersectionSlabs,solveIsolatedPoints,coordinateTimeEquations,parameterValues,timeImplicitAt} from './math.js?v=01s';
+import {AdaptiveGrids} from './grid-scale.js?v=01t';
+import {setupSurface,affine,display,visible,implicitEquationTexts,intersectionSlabs,solveIsolatedPoints,coordinateTimeEquations,parameterValues,timeImplicitAt} from './math.js?v=01t';
 const nextFrame=()=>new Promise(done=>requestAnimationFrame(done));
 const sleep=ms=>new Promise(done=>setTimeout(done,ms));
 export class SurfaceRenderer {
@@ -25,15 +25,16 @@ export class SurfaceRenderer {
    const chosen=new THREE.Points(chosenGeom,chosenMaterial);chosen.renderOrder=21;
    // Dynamic experiments: the moving point and its completed path are
    // geometry in the same 3-D coordinate system as the original object.
-   // They keep depth testing, so a back-side point can be occluded.
+   // The moving point keeps its depth test; historical positions need an overlay
+   // because expanding objects can enclose the earlier trajectory.
    const trailGeom=new THREE.BufferGeometry();
-   const trail=new THREE.LineSegments(trailGeom,new THREE.LineBasicMaterial({color:0xe71921,transparent:false,depthTest:true,depthWrite:false}));
+   const trail=new THREE.LineSegments(trailGeom,new THREE.LineBasicMaterial({color:0xe71921,transparent:false,depthTest:false,depthWrite:false}));
    trail.renderOrder=12;
-   // Two depth-tested tubes give the moving red trajectory a crisp white
+   // Two overlay tubes give the historical trajectory a crisp white
    // outline. Unlike WebGL's linewidth (usually fixed at one pixel), real
-   // meshes stay readable on Chrome/Edge and under 3-D rotation.
-   const halo=new THREE.Mesh(new THREE.BufferGeometry(),new THREE.MeshBasicMaterial({color:0xffffff,depthTest:true,depthWrite:false,transparent:true,opacity:.96,side:THREE.DoubleSide}));
-   const redTube=new THREE.Mesh(new THREE.BufferGeometry(),new THREE.MeshBasicMaterial({color:0xe71724,depthTest:true,depthWrite:false,side:THREE.DoubleSide}));
+   // meshes stay readable even when newer surface layers enclose them.
+   const halo=new THREE.Mesh(new THREE.BufferGeometry(),new THREE.MeshBasicMaterial({color:0xffffff,depthTest:false,depthWrite:false,transparent:true,opacity:.96,side:THREE.DoubleSide}));
+   const redTube=new THREE.Mesh(new THREE.BufferGeometry(),new THREE.MeshBasicMaterial({color:0xe71724,depthTest:false,depthWrite:false,side:THREE.DoubleSide}));
    halo.renderOrder=13;redTube.renderOrder=14;
    group.add(face,wire,point,ink,marker,trail,halo,redTube,chosen);
    this.layers.push({id,view,group,surfaces,wires,dots,characteristic,markGeom,chosenGeom,trailGeom,face,ink,marker,halo,redTube});

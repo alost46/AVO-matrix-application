@@ -132,7 +132,7 @@
 /* Keep the camera accessible in an enlarged result picture. */
 .picture-full .surface-camera-panel{flex:0 0 auto;max-height:45vh;overflow:auto;}
 
-/* 01s: the SAME camera panel is moved into the currently enlarged picture.
+/* 01t: the SAME camera panel is moved into the currently enlarged picture.
  * In normal mode it stays below the right-hand description. All controls
  * remain operable in the enlarged picture; no change to core or encoder. */
 .picture-full>.surface-camera-panel{display:block!important;flex:0 0 auto;max-height:min(40vh,350px);overflow:auto;z-index:2;border-top:2px solid #a8c6d9;}
